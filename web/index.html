@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ePager Flasher</title>
+<meta name="description" content="Install ePager firmware from your browser over USB. No tools to install.">
+<style>
+  :root {
+    --bg: #f6f7f9; --card: #ffffff; --text: #1b1f24; --muted: #5b6672; --line: #d9dee4;
+    --accent: #0b6bcb; --accent-text: #ffffff; --warn-bg: #fff4d6; --warn-line: #e0b84a; --ok: #1a7f37;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #12161b; --card: #1a2027; --text: #e6eaee; --muted: #9aa6b2; --line: #2d3640;
+      --accent: #4c9dff; --accent-text: #08121f; --warn-bg: #3a3014; --warn-line: #8a7126; --ok: #56d364;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 720px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 1.6rem; margin: 0 0 4px; }
+  h2 { font-size: 1.05rem; margin: 28px 0 10px; }
+  .lead { color: var(--muted); margin: 0 0 20px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+  .boards { display: grid; gap: 10px; }
+  .board { display: block; cursor: pointer; }
+  .board input { position: absolute; opacity: 0; pointer-events: none; }
+  .board:has(input:checked) { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+  .board:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .board.disabled { opacity: .55; cursor: not-allowed; }
+  .board h3 { margin: 0; font-size: 1rem; }
+  .board p { margin: 2px 0 0; color: var(--muted); font-size: .92rem; }
+  .meta { margin-top: 6px; font-size: .85rem; color: var(--muted); }
+  .tag { display: inline-block; font-size: .75rem; padding: 0 7px; border-radius: 99px; border: 1px solid var(--line); }
+  .tag.dev { border-color: var(--warn-line); background: var(--warn-bg); color: var(--text); }
+  .install { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .btn { font: inherit; font-weight: 600; border: 0; border-radius: 8px; padding: 10px 20px; cursor: pointer;
+         background: var(--accent); color: var(--accent-text); }
+  .btn[disabled] { opacity: .5; cursor: not-allowed; }
+  .notice { background: var(--warn-bg); border: 1px solid var(--warn-line); border-radius: 10px;
+            padding: 10px 14px; margin: 14px 0 0; font-size: .92rem; }
+  .notice[hidden] { display: none; }
+  ol, ul { padding-left: 1.3rem; margin: 6px 0; }
+  li { margin: 4px 0; }
+  details { margin: 8px 0; }
+  summary { cursor: pointer; font-weight: 600; }
+  code, kbd { font: .88em ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+              background: color-mix(in srgb, var(--line) 50%, transparent); padding: 1px 5px; border-radius: 4px; }
+  footer { margin-top: 32px; color: var(--muted); font-size: .85rem; }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <h1>ePager firmware installer</h1>
+  <p class="lead">Flash an ePager board from your browser over USB. Nothing to install.</p>
+
+  <h2>1. Pick your board</h2>
+  <div class="boards" id="boards">
+    <label class="card board" data-board="paper">
+      <input type="radio" name="board" value="paper">
+      <h3>Paper <span class="tag">e-paper</span></h3>
+      <p>Waveshare ESP32-S3-ePaper-1.54 V2: 200×200 black and white, 8 MB flash.</p>
+      <div class="meta" data-meta>Loading…</div>
+    </label>
+    <label class="card board" data-board="lcd">
+      <input type="radio" name="board" value="lcd">
+      <h3>LCD <span class="tag">colour, touch</span></h3>
+      <p>ostb-xiaozhi-3st: ESP32-S3, 296×240 colour LCD, 16 MB flash.</p>
+      <div class="meta" data-meta>Loading…</div>
+    </label>
+  </div>
+
+  <h2>2. Connect it</h2>
+  <ol>
+    <li>Plug the board into this computer with a USB cable that carries data (a charge-only cable shows no port).</li>
+    <li>Click <b>Install</b>, pick the board's serial port in the browser's dialog (usually “USB JTAG/serial debug unit” or “ESP32-S3”), and wait until it says done. Keep the cable plugged in meanwhile.</li>
+  </ol>
+
+  <div class="install">
+    <esp-web-install-button id="installer" hidden>
+      <button slot="activate" class="btn" type="button">Install</button>
+      <span slot="unsupported" class="notice">This browser cannot flash over USB. Use <b>Chrome</b>, <b>Edge</b> or <b>Opera</b> on a desktop computer (Firefox and Safari do not support Web Serial).</span>
+      <span slot="not-allowed" class="notice">Web Serial needs a secure page (HTTPS). Open this page over <code>https://</code> or from <code>localhost</code>.</span>
+    </esp-web-install-button>
+    <button class="btn" id="placeholder" type="button" disabled>Install</button>
+    <span id="status" class="meta"></span>
+  </div>
+  <p class="notice" id="devnote" hidden>This is an <b>unsigned development build</b>: it runs normally, but it will not accept over-the-air updates from the phone app later.</p>
+  <p class="notice" id="lcdnote" hidden>The LCD board has no BOOT key. Its only way back from a bad image is USB, so leave the cable connected until the install ends. Want the original firmware back later? Back it up first (see “Restore” below).</p>
+
+  <h2>What gets written</h2>
+  <ul>
+    <li>The bootloader, the partition table, the boot-slot data and the application, at fixed offsets.</li>
+    <li>Settings, paired phones and saved Wi-Fi networks stay when the partition layout is unchanged, so updating a board that already runs ePager keeps them. Tick <b>Erase device</b> in the dialog for a clean start; the first install over a different firmware (for example the stock one) should use it.</li>
+  </ul>
+
+  <h2>Trouble</h2>
+  <details>
+    <summary>The port list is empty or the install fails to connect</summary>
+    <ul>
+      <li><b>Paper:</b> unplug the cable, hold <kbd>BOOT</kbd>, plug it in, release <kbd>BOOT</kbd>, then try again. The chip is then in its ROM download mode.</li>
+      <li><b>LCD:</b> there is no BOOT key. Unplug and replug the cable and try again; if the firmware was sleeping, press a volume key first.</li>
+      <li><b>Linux:</b> your user needs access to <code>/dev/ttyACM*</code>: <code>sudo usermod -aG dialout $USER</code>, then log out and in.</li>
+      <li>Close other programs that hold the port (serial monitors, <code>idf.py monitor</code>).</li>
+    </ul>
+  </details>
+  <details>
+    <summary>Restore the original firmware (LCD board)</summary>
+    <p>This page cannot restore the stock firmware. Before the first install, read the whole flash with
+    <code>esptool.py --chip esp32s3 -b 921600 read_flash 0 0x1000000 backup.bin</code>
+    and keep the file private (it holds the vendor's stored Wi-Fi passwords). Restore steps:
+    <a href="https://github.com/tdpi95/epager-firmware/blob/main/docs/recovery.md">docs/recovery.md</a>.</p>
+  </details>
+
+  <footer id="footer">ePager firmware. Flashing uses <a href="https://esphome.github.io/esp-web-tools/">ESP Web Tools</a>; the files never leave your browser and the board.</footer>
+</main>
+
+<script type="module">
+  const $ = (s, el = document) => el.querySelector(s);
+  const installer = $("#installer");
+  const placeholder = $("#placeholder");
+  const status = $("#status");
+  const boardsEl = $("#boards");
+  let index = null;
+
+  const fmt = (n) => (n / 1048576).toFixed(2) + " MB";
+
+  function select(name) {
+    const info = index && index.boards[name];
+    if (!info) return;
+    // esp-web-tools reads `manifest` when the button is clicked, so changing it here is enough.
+    installer.setAttribute("manifest", info.manifest);
+    // Until the component is defined its slotted fallbacks would all show: keep it hidden till then.
+    customElements.whenDefined("esp-web-install-button").then(() => {
+      installer.hidden = false;
+      placeholder.hidden = true;
+    });
+    $("#devnote").hidden = info.signed;
+    $("#lcdnote").hidden = name !== "lcd";
+    status.textContent = `Will install ${info.version} on ${info.chip}.`;
+    try { localStorage.setItem("epager-board", name); } catch {}
+  }
+
+  async function init() {
+    try {
+      const res = await fetch("firmware/index.json", { cache: "no-cache" });
+      if (!res.ok) throw new Error(res.status);
+      index = await res.json();
+    } catch (e) {
+      for (const el of boardsEl.querySelectorAll("[data-meta]")) el.textContent = "Firmware list could not be loaded.";
+      status.textContent = "Reload the page to try again.";
+      return;
+    }
+
+    for (const label of boardsEl.querySelectorAll(".board")) {
+      const name = label.dataset.board;
+      const info = index.boards[name];
+      const meta = $("[data-meta]", label);
+      const input = $("input", label);
+      if (!info) {
+        meta.textContent = "Not part of this release.";
+        label.classList.add("disabled");
+        input.disabled = true;
+        continue;
+      }
+      const tag = document.createElement("span");
+      tag.className = "tag" + (info.signed ? "" : " dev");
+      tag.textContent = info.signed ? "signed" : "unsigned dev build";
+      meta.textContent = `Version ${info.version} · ${fmt(info.total_size)} · `;
+      meta.append(tag);
+    }
+
+    boardsEl.addEventListener("change", (e) => { if (e.target.name === "board") select(e.target.value); });
+
+    let saved = null;
+    try { saved = localStorage.getItem("epager-board"); } catch {}
+    const first = (saved && index.boards[saved]) ? saved : Object.keys(index.boards)[0];
+    const input = first && $(`input[value="${first}"]`, boardsEl);
+    if (input) { input.checked = true; select(first); }
+
+    if (index.commit) {
+      $("#footer").append(` Build ${index.commit}, ${index.generated.slice(0, 10)}.`);
+    }
+  }
+
+  // The install button element comes from the CDN; the page works (and shows why) if it does not load.
+  import("https://unpkg.com/esp-web-tools@10.4.0/dist/web/install-button.js?module")
+    .catch(() => { status.textContent = "Could not load the flasher component. Check your connection and reload."; });
+  init();
+</script>
+</body>
+</html>

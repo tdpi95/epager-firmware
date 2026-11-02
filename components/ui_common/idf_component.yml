@@ -1,0 +1,4 @@
+## Managed component for the firmware build, pinned exactly (variants/*/dependencies.lock is committed).
+dependencies:
+  # PLAN D30: the same release as the host build (tests/host/lvgl.cmake, archive SHA-256 pinned there).
+  lvgl/lvgl: "9.5.0"

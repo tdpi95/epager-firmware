@@ -1,0 +1,2012 @@
+{
+ "contract_version": "0.13.0",
+ "description": "App icons (asset-formats.md `app_icon`). `removal` (since 0.12.0, board only; the app ignores it): the board deletes an app's icon when the app leaves the seen list (protocol.md 6.4); see `removal.description`. `ids`: the asset id of an app's icon is app_icon_id(app_id) = lower-case hex of the first 16 bytes of SHA-256 over the app_id's UTF-8 bytes (`app_id_hex`), exactly as the board reports the app_id, without case folding. Both sides compute it. `icons`: `app_icon` + `mono1` files; `rows` are top to bottom, '#' = black (bit 0), '.' = white (bit 1); encoding them must give exactly `hex` (16-byte container header + payload). `rgb565a8_icons` (since 0.8.0): `app_icon` + `rgb565a8` files; `pixels` are rows top to bottom of 'rrggbbaa' (8-bit channels); RGB565 keeps the top 5/6/5 bits; encoding them must give exactly `hex`.",
+ "scope": "app+board",
+ "ids": [
+  {
+   "name": "android",
+   "description": "Android package name",
+   "app_id": "com.zing.zalo",
+   "app_id_hex": "636f6d2e7a696e672e7a616c6f",
+   "icon_id": "3fb7c0466d433308884e5268cff76036"
+  },
+  {
+   "name": "ios_upper_case",
+   "description": "iOS bundle id with upper case",
+   "app_id": "com.apple.MobileSMS",
+   "app_id_hex": "636f6d2e6170706c652e4d6f62696c65534d53",
+   "icon_id": "0e98b2332404e8a2ea07603dd6bd2bd1"
+  },
+  {
+   "name": "case_sensitive",
+   "description": "Same letters in lower case: a different id (no case folding)",
+   "app_id": "com.apple.mobilesms",
+   "app_id_hex": "636f6d2e6170706c652e6d6f62696c65736d73",
+   "icon_id": "3b9ee67b3fc80caf9f22742b23af72e8"
+  },
+  {
+   "name": "ios_vietnamese_bank",
+   "description": "iOS bundle id",
+   "app_id": "com.vietinbank.ipay",
+   "app_id_hex": "636f6d2e76696574696e62616e6b2e69706179",
+   "icon_id": "cbcd238d5c7026448340a7899388dd28"
+  },
+  {
+   "name": "one_byte",
+   "description": "Shortest app_id",
+   "app_id": "a",
+   "app_id_hex": "61",
+   "icon_id": "ca978112ca1bbdcafac231b39a23dc4d"
+  },
+  {
+   "name": "max_len",
+   "description": "64-byte app_id (app_entry.app_id max_len)",
+   "app_id": "vn.com.example.notifications.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   "app_id_hex": "766e2e636f6d2e6578616d706c652e6e6f74696669636174696f6e732e7878787878787878787878787878787878787878787878787878787878787878787878",
+   "icon_id": "653587ac381f9c7c4f7125f8edc2b1ca"
+  },
+  {
+   "name": "non_ascii",
+   "description": "app_id is `str`: hashed as its UTF-8 bytes",
+   "app_id": "vn.ứng-dụng.tin-nhắn",
+   "app_id_hex": "766e2ee1bba96e672d64e1bba56e672e74696e2d6e68e1baaf6e",
+   "icon_id": "01aaaeceb0d2df33b0ecf868d935f434"
+  }
+ ],
+ "icons": [
+  {
+   "name": "paper_24",
+   "description": "Paper app icon (24x24, 72-byte payload, 88-byte file); transfer.json `app_icon_install` uploads this file",
+   "rows": [
+    "........................",
+    "....################....",
+    "..##................##..",
+    ".#....................#.",
+    ".#....................#.",
+    "#......................#",
+    "#......................#",
+    "#......................#",
+    "#....##....##....##....#",
+    "#....##....##....##....#",
+    "#......................#",
+    "#......................#",
+    "#......................#",
+    ".#....................#.",
+    ".#....................#.",
+    "..###..............###..",
+    "....#...############....",
+    "....#..#................",
+    "....#.#.................",
+    "....##..................",
+    "....#...................",
+    "........................",
+    "........................",
+    "........................"
+   ],
+   "hex": "45535041010501001800180048000000fffffff0000fcffff3bffffdbffffd7ffffe7ffffe7ffffe79e79e79e79e7ffffe7ffffe7ffffebffffdbffffdc7ffe3f7000ff6fffff5fffff3fffff7ffffffffffffffffffffff",
+   "width": 24,
+   "height": 24
+  },
+  {
+   "name": "row_padding",
+   "description": "Packing only (not a Paper icon size): 12 pixels per row = 2 bytes, the 4 padding bits are 0",
+   "rows": [
+    "#..........#",
+    ".##########.",
+    "#.#.#.#.#.#."
+   ],
+   "hex": "45535041010501000c000300060000007fe080105550",
+   "width": 12,
+   "height": 3
+  }
+ ],
+ "rgb565a8_icons": [
+  {
+   "name": "packing_3x2",
+   "description": "Packing only: 3x2 pixels, RGB565 plane (little-endian) then the alpha plane; (8, 4, 8) truncates to 0x0821",
+   "pixels": [
+    [
+     "ff0000ff",
+     "00ff0080",
+     "0000ff00"
+    ],
+    [
+     "ffffffff",
+     "08040801",
+     "000000ff"
+    ]
+   ],
+   "hex": "4553504101050600030002001200000000f8e0071f00ffff21080000ff8000ff01ff",
+   "width": 3,
+   "height": 2
+  },
+  {
+   "name": "lcd_32",
+   "description": "LCD app icon (32x32, 3,072-byte payload, 3,088-byte file); transfer.json `lcd_app_icon` uploads this file",
+   "pixels": [
+    [
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000"
+    ],
+    [
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "5808a080",
+     "6008a080",
+     "6808a080",
+     "7008a080",
+     "7808a080",
+     "8008a080",
+     "8808a080",
+     "9008a080",
+     "9808a080",
+     "a008a080",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000"
+    ],
+    [
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "4010a080",
+     "4810a080",
+     "5010a080",
+     "5810a080",
+     "6010a0ff",
+     "6810a0ff",
+     "7010a0ff",
+     "7810a0ff",
+     "8010a0ff",
+     "8810a0ff",
+     "9010a0ff",
+     "9810a0ff",
+     "a010a080",
+     "a810a080",
+     "b010a080",
+     "b810a080",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000"
+    ],
+    [
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "3818a080",
+     "4018a080",
+     "4818a080",
+     "5018a0ff",
+     "5818a0ff",
+     "6018a0ff",
+     "6818a0ff",
+     "7018a0ff",
+     "7818a0ff",
+     "8018a0ff",
+     "8818a0ff",
+     "9018a0ff",
+     "9818a0ff",
+     "a018a0ff",
+     "a818a0ff",
+     "b018a080",
+     "b818a080",
+     "c018a080",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000"
+    ],
+    [
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "3020a080",
+     "3820a080",
+     "4020a0ff",
+     "4820a0ff",
+     "5020a0ff",
+     "5820a0ff",
+     "6020a0ff",
+     "6820a0ff",
+     "7020a0ff",
+     "7820a0ff",
+     "8020a0ff",
+     "8820a0ff",
+     "9020a0ff",
+     "9820a0ff",
+     "a020a0ff",
+     "a820a0ff",
+     "b020a0ff",
+     "b820a0ff",
+     "c020a080",
+     "c820a080",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000"
+    ],
+    [
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "2828a080",
+     "3028a080",
+     "3828a0ff",
+     "4028a0ff",
+     "4828a0ff",
+     "5028a0ff",
+     "5828a0ff",
+     "6028a0ff",
+     "6828a0ff",
+     "7028a0ff",
+     "7828a0ff",
+     "8028a0ff",
+     "8828a0ff",
+     "9028a0ff",
+     "9828a0ff",
+     "a028a0ff",
+     "a828a0ff",
+     "b028a0ff",
+     "b828a0ff",
+     "c028a0ff",
+     "c828a080",
+     "d028a080",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000"
+    ],
+    [
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "2030a080",
+     "2830a080",
+     "3030a0ff",
+     "3830a0ff",
+     "4030a0ff",
+     "4830a0ff",
+     "5030a0ff",
+     "5830a0ff",
+     "6030a0ff",
+     "6830a0ff",
+     "7030a0ff",
+     "7830a0ff",
+     "8030a0ff",
+     "8830a0ff",
+     "9030a0ff",
+     "9830a0ff",
+     "a030a0ff",
+     "a830a0ff",
+     "b030a0ff",
+     "b830a0ff",
+     "c030a0ff",
+     "c830a0ff",
+     "d030a080",
+     "d830a080",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000"
+    ],
+    [
+     "00000000",
+     "00000000",
+     "00000000",
+     "1838a080",
+     "2038a080",
+     "2838a0ff",
+     "3038a0ff",
+     "3838a0ff",
+     "4038a0ff",
+     "4838a0ff",
+     "5038a0ff",
+     "5838a0ff",
+     "6038a0ff",
+     "6838a0ff",
+     "7038a0ff",
+     "7838a0ff",
+     "8038a0ff",
+     "8838a0ff",
+     "9038a0ff",
+     "9838a0ff",
+     "a038a0ff",
+     "a838a0ff",
+     "b038a0ff",
+     "b838a0ff",
+     "c038a0ff",
+     "c838a0ff",
+     "d038a0ff",
+     "d838a080",
+     "e038a080",
+     "00000000",
+     "00000000",
+     "00000000"
+    ],
+    [
+     "00000000",
+     "00000000",
+     "1040a080",
+     "1840a080",
+     "2040a0ff",
+     "2840a0ff",
+     "3040a0ff",
+     "3840a0ff",
+     "4040a0ff",
+     "4840a0ff",
+     "5040a0ff",
+     "5840a0ff",
+     "6040a0ff",
+     "6840a0ff",
+     "7040a0ff",
+     "7840a0ff",
+     "8040a0ff",
+     "8840a0ff",
+     "9040a0ff",
+     "9840a0ff",
+     "a040a0ff",
+     "a840a0ff",
+     "b040a0ff",
+     "b840a0ff",
+     "c040a0ff",
+     "c840a0ff",
+     "d040a0ff",
+     "d840a0ff",
+     "e040a080",
+     "e840a080",
+     "00000000",
+     "00000000"
+    ],
+    [
+     "00000000",
+     "00000000",
+     "1048a080",
+     "1848a080",
+     "2048a0ff",
+     "2848a0ff",
+     "3048a0ff",
+     "3848a0ff",
+     "4048a0ff",
+     "4848a0ff",
+     "5048a0ff",
+     "5848a0ff",
+     "6048a0ff",
+     "6848a0ff",
+     "7048a0ff",
+     "7848a0ff",
+     "8048a0ff",
+     "8848a0ff",
+     "9048a0ff",
+     "9848a0ff",
+     "a048a0ff",
+     "a848a0ff",
+     "b048a0ff",
+     "b848a0ff",
+     "c048a0ff",
+     "c848a0ff",
+     "d048a0ff",
+     "d848a0ff",
+     "e048a080",
+     "e848a080",
+     "00000000",
+     "00000000"
+    ],
+    [
+     "00000000",
+     "00000000",
+     "1050a080",
+     "1850a0ff",
+     "2050a0ff",
+     "2850a0ff",
+     "3050a0ff",
+     "3850a0ff",
+     "4050a0ff",
+     "4850a0ff",
+     "5050a0ff",
+     "5850a0ff",
+     "6050a0ff",
+     "6850a0ff",
+     "7050a0ff",
+     "7850a0ff",
+     "8050a0ff",
+     "8850a0ff",
+     "9050a0ff",
+     "9850a0ff",
+     "a050a0ff",
+     "a850a0ff",
+     "b050a0ff",
+     "b850a0ff",
+     "c050a0ff",
+     "c850a0ff",
+     "d050a0ff",
+     "d850a0ff",
+     "e050a0ff",
+     "e850a080",
+     "00000000",
+     "00000000"
+    ],
+    [
+     "00000000",
+     "0858a080",
+     "1058a080",
+     "1858a0ff",
+     "2058a0ff",
+     "2858a0ff",
+     "3058a0ff",
+     "3858a0ff",
+     "4058a0ff",
+     "4858a0ff",
+     "5058a0ff",
+     "5858a0ff",
+     "6058a0ff",
+     "6858a0ff",
+     "7058a0ff",
+     "7858a0ff",
+     "8058a0ff",
+     "8858a0ff",
+     "9058a0ff",
+     "9858a0ff",
+     "a058a0ff",
+     "a858a0ff",
+     "b058a0ff",
+     "b858a0ff",
+     "c058a0ff",
+     "c858a0ff",
+     "d058a0ff",
+     "d858a0ff",
+     "e058a0ff",
+     "e858a080",
+     "f058a080",
+     "00000000"
+    ],
+    [
+     "00000000",
+     "0860a080",
+     "1060a0ff",
+     "1860a0ff",
+     "2060a0ff",
+     "2860a0ff",
+     "3060a0ff",
+     "3860a0ff",
+     "4060a0ff",
+     "4860a0ff",
+     "5060a0ff",
+     "5860a0ff",
+     "6060a0ff",
+     "6860a0ff",
+     "7060a0ff",
+     "7860a0ff",
+     "8060a0ff",
+     "8860a0ff",
+     "9060a0ff",
+     "9860a0ff",
+     "a060a0ff",
+     "a860a0ff",
+     "b060a0ff",
+     "b860a0ff",
+     "c060a0ff",
+     "c860a0ff",
+     "d060a0ff",
+     "d860a0ff",
+     "e060a0ff",
+     "e860a0ff",
+     "f060a080",
+     "00000000"
+    ],
+    [
+     "00000000",
+     "0868a080",
+     "1068a0ff",
+     "1868a0ff",
+     "2068a0ff",
+     "2868a0ff",
+     "3068a0ff",
+     "3868a0ff",
+     "4068a0ff",
+     "4868a0ff",
+     "5068a0ff",
+     "5868a0ff",
+     "6068a0ff",
+     "6868a0ff",
+     "7068a0ff",
+     "7868a0ff",
+     "8068a0ff",
+     "8868a0ff",
+     "9068a0ff",
+     "9868a0ff",
+     "a068a0ff",
+     "a868a0ff",
+     "b068a0ff",
+     "b868a0ff",
+     "c068a0ff",
+     "c868a0ff",
+     "d068a0ff",
+     "d868a0ff",
+     "e068a0ff",
+     "e868a0ff",
+     "f068a080",
+     "00000000"
+    ],
+    [
+     "00000000",
+     "0870a080",
+     "1070a0ff",
+     "1870a0ff",
+     "2070a0ff",
+     "2870a0ff",
+     "3070a0ff",
+     "3870a0ff",
+     "4070a0ff",
+     "4870a0ff",
+     "5070a0ff",
+     "5870a0ff",
+     "6070a0ff",
+     "6870a0ff",
+     "7070a0ff",
+     "7870a0ff",
+     "8070a0ff",
+     "8870a0ff",
+     "9070a0ff",
+     "9870a0ff",
+     "a070a0ff",
+     "a870a0ff",
+     "b070a0ff",
+     "b870a0ff",
+     "c070a0ff",
+     "c870a0ff",
+     "d070a0ff",
+     "d870a0ff",
+     "e070a0ff",
+     "e870a0ff",
+     "f070a080",
+     "00000000"
+    ],
+    [
+     "00000000",
+     "0878a080",
+     "1078a0ff",
+     "1878a0ff",
+     "2078a0ff",
+     "2878a0ff",
+     "3078a0ff",
+     "3878a0ff",
+     "4078a0ff",
+     "4878a0ff",
+     "5078a0ff",
+     "5878a0ff",
+     "6078a0ff",
+     "6878a0ff",
+     "7078a0ff",
+     "7878a0ff",
+     "8078a0ff",
+     "8878a0ff",
+     "9078a0ff",
+     "9878a0ff",
+     "a078a0ff",
+     "a878a0ff",
+     "b078a0ff",
+     "b878a0ff",
+     "c078a0ff",
+     "c878a0ff",
+     "d078a0ff",
+     "d878a0ff",
+     "e078a0ff",
+     "e878a0ff",
+     "f078a080",
+     "00000000"
+    ],
+    [
+     "00000000",
+     "0880a080",
+     "1080a0ff",
+     "1880a0ff",
+     "2080a0ff",
+     "2880a0ff",
+     "3080a0ff",
+     "3880a0ff",
+     "4080a0ff",
+     "4880a0ff",
+     "5080a0ff",
+     "5880a0ff",
+     "6080a0ff",
+     "6880a0ff",
+     "7080a0ff",
+     "7880a0ff",
+     "8080a0ff",
+     "8880a0ff",
+     "9080a0ff",
+     "9880a0ff",
+     "a080a0ff",
+     "a880a0ff",
+     "b080a0ff",
+     "b880a0ff",
+     "c080a0ff",
+     "c880a0ff",
+     "d080a0ff",
+     "d880a0ff",
+     "e080a0ff",
+     "e880a0ff",
+     "f080a080",
+     "00000000"
+    ],
+    [
+     "00000000",
+     "0888a080",
+     "1088a0ff",
+     "1888a0ff",
+     "2088a0ff",
+     "2888a0ff",
+     "3088a0ff",
+     "3888a0ff",
+     "4088a0ff",
+     "4888a0ff",
+     "5088a0ff",
+     "5888a0ff",
+     "6088a0ff",
+     "6888a0ff",
+     "7088a0ff",
+     "7888a0ff",
+     "8088a0ff",
+     "8888a0ff",
+     "9088a0ff",
+     "9888a0ff",
+     "a088a0ff",
+     "a888a0ff",
+     "b088a0ff",
+     "b888a0ff",
+     "c088a0ff",
+     "c888a0ff",
+     "d088a0ff",
+     "d888a0ff",
+     "e088a0ff",
+     "e888a0ff",
+     "f088a080",
+     "00000000"
+    ],
+    [
+     "00000000",
+     "0890a080",
+     "1090a0ff",
+     "1890a0ff",
+     "2090a0ff",
+     "2890a0ff",
+     "3090a0ff",
+     "3890a0ff",
+     "4090a0ff",
+     "4890a0ff",
+     "5090a0ff",
+     "5890a0ff",
+     "6090a0ff",
+     "6890a0ff",
+     "7090a0ff",
+     "7890a0ff",
+     "8090a0ff",
+     "8890a0ff",
+     "9090a0ff",
+     "9890a0ff",
+     "a090a0ff",
+     "a890a0ff",
+     "b090a0ff",
+     "b890a0ff",
+     "c090a0ff",
+     "c890a0ff",
+     "d090a0ff",
+     "d890a0ff",
+     "e090a0ff",
+     "e890a0ff",
+     "f090a080",
+     "00000000"
+    ],
+    [
+     "00000000",
+     "0898a080",
+     "1098a0ff",
+     "1898a0ff",
+     "2098a0ff",
+     "2898a0ff",
+     "3098a0ff",
+     "3898a0ff",
+     "4098a0ff",
+     "4898a0ff",
+     "5098a0ff",
+     "5898a0ff",
+     "6098a0ff",
+     "6898a0ff",
+     "7098a0ff",
+     "7898a0ff",
+     "8098a0ff",
+     "8898a0ff",
+     "9098a0ff",
+     "9898a0ff",
+     "a098a0ff",
+     "a898a0ff",
+     "b098a0ff",
+     "b898a0ff",
+     "c098a0ff",
+     "c898a0ff",
+     "d098a0ff",
+     "d898a0ff",
+     "e098a0ff",
+     "e898a0ff",
+     "f098a080",
+     "00000000"
+    ],
+    [
+     "00000000",
+     "08a0a080",
+     "10a0a080",
+     "18a0a0ff",
+     "20a0a0ff",
+     "28a0a0ff",
+     "30a0a0ff",
+     "38a0a0ff",
+     "40a0a0ff",
+     "48a0a0ff",
+     "50a0a0ff",
+     "58a0a0ff",
+     "60a0a0ff",
+     "68a0a0ff",
+     "70a0a0ff",
+     "78a0a0ff",
+     "80a0a0ff",
+     "88a0a0ff",
+     "90a0a0ff",
+     "98a0a0ff",
+     "a0a0a0ff",
+     "a8a0a0ff",
+     "b0a0a0ff",
+     "b8a0a0ff",
+     "c0a0a0ff",
+     "c8a0a0ff",
+     "d0a0a0ff",
+     "d8a0a0ff",
+     "e0a0a0ff",
+     "e8a0a080",
+     "f0a0a080",
+     "00000000"
+    ],
+    [
+     "00000000",
+     "00000000",
+     "10a8a080",
+     "18a8a0ff",
+     "20a8a0ff",
+     "28a8a0ff",
+     "30a8a0ff",
+     "38a8a0ff",
+     "40a8a0ff",
+     "48a8a0ff",
+     "50a8a0ff",
+     "58a8a0ff",
+     "60a8a0ff",
+     "68a8a0ff",
+     "70a8a0ff",
+     "78a8a0ff",
+     "80a8a0ff",
+     "88a8a0ff",
+     "90a8a0ff",
+     "98a8a0ff",
+     "a0a8a0ff",
+     "a8a8a0ff",
+     "b0a8a0ff",
+     "b8a8a0ff",
+     "c0a8a0ff",
+     "c8a8a0ff",
+     "d0a8a0ff",
+     "d8a8a0ff",
+     "e0a8a0ff",
+     "e8a8a080",
+     "00000000",
+     "00000000"
+    ],
+    [
+     "00000000",
+     "00000000",
+     "10b0a080",
+     "18b0a080",
+     "20b0a0ff",
+     "28b0a0ff",
+     "30b0a0ff",
+     "38b0a0ff",
+     "40b0a0ff",
+     "48b0a0ff",
+     "50b0a0ff",
+     "58b0a0ff",
+     "60b0a0ff",
+     "68b0a0ff",
+     "70b0a0ff",
+     "78b0a0ff",
+     "80b0a0ff",
+     "88b0a0ff",
+     "90b0a0ff",
+     "98b0a0ff",
+     "a0b0a0ff",
+     "a8b0a0ff",
+     "b0b0a0ff",
+     "b8b0a0ff",
+     "c0b0a0ff",
+     "c8b0a0ff",
+     "d0b0a0ff",
+     "d8b0a0ff",
+     "e0b0a080",
+     "e8b0a080",
+     "00000000",
+     "00000000"
+    ],
+    [
+     "00000000",
+     "00000000",
+     "10b8a080",
+     "18b8a080",
+     "20b8a0ff",
+     "28b8a0ff",
+     "30b8a0ff",
+     "38b8a0ff",
+     "40b8a0ff",
+     "48b8a0ff",
+     "50b8a0ff",
+     "58b8a0ff",
+     "60b8a0ff",
+     "68b8a0ff",
+     "70b8a0ff",
+     "78b8a0ff",
+     "80b8a0ff",
+     "88b8a0ff",
+     "90b8a0ff",
+     "98b8a0ff",
+     "a0b8a0ff",
+     "a8b8a0ff",
+     "b0b8a0ff",
+     "b8b8a0ff",
+     "c0b8a0ff",
+     "c8b8a0ff",
+     "d0b8a0ff",
+     "d8b8a0ff",
+     "e0b8a080",
+     "e8b8a080",
+     "00000000",
+     "00000000"
+    ],
+    [
+     "00000000",
+     "00000000",
+     "00000000",
+     "18c0a080",
+     "20c0a080",
+     "28c0a0ff",
+     "30c0a0ff",
+     "38c0a0ff",
+     "40c0a0ff",
+     "48c0a0ff",
+     "50c0a0ff",
+     "58c0a0ff",
+     "60c0a0ff",
+     "68c0a0ff",
+     "70c0a0ff",
+     "78c0a0ff",
+     "80c0a0ff",
+     "88c0a0ff",
+     "90c0a0ff",
+     "98c0a0ff",
+     "a0c0a0ff",
+     "a8c0a0ff",
+     "b0c0a0ff",
+     "b8c0a0ff",
+     "c0c0a0ff",
+     "c8c0a0ff",
+     "d0c0a0ff",
+     "d8c0a080",
+     "e0c0a080",
+     "00000000",
+     "00000000",
+     "00000000"
+    ],
+    [
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "20c8a080",
+     "28c8a080",
+     "30c8a0ff",
+     "38c8a0ff",
+     "40c8a0ff",
+     "48c8a0ff",
+     "50c8a0ff",
+     "58c8a0ff",
+     "60c8a0ff",
+     "68c8a0ff",
+     "70c8a0ff",
+     "78c8a0ff",
+     "80c8a0ff",
+     "88c8a0ff",
+     "90c8a0ff",
+     "98c8a0ff",
+     "a0c8a0ff",
+     "a8c8a0ff",
+     "b0c8a0ff",
+     "b8c8a0ff",
+     "c0c8a0ff",
+     "c8c8a0ff",
+     "d0c8a080",
+     "d8c8a080",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000"
+    ],
+    [
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "28d0a080",
+     "30d0a080",
+     "38d0a0ff",
+     "40d0a0ff",
+     "48d0a0ff",
+     "50d0a0ff",
+     "58d0a0ff",
+     "60d0a0ff",
+     "68d0a0ff",
+     "70d0a0ff",
+     "78d0a0ff",
+     "80d0a0ff",
+     "88d0a0ff",
+     "90d0a0ff",
+     "98d0a0ff",
+     "a0d0a0ff",
+     "a8d0a0ff",
+     "b0d0a0ff",
+     "b8d0a0ff",
+     "c0d0a0ff",
+     "c8d0a080",
+     "d0d0a080",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000"
+    ],
+    [
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "30d8a080",
+     "38d8a080",
+     "40d8a0ff",
+     "48d8a0ff",
+     "50d8a0ff",
+     "58d8a0ff",
+     "60d8a0ff",
+     "68d8a0ff",
+     "70d8a0ff",
+     "78d8a0ff",
+     "80d8a0ff",
+     "88d8a0ff",
+     "90d8a0ff",
+     "98d8a0ff",
+     "a0d8a0ff",
+     "a8d8a0ff",
+     "b0d8a0ff",
+     "b8d8a0ff",
+     "c0d8a080",
+     "c8d8a080",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000"
+    ],
+    [
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "38e0a080",
+     "40e0a080",
+     "48e0a080",
+     "50e0a0ff",
+     "58e0a0ff",
+     "60e0a0ff",
+     "68e0a0ff",
+     "70e0a0ff",
+     "78e0a0ff",
+     "80e0a0ff",
+     "88e0a0ff",
+     "90e0a0ff",
+     "98e0a0ff",
+     "a0e0a0ff",
+     "a8e0a0ff",
+     "b0e0a080",
+     "b8e0a080",
+     "c0e0a080",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000"
+    ],
+    [
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "40e8a080",
+     "48e8a080",
+     "50e8a080",
+     "58e8a080",
+     "60e8a0ff",
+     "68e8a0ff",
+     "70e8a0ff",
+     "78e8a0ff",
+     "80e8a0ff",
+     "88e8a0ff",
+     "90e8a0ff",
+     "98e8a0ff",
+     "a0e8a080",
+     "a8e8a080",
+     "b0e8a080",
+     "b8e8a080",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000"
+    ],
+    [
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "58f0a080",
+     "60f0a080",
+     "68f0a080",
+     "70f0a080",
+     "78f0a080",
+     "80f0a080",
+     "88f0a080",
+     "90f0a080",
+     "98f0a080",
+     "a0f0a080",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000"
+    ],
+    [
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000",
+     "00000000"
+    ]
+   ],
+   "hex": "455350410105060020002000000c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000054585460546854705478548054885490549854a0000000000000000000000000000000000000000000000000000000000000000000000000000094409448945094589460946894709478948094889490949894a094a894b094b8000000000000000000000000000000000000000000000000000000000000d438d440d448d450d458d460d468d470d478d480d488d490d498d4a0d4a8d4b0d4b8d4c000000000000000000000000000000000000000000000000000001431143914411449145114591461146914711479148114891491149914a114a914b114b914c114c90000000000000000000000000000000000000000000054295431543954415449545154595461546954715479548154895491549954a154a954b154b954c154c954d1000000000000000000000000000000000000942194299431943994419449945194599461946994719479948194899491949994a194a994b194b994c194c994d194d90000000000000000000000000000d419d421d429d431d439d441d449d451d459d461d469d471d479d481d489d491d499d4a1d4a9d4b1d4b9d4c1d4c9d4d1d4d9d4e1000000000000000000001412141a1422142a1432143a1442144a1452145a1462146a1472147a1482148a1492149a14a214aa14b214ba14c214ca14d214da14e214ea00000000000000005412541a5422542a5432543a5442544a5452545a5462546a5472547a5482548a5492549a54a254aa54b254ba54c254ca54d254da54e254ea00000000000000009412941a9422942a9432943a9442944a9452945a9462946a9472947a9482948a9492949a94a294aa94b294ba94c294ca94d294da94e294ea000000000000d40ad412d41ad422d42ad432d43ad442d44ad452d45ad462d46ad472d47ad482d48ad492d49ad4a2d4aad4b2d4bad4c2d4cad4d2d4dad4e2d4ead4f200000000140b1413141b1423142b1433143b1443144b1453145b1463146b1473147b1483148b1493149b14a314ab14b314bb14c314cb14d314db14e314eb14f300000000540b5413541b5423542b5433543b5443544b5453545b5463546b5473547b5483548b5493549b54a354ab54b354bb54c354cb54d354db54e354eb54f300000000940b9413941b9423942b9433943b9443944b9453945b9463946b9473947b9483948b9493949b94a394ab94b394bb94c394cb94d394db94e394eb94f300000000d40bd413d41bd423d42bd433d43bd443d44bd453d45bd463d46bd473d47bd483d48bd493d49bd4a3d4abd4b3d4bbd4c3d4cbd4d3d4dbd4e3d4ebd4f300000000140c1414141c1424142c1434143c1444144c1454145c1464146c1474147c1484148c1494149c14a414ac14b414bc14c414cc14d414dc14e414ec14f400000000540c5414541c5424542c5434543c5444544c5454545c5464546c5474547c5484548c5494549c54a454ac54b454bc54c454cc54d454dc54e454ec54f400000000940c9414941c9424942c9434943c9444944c9454945c9464946c9474947c9484948c9494949c94a494ac94b494bc94c494cc94d494dc94e494ec94f400000000d40cd414d41cd424d42cd434d43cd444d44cd454d45cd464d46cd474d47cd484d48cd494d49cd4a4d4acd4b4d4bcd4c4d4ccd4d4d4dcd4e4d4ecd4f400000000140d1415141d1425142d1435143d1445144d1455145d1465146d1475147d1485148d1495149d14a514ad14b514bd14c514cd14d514dd14e514ed14f50000000000005415541d5425542d5435543d5445544d5455545d5465546d5475547d5485548d5495549d54a554ad54b554bd54c554cd54d554dd54e554ed00000000000000009415941d9425942d9435943d9445944d9455945d9465946d9475947d9485948d9495949d94a594ad94b594bd94c594cd94d594dd94e594ed0000000000000000d415d41dd425d42dd435d43dd445d44dd455d45dd465d46dd475d47dd485d48dd495d49dd4a5d4add4b5d4bdd4c5d4cdd4d5d4ddd4e5d4ed00000000000000000000141e1426142e1436143e1446144e1456145e1466146e1476147e1486148e1496149e14a614ae14b614be14c614ce14d614de14e600000000000000000000000000005426542e5436543e5446544e5456545e5466546e5476547e5486548e5496549e54a654ae54b654be54c654ce54d654de000000000000000000000000000000000000942e9436943e9446944e9456945e9466946e9476947e9486948e9496949e94a694ae94b694be94c694ce94d600000000000000000000000000000000000000000000d436d43ed446d44ed456d45ed466d46ed476d47ed486d48ed496d49ed4a6d4aed4b6d4bed4c6d4ce0000000000000000000000000000000000000000000000000000143f1447144f1457145f1467146f1477147f1487148f1497149f14a714af14b714bf14c70000000000000000000000000000000000000000000000000000000000005447544f5457545f5467546f5477547f5487548f5497549f54a754af54b754bf0000000000000000000000000000000000000000000000000000000000000000000000000000945f9467946f9477947f9487948f9497949f94a7000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000808080808080808080800000000000000000000000000000000000000080808080ffffffffffffffff80808080000000000000000000000000000000808080ffffffffffffffffffffffff808080000000000000000000000000008080ffffffffffffffffffffffffffffffff808000000000000000000000008080ffffffffffffffffffffffffffffffffffff80800000000000000000008080ffffffffffffffffffffffffffffffffffffffff8080000000000000008080ffffffffffffffffffffffffffffffffffffffffffff808000000000008080ffffffffffffffffffffffffffffffffffffffffffffffff8080000000008080ffffffffffffffffffffffffffffffffffffffffffffffff80800000000080ffffffffffffffffffffffffffffffffffffffffffffffffffff800000008080ffffffffffffffffffffffffffffffffffffffffffffffffffff8080000080ffffffffffffffffffffffffffffffffffffffffffffffffffffffff80000080ffffffffffffffffffffffffffffffffffffffffffffffffffffffff80000080ffffffffffffffffffffffffffffffffffffffffffffffffffffffff80000080ffffffffffffffffffffffffffffffffffffffffffffffffffffffff80000080ffffffffffffffffffffffffffffffffffffffffffffffffffffffff80000080ffffffffffffffffffffffffffffffffffffffffffffffffffffffff80000080ffffffffffffffffffffffffffffffffffffffffffffffffffffffff80000080ffffffffffffffffffffffffffffffffffffffffffffffffffffffff8000008080ffffffffffffffffffffffffffffffffffffffffffffffffffff808000000080ffffffffffffffffffffffffffffffffffffffffffffffffffff80000000008080ffffffffffffffffffffffffffffffffffffffffffffffff8080000000008080ffffffffffffffffffffffffffffffffffffffffffffffff808000000000008080ffffffffffffffffffffffffffffffffffffffffffff8080000000000000008080ffffffffffffffffffffffffffffffffffffffff80800000000000000000008080ffffffffffffffffffffffffffffffffffff808000000000000000000000008080ffffffffffffffffffffffffffffffff808000000000000000000000000000808080ffffffffffffffffffffffff80808000000000000000000000000000000080808080ffffffffffffffff80808080000000000000000000000000000000000000008080808080808080808000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+   "width": 32,
+   "height": 32
+  }
+ ],
+ "removal": {
+  "description": "Board only. A board whose seen list holds `seen_apps` entries starts empty. Steps: `seen` = a notification from the app (NOTIF_POST on the notification channel, so the app is added and may evict the least recently seen app without an explicit policy), `icon` = the app's icon is installed (a completed upload; the asset id is app_icon_id(app_id)), `policy` = APPS_SET_POLICY, `forget` = APPS_FORGET (no ids = all). After the steps ASSET_LIST (asset_type app_icon) lists exactly `icons_after`, and APPS_LIST exactly `apps_after` (order not significant).",
+  "seen_apps": 16,
+  "cases": [
+   {
+    "name": "forget_one",
+    "description": "APPS_FORGET names one app: its icon goes, the other app keeps its icon",
+    "steps": [
+     {
+      "op": "seen",
+      "app_id": "com.a"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.b"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.a"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.b"
+     },
+     {
+      "op": "forget",
+      "app_ids": [
+       "com.a"
+      ]
+     }
+    ],
+    "icons_after": [
+     "01df150cf0271cafe89a3aa1520d407d"
+    ],
+    "icon_app_ids_after": [
+     "com.b"
+    ],
+    "apps_after": [
+     "com.b"
+    ]
+   },
+   {
+    "name": "forget_all",
+    "description": "APPS_FORGET with no ids forgets every app and their icons",
+    "steps": [
+     {
+      "op": "seen",
+      "app_id": "com.a"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.b"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.a"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.b"
+     },
+     {
+      "op": "forget",
+      "app_ids": []
+     }
+    ],
+    "icons_after": [],
+    "icon_app_ids_after": [],
+    "apps_after": []
+   },
+   {
+    "name": "forget_without_icon",
+    "description": "An app that never got an icon is forgotten without any error",
+    "steps": [
+     {
+      "op": "seen",
+      "app_id": "com.a"
+     },
+     {
+      "op": "forget",
+      "app_ids": [
+       "com.a"
+      ]
+     }
+    ],
+    "icons_after": [],
+    "icon_app_ids_after": [],
+    "apps_after": []
+   },
+   {
+    "name": "forget_unknown_app_keeps_its_icon",
+    "description": "An icon uploaded for an app that is not in the list (a curated pack) is not touched by APPS_FORGET naming that app",
+    "steps": [
+     {
+      "op": "seen",
+      "app_id": "com.a"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.a"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.never.seen"
+     },
+     {
+      "op": "forget",
+      "app_ids": [
+       "com.never.seen"
+      ]
+     }
+    ],
+    "icons_after": [
+     "c1e78359108d386c088c01a291d36494",
+     "ce2067e05f5e53c312b6ca4b15690e60"
+    ],
+    "icon_app_ids_after": [
+     "com.a",
+     "com.never.seen"
+    ],
+    "apps_after": [
+     "com.a"
+    ]
+   },
+   {
+    "name": "forget_all_keeps_icons_of_unseen_apps",
+    "description": "Forgetting all deletes the icons of the listed apps only",
+    "steps": [
+     {
+      "op": "seen",
+      "app_id": "com.a"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.a"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.never.seen"
+     },
+     {
+      "op": "forget",
+      "app_ids": []
+     }
+    ],
+    "icons_after": [
+     "c1e78359108d386c088c01a291d36494"
+    ],
+    "icon_app_ids_after": [
+     "com.never.seen"
+    ],
+    "apps_after": []
+   },
+   {
+    "name": "forget_app_with_policy",
+    "description": "An app with an explicit policy is forgotten like any other, icon included",
+    "steps": [
+     {
+      "op": "seen",
+      "app_id": "com.a"
+     },
+     {
+      "op": "policy",
+      "app_id": "com.a",
+      "policy": 2
+     },
+     {
+      "op": "icon",
+      "app_id": "com.a"
+     },
+     {
+      "op": "forget",
+      "app_ids": [
+       "com.a"
+      ]
+     }
+    ],
+    "icons_after": [],
+    "icon_app_ids_after": [],
+    "apps_after": []
+   },
+   {
+    "name": "seen_again_has_no_icon",
+    "description": "After a forget the app is new again: no icon until it is uploaded again",
+    "steps": [
+     {
+      "op": "seen",
+      "app_id": "com.a"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.a"
+     },
+     {
+      "op": "forget",
+      "app_ids": [
+       "com.a"
+      ]
+     },
+     {
+      "op": "seen",
+      "app_id": "com.a"
+     }
+    ],
+    "icons_after": [],
+    "icon_app_ids_after": [],
+    "apps_after": [
+     "com.a"
+    ]
+   },
+   {
+    "name": "evicted_app_loses_its_icon",
+    "description": "The list is full: the least recently seen app is evicted for a new one and its icon is deleted",
+    "steps": [
+     {
+      "op": "seen",
+      "app_id": "com.app00"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.app01"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.app02"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.app03"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.app04"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.app05"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.app06"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.app07"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.app08"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.app09"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.app10"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.app11"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.app12"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.app13"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.app14"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.app15"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app00"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app01"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app02"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app03"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app04"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app05"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app06"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app07"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app08"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app09"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app10"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app11"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app12"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app13"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app14"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app15"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.new"
+     }
+    ],
+    "icons_after": [
+     "0c72b05125b48ac46e2e07a866b31b47",
+     "119d422c8532a5cb589946a1ca332fc1",
+     "5cb3349411872bff21953088e7395a41",
+     "72ba35da4de1c3d6a7bc17e33d1b78ef",
+     "7ab17efff5ff8d75a8a58b132b3a84ea",
+     "7e38bffa7eae70e456ad3d5567e83a9c",
+     "9a04c47525e0d8e5d4667efc530af626",
+     "a7e15ed3d4794f4617a777bfbecd0cdb",
+     "aa2008117ba1518d06e1ba0d30d31d04",
+     "ad15f413337dadfa3392d324a62f387e",
+     "af1c85e0106d954259295fa9e5ec2b79",
+     "c00daf9afcb943ea3a27afde0f8aeb9a",
+     "c396443767b4114a6cb62313ec2df9d2",
+     "fb72aa8b98db2e894935e1f5a0906316",
+     "fe5d3b962d5d46d52a92514525e0ff77"
+    ],
+    "icon_app_ids_after": [
+     "com.app01",
+     "com.app02",
+     "com.app03",
+     "com.app04",
+     "com.app05",
+     "com.app06",
+     "com.app07",
+     "com.app08",
+     "com.app09",
+     "com.app10",
+     "com.app11",
+     "com.app12",
+     "com.app13",
+     "com.app14",
+     "com.app15"
+    ],
+    "apps_after": [
+     "com.app01",
+     "com.app02",
+     "com.app03",
+     "com.app04",
+     "com.app05",
+     "com.app06",
+     "com.app07",
+     "com.app08",
+     "com.app09",
+     "com.app10",
+     "com.app11",
+     "com.app12",
+     "com.app13",
+     "com.app14",
+     "com.app15",
+     "com.new"
+    ]
+   },
+   {
+    "name": "recently_seen_app_is_not_evicted",
+    "description": "A notification renews an app's recency, so the next one in line is evicted",
+    "steps": [
+     {
+      "op": "seen",
+      "app_id": "com.app00"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.app01"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.app02"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.app03"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.app04"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.app05"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.app06"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.app07"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.app08"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.app09"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.app10"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.app11"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.app12"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.app13"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.app14"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.app15"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app00"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app01"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app02"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app03"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app04"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app05"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app06"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app07"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app08"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app09"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app10"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app11"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app12"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app13"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app14"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app15"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.app00"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.new"
+     }
+    ],
+    "icons_after": [
+     "0c72b05125b48ac46e2e07a866b31b47",
+     "119d422c8532a5cb589946a1ca332fc1",
+     "5cb3349411872bff21953088e7395a41",
+     "72ba35da4de1c3d6a7bc17e33d1b78ef",
+     "7ab17efff5ff8d75a8a58b132b3a84ea",
+     "7e38bffa7eae70e456ad3d5567e83a9c",
+     "a7e15ed3d4794f4617a777bfbecd0cdb",
+     "aa2008117ba1518d06e1ba0d30d31d04",
+     "ad15f413337dadfa3392d324a62f387e",
+     "af1c85e0106d954259295fa9e5ec2b79",
+     "c00daf9afcb943ea3a27afde0f8aeb9a",
+     "c01200f7ba99c4c47176c79a8633d2bf",
+     "c396443767b4114a6cb62313ec2df9d2",
+     "fb72aa8b98db2e894935e1f5a0906316",
+     "fe5d3b962d5d46d52a92514525e0ff77"
+    ],
+    "icon_app_ids_after": [
+     "com.app00",
+     "com.app02",
+     "com.app03",
+     "com.app04",
+     "com.app05",
+     "com.app06",
+     "com.app07",
+     "com.app08",
+     "com.app09",
+     "com.app10",
+     "com.app11",
+     "com.app12",
+     "com.app13",
+     "com.app14",
+     "com.app15"
+    ],
+    "apps_after": [
+     "com.app02",
+     "com.app03",
+     "com.app04",
+     "com.app05",
+     "com.app06",
+     "com.app07",
+     "com.app08",
+     "com.app09",
+     "com.app10",
+     "com.app11",
+     "com.app12",
+     "com.app13",
+     "com.app14",
+     "com.app15",
+     "com.app00",
+     "com.new"
+    ]
+   },
+   {
+    "name": "evicted_skips_explicit_policy",
+    "description": "An app with an explicit policy is never evicted: the next app in line loses its icon",
+    "steps": [
+     {
+      "op": "seen",
+      "app_id": "com.app00"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.app01"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.app02"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.app03"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.app04"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.app05"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.app06"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.app07"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.app08"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.app09"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.app10"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.app11"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.app12"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.app13"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.app14"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.app15"
+     },
+     {
+      "op": "policy",
+      "app_id": "com.app00",
+      "policy": 1
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app00"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app01"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app02"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app03"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app04"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app05"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app06"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app07"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app08"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app09"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app10"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app11"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app12"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app13"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app14"
+     },
+     {
+      "op": "icon",
+      "app_id": "com.app15"
+     },
+     {
+      "op": "seen",
+      "app_id": "com.new"
+     }
+    ],
+    "icons_after": [
+     "0c72b05125b48ac46e2e07a866b31b47",
+     "119d422c8532a5cb589946a1ca332fc1",
+     "5cb3349411872bff21953088e7395a41",
+     "72ba35da4de1c3d6a7bc17e33d1b78ef",
+     "7ab17efff5ff8d75a8a58b132b3a84ea",
+     "7e38bffa7eae70e456ad3d5567e83a9c",
+     "a7e15ed3d4794f4617a777bfbecd0cdb",
+     "aa2008117ba1518d06e1ba0d30d31d04",
+     "ad15f413337dadfa3392d324a62f387e",
+     "af1c85e0106d954259295fa9e5ec2b79",
+     "c00daf9afcb943ea3a27afde0f8aeb9a",
+     "c01200f7ba99c4c47176c79a8633d2bf",
+     "c396443767b4114a6cb62313ec2df9d2",
+     "fb72aa8b98db2e894935e1f5a0906316",
+     "fe5d3b962d5d46d52a92514525e0ff77"
+    ],
+    "icon_app_ids_after": [
+     "com.app00",
+     "com.app02",
+     "com.app03",
+     "com.app04",
+     "com.app05",
+     "com.app06",
+     "com.app07",
+     "com.app08",
+     "com.app09",
+     "com.app10",
+     "com.app11",
+     "com.app12",
+     "com.app13",
+     "com.app14",
+     "com.app15"
+    ],
+    "apps_after": [
+     "com.app00",
+     "com.app02",
+     "com.app03",
+     "com.app04",
+     "com.app05",
+     "com.app06",
+     "com.app07",
+     "com.app08",
+     "com.app09",
+     "com.app10",
+     "com.app11",
+     "com.app12",
+     "com.app13",
+     "com.app14",
+     "com.app15",
+     "com.new"
+    ]
+   }
+  ]
+ }
+}

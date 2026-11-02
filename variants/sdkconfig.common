@@ -1,0 +1,79 @@
+# Settings every variant, chip and board shares (variants/common.cmake loads this first). Every line says why.
+# Per-chip settings are in variants/targets/<chip>.sdkconfig, per-variant ones in variants/<variant>/sdkconfig.defaults,
+# per-board ones (flash, PSRAM, console, low-power clock) in boards/<board>/sdkconfig.board; later files override.
+
+# --- partitions: the board's own table, a custom table with two OTA app slots and a LittleFS assets
+# partition (PLAN section 5, 5b). The file name comes from variants/common.cmake.
+CONFIG_PARTITION_TABLE_CUSTOM=y
+
+# --- OTA rollback (PLAN D11): the running image must mark itself valid after its self-check
+CONFIG_BOOTLOADER_APP_ROLLBACK_ENABLE=y
+
+# --- size and logging (privacy: content never logged; no coredump partition in release, D14)
+CONFIG_COMPILER_OPTIMIZATION_SIZE=y
+CONFIG_COMPILER_OPTIMIZATION_ASSERTIONS_SILENT=y
+CONFIG_LOG_DEFAULT_LEVEL_INFO=y
+CONFIG_ESP_COREDUMP_ENABLE_TO_NONE=y
+
+# --- main task runs the core and LVGL (cfg_store handle_set alone uses ~1 KB of stack, LVGL more);
+# the log reports the remaining headroom, TODO(hw-verify) and shrink or split the tasks.
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=8192
+
+# --- CPU and power (PLAN D17, D50, D82): DFS and automatic light sleep, never deep sleep. components/app holds
+# both PM locks while the UI is busy (a refresh, a message, the radio, the screen on) and releases them when it is
+# idle, so the chip sleeps in between.
+CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_160=y
+CONFIG_PM_ENABLE=y
+CONFIG_FREERTOS_USE_TICKLESS_IDLE=y
+# Sleep and wake code in IRAM: the chip sleeps longer on every wake-up (PLAN D103; ESP-IDF's help: about 310 us
+# and 20 us at 160 MHz), which counts with a wake-up at every BLE connection event. Costs about 2.3 KB of IRAM.
+CONFIG_PM_SLP_IRAM_OPT=y
+CONFIG_PM_RTOS_IDLE_OPT=y
+
+# --- BLE: NimBLE, LE Secure Connections + bonding, 1 connection, 3 bonds (PLAN D1, D6)
+CONFIG_BT_ENABLED=y
+CONFIG_BT_NIMBLE_ENABLED=y
+# The GATT client (ANCS on iPhones, PLAN D68) is part of NimBLE's central role in ESP-IDF 5.5; the board never
+# scans or connects out. Observer stays off.
+CONFIG_BT_NIMBLE_ROLE_CENTRAL=y
+CONFIG_BT_NIMBLE_ROLE_OBSERVER=n
+CONFIG_BT_NIMBLE_MAX_CONNECTIONS=1
+CONFIG_BT_NIMBLE_MAX_BONDS=3
+CONFIG_BT_NIMBLE_SECURITY_ENABLE=y
+CONFIG_BT_NIMBLE_SM_SC=y
+# Secure Connections only (PLAN D6): no legacy pairing, 128-bit keys; the glue also requires MITM and a bond.
+CONFIG_BT_NIMBLE_SM_LEGACY=n
+CONFIG_BT_NIMBLE_SM_SC_ONLY=1
+# Security level 3: peers that do not ask for MITM protection are refused (the glue also deletes the bond a
+# "just works" peer leaves behind). 24 CCCD records: three bonds x the six characteristics a phone subscribes to
+# (the default of 8 made the second phone unpair the first).
+CONFIG_BT_NIMBLE_SM_LVL=3
+CONFIG_BT_NIMBLE_MAX_CCCDS=24
+# Callbacks run in the host task and the GATT client procedures sit on top of NimBLE's own stack use.
+CONFIG_BT_NIMBLE_HOST_TASK_STACK_SIZE=6144
+CONFIG_BT_NIMBLE_NVS_PERSIST=y
+CONFIG_BT_NIMBLE_ATT_PREFERRED_MTU=517
+# Light sleep with a BLE link needs modem sleep (the controller option is the chip's: variants/targets/);
+# the low-power clock is the board's (sdkconfig.board).
+
+# --- LVGL: configured by components/ui_common/lv_conf/lv_conf.h (same file as the host build)
+CONFIG_LV_CONF_SKIP=n
+# LVGL's examples and demos are not part of the firmware.
+CONFIG_LV_BUILD_EXAMPLES=n
+CONFIG_LV_BUILD_DEMOS=n
+
+# --- Wi-Fi for the weather, the time and the setup hotspot (components/net, PLAN D60-D64, D78). The radio is on only
+# while fetching or while the hotspot is open; it never touches GPIO19/20 or the USB PHY (D50). Wi-Fi and lwIP
+# buffers go to PSRAM (internal RAM is shared with BLE and LVGL); the common CA bundle covers Open-Meteo and
+# ipinfo.io at a fraction of the full bundle's size; longer request headers for phones' captive-portal checks.
+# Where the buffers live (PSRAM or internal RAM) depends on the chip: variants/targets/<chip>.sdkconfig.
+CONFIG_EPAGER_FEATURE_WIFI=y
+CONFIG_EPAGER_FEATURE_WEATHER=y
+# Wi-Fi keeps few internal RX buffers: a weather fetch is a few KB. With the IDF defaults (16 static RX buffers,
+# TLS in internal RAM) the Wi-Fi driver did not start on the LCD board (ESP_ERR_NO_MEM, 2026-10-14).
+CONFIG_ESP_WIFI_STATIC_RX_BUFFER_NUM=6
+CONFIG_ESP_WIFI_DYNAMIC_RX_BUFFER_NUM=16
+CONFIG_ESP_WIFI_RX_BA_WIN=6
+CONFIG_MBEDTLS_CERTIFICATE_BUNDLE=y
+CONFIG_MBEDTLS_CERTIFICATE_BUNDLE_DEFAULT_CMN=y
+CONFIG_HTTPD_MAX_REQ_HDR_LEN=1024

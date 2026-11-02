@@ -1,0 +1,8 @@
+# Name,   Type, SubType, Offset,   Size,     Flags
+# PLAN section 5b (D49), 16 MB flash: provisional until the first release (after that, slots change only by USB reflash).
+nvs,      data, nvs,     0x9000,   0x10000,
+otadata,  data, ota,     0x19000,  0x2000,
+phy_init, data, phy,     0x1B000,  0x1000,
+ota_0,    app,  ota_0,   0x20000,  0x400000,
+ota_1,    app,  ota_1,   0x420000, 0x400000,
+assets,   data, littlefs,0x820000, 0x7E0000,

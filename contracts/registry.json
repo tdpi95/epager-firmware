@@ -1,0 +1,415 @@
+{
+  "$schema": "./registry.schema.json",
+  "proto_major": 0,
+  "limits": {
+    "capabilities_max": 512,
+    "max_message_config": 1024,
+    "max_message_notification": 2048,
+    "max_message_transfer": 1100,
+    "max_message_status": 256,
+    "seg_seq_modulo": 64,
+    "seen_apps_max": 128,
+    "notif_history_max": 50,
+    "chunk_data_max": 1024,
+    "ancs_title_max": 128,
+    "ancs_subtitle_max": 128,
+    "ancs_message_max": 1024
+  },
+  "text": {
+    "description": "Board text handling (protocol.md section 8). Reference font coverage used by vectors and the default C predicate.",
+    "placeholder": "0x25A1",
+    "ellipsis": "0x2026",
+    "combining_range": ["0x0300", "0x036F"],
+    "max_combining_run": 8,
+    "compose_ranges": [["0x00C0", "0x024F"], ["0x1E00", "0x1EFF"]],
+    "removed_ranges": [["0x00AD", "0x00AD"], ["0x200B", "0x200F"], ["0x2060", "0x2060"], ["0x20E3", "0x20E3"],
+                       ["0xFE00", "0xFE0F"], ["0xFEFF", "0xFEFF"], ["0x1F3FB", "0x1F3FF"], ["0xE0020", "0xE007F"]],
+    "zwj": "0x200D",
+    "regional_indicator_range": ["0x1F1E6", "0x1F1FF"],
+    "flag_glyph": "0x1F3F3",
+    "emoji_ranges": [
+      ["0x203C", "0x203C"], ["0x2049", "0x2049"], ["0x2139", "0x2139"], ["0x2194", "0x2199"], ["0x21A9", "0x21AA"],
+      ["0x231A", "0x231B"], ["0x2328", "0x2328"], ["0x23CF", "0x23CF"], ["0x23E9", "0x23F3"], ["0x23F8", "0x23FA"],
+      ["0x24C2", "0x24C2"], ["0x25AA", "0x25AB"], ["0x25B6", "0x25B6"], ["0x25C0", "0x25C0"], ["0x25FB", "0x25FE"],
+      ["0x2600", "0x2604"], ["0x260E", "0x260E"], ["0x2611", "0x2611"], ["0x2614", "0x2615"], ["0x2618", "0x2618"],
+      ["0x261D", "0x261D"], ["0x2620", "0x2620"], ["0x2622", "0x2623"], ["0x2626", "0x2626"], ["0x262A", "0x262A"],
+      ["0x262E", "0x262F"], ["0x2638", "0x263A"], ["0x2640", "0x2640"], ["0x2642", "0x2642"], ["0x2648", "0x2653"],
+      ["0x265F", "0x2660"], ["0x2663", "0x2663"], ["0x2665", "0x2666"], ["0x2668", "0x2668"], ["0x267B", "0x267B"],
+      ["0x267E", "0x267F"], ["0x2692", "0x2697"], ["0x2699", "0x2699"], ["0x269B", "0x269C"], ["0x26A0", "0x26A1"],
+      ["0x26A7", "0x26A7"], ["0x26AA", "0x26AB"], ["0x26B0", "0x26B1"], ["0x26BD", "0x26BE"], ["0x26C4", "0x26C5"],
+      ["0x26C8", "0x26C8"], ["0x26CE", "0x26CF"], ["0x26D1", "0x26D1"], ["0x26D3", "0x26D4"], ["0x26E9", "0x26EA"],
+      ["0x26F0", "0x26F5"], ["0x26F7", "0x26FA"], ["0x26FD", "0x26FD"], ["0x2702", "0x2702"], ["0x2705", "0x2705"],
+      ["0x2708", "0x270D"], ["0x270F", "0x270F"], ["0x2712", "0x2712"], ["0x2714", "0x2714"], ["0x2716", "0x2716"],
+      ["0x271D", "0x271D"], ["0x2721", "0x2721"], ["0x2728", "0x2728"], ["0x2733", "0x2734"], ["0x2744", "0x2744"],
+      ["0x2747", "0x2747"], ["0x274C", "0x274C"], ["0x274E", "0x274E"], ["0x2753", "0x2755"], ["0x2757", "0x2757"],
+      ["0x2763", "0x2764"], ["0x2795", "0x2797"], ["0x27A1", "0x27A1"], ["0x27B0", "0x27B0"], ["0x27BF", "0x27BF"],
+      ["0x2934", "0x2935"], ["0x2B05", "0x2B07"], ["0x2B1B", "0x2B1C"], ["0x2B50", "0x2B50"], ["0x2B55", "0x2B55"],
+      ["0x3030", "0x3030"], ["0x303D", "0x303D"], ["0x3297", "0x3297"], ["0x3299", "0x3299"], ["0x1F004", "0x1F004"],
+      ["0x1F0CF", "0x1F0CF"], ["0x1F170", "0x1F171"], ["0x1F17E", "0x1F17F"], ["0x1F18E", "0x1F18E"],
+      ["0x1F191", "0x1F19A"], ["0x1F201", "0x1F202"], ["0x1F21A", "0x1F21A"], ["0x1F22F", "0x1F22F"],
+      ["0x1F232", "0x1F23A"], ["0x1F250", "0x1F251"], ["0x1F300", "0x1F321"], ["0x1F324", "0x1F393"],
+      ["0x1F396", "0x1F397"], ["0x1F399", "0x1F39B"], ["0x1F39E", "0x1F3F0"], ["0x1F3F3", "0x1F3F5"],
+      ["0x1F3F7", "0x1F3FA"], ["0x1F400", "0x1F4FD"], ["0x1F4FF", "0x1F53D"], ["0x1F549", "0x1F54E"],
+      ["0x1F550", "0x1F567"], ["0x1F56F", "0x1F570"], ["0x1F573", "0x1F57A"], ["0x1F587", "0x1F587"],
+      ["0x1F58A", "0x1F58D"], ["0x1F590", "0x1F590"], ["0x1F595", "0x1F596"], ["0x1F5A4", "0x1F5A5"],
+      ["0x1F5A8", "0x1F5A8"], ["0x1F5B1", "0x1F5B2"], ["0x1F5BC", "0x1F5BC"], ["0x1F5C2", "0x1F5C4"],
+      ["0x1F5D1", "0x1F5D3"], ["0x1F5DC", "0x1F5DE"], ["0x1F5E1", "0x1F5E1"], ["0x1F5E3", "0x1F5E3"],
+      ["0x1F5E8", "0x1F5E8"], ["0x1F5EF", "0x1F5EF"], ["0x1F5F3", "0x1F5F3"], ["0x1F5FA", "0x1F64F"],
+      ["0x1F680", "0x1F6C5"], ["0x1F6CB", "0x1F6D2"], ["0x1F6D5", "0x1F6D7"], ["0x1F6DC", "0x1F6E5"],
+      ["0x1F6E9", "0x1F6E9"], ["0x1F6EB", "0x1F6EC"], ["0x1F6F0", "0x1F6F0"], ["0x1F6F3", "0x1F6FC"],
+      ["0x1F7E0", "0x1F7EB"], ["0x1F7F0", "0x1F7F0"], ["0x1F90C", "0x1F93A"], ["0x1F93C", "0x1F945"],
+      ["0x1F947", "0x1F9FF"], ["0x1FA70", "0x1FA7C"], ["0x1FA80", "0x1FA88"], ["0x1FA90", "0x1FABD"],
+      ["0x1FABF", "0x1FAC5"], ["0x1FACE", "0x1FADB"], ["0x1FAE0", "0x1FAE8"], ["0x1FAF0", "0x1FAF8"]
+    ],
+    "renderable_ranges": [
+      ["0x000A", "0x000A"], ["0x0020", "0x007E"], ["0x00A0", "0x017F"], ["0x01A0", "0x01B0"],
+      ["0x1E00", "0x1EFF"], ["0x2010", "0x2027"], ["0x2030", "0x203A"], ["0x20AB", "0x20AC"],
+      ["0x2122", "0x2122"], ["0x25A1", "0x25A1"]
+    ]
+  },
+  "status_codes": [
+    {"id": 0, "name": "OK", "description": "Success."},
+    {"id": 1, "name": "UNKNOWN_MESSAGE", "description": "Message type not known to the receiver."},
+    {"id": 2, "name": "MALFORMED", "description": "Header or TLV structure invalid, wrong fixed width, bad bool, duplicate non-repeated field, tag 0, or below min_len."},
+    {"id": 3, "name": "UNSUPPORTED_VERSION", "description": "Header ver is not the receiver's protocol major."},
+    {"id": 4, "name": "MISSING_FIELD", "description": "A required field is absent."},
+    {"id": 5, "name": "TOO_LARGE", "description": "Field longer than max_len, message larger than the channel limit, or payload larger than allowed."},
+    {"id": 6, "name": "INVALID_UTF8", "description": "A str or id field is not valid UTF-8."},
+    {"id": 7, "name": "INVALID_ID", "description": "An id field contains characters outside [a-z0-9._-] or starts with '.'."},
+    {"id": 8, "name": "OUT_OF_RANGE", "description": "Integer outside min/max, or config enum value unknown to the board."},
+    {"id": 9, "name": "UNKNOWN_KEY", "description": "Config key not known to (or not applicable on) this board; skipped."},
+    {"id": 10, "name": "TYPE_MISMATCH", "description": "Config value length does not match the key's type."},
+    {"id": 11, "name": "READ_ONLY", "description": "Config key cannot be written."},
+    {"id": 12, "name": "REVISION_CONFLICT", "description": "expected_revision differs from the current config revision."},
+    {"id": 13, "name": "INSUFFICIENT_SECURITY", "description": "Link not encrypted/bonded (non-BLE transports; BLE enforces this at the ATT layer)."},
+    {"id": 14, "name": "BUSY", "description": "Another operation is in progress."},
+    {"id": 15, "name": "NO_SPACE", "description": "Not enough storage."},
+    {"id": 16, "name": "BAD_OFFSET", "description": "Chunk offset is not the next expected offset."},
+    {"id": 17, "name": "NO_SESSION", "description": "Unknown or expired transfer handle."},
+    {"id": 18, "name": "CRC_MISMATCH", "description": "CRC-32 of the received data does not match."},
+    {"id": 19, "name": "HASH_MISMATCH", "description": "SHA-256 of the received data does not match."},
+    {"id": 20, "name": "SIGNATURE_INVALID", "description": "Firmware signature missing or not trusted."},
+    {"id": 21, "name": "IMAGE_INVALID", "description": "Firmware image or asset content fails format validation."},
+    {"id": 22, "name": "LOW_BATTERY", "description": "Battery below the board's OTA threshold and no external power."},
+    {"id": 23, "name": "VERSION_REJECTED", "description": "Firmware version is not newer than the running one."},
+    {"id": 24, "name": "NOT_FOUND", "description": "Asset, app or notification not found."},
+    {"id": 25, "name": "UNSUPPORTED", "description": "Feature, kind or asset type not supported by this board/variant."},
+    {"id": 26, "name": "SEGMENT_ERROR", "description": "Segment sequence error during reassembly."},
+    {"id": 27, "name": "INTERNAL", "description": "Unexpected internal error."}
+  ],
+  "enums": {
+    "variant": {"fallback": 0, "values": [
+      {"value": 0, "name": "unknown"}, {"value": 1, "name": "paper"}, {"value": 2, "name": "lcd"}]},
+    "display_type": {"fallback": 0, "values": [
+      {"value": 0, "name": "unknown"}, {"value": 1, "name": "epaper_bw"}, {"value": 2, "name": "lcd_color"}]},
+    "refresh_class": {"fallback": 0, "values": [
+      {"value": 0, "name": "unknown"}, {"value": 1, "name": "epaper"}, {"value": 2, "name": "lcd"}]},
+    "category": {"fallback": 0, "values": [
+      {"value": 0, "name": "other"}, {"value": 1, "name": "incoming_call"}, {"value": 2, "name": "missed_call"},
+      {"value": 3, "name": "voicemail"}, {"value": 4, "name": "social"}, {"value": 5, "name": "schedule"},
+      {"value": 6, "name": "email"}, {"value": 7, "name": "news"}, {"value": 8, "name": "health_and_fitness"},
+      {"value": 9, "name": "business_and_finance"}, {"value": 10, "name": "location"}, {"value": 11, "name": "entertainment"}]},
+    "priority": {"fallback": 1, "values": [
+      {"value": 0, "name": "low"}, {"value": 1, "name": "normal"}, {"value": 2, "name": "high"}, {"value": 3, "name": "urgent"}]},
+    "notif_source": {"fallback": 0, "values": [
+      {"value": 0, "name": "unknown"}, {"value": 1, "name": "ancs"}, {"value": 2, "name": "android"}]},
+    "app_policy": {"fallback": 0, "values": [
+      {"value": 0, "name": "default"}, {"value": 1, "name": "allow"}, {"value": 2, "name": "block"}]},
+    "default_policy": {"fallback": 0, "values": [
+      {"value": 0, "name": "allow"}, {"value": 1, "name": "block"}]},
+    "language": {"fallback": 0, "values": [
+      {"value": 0, "name": "en"}, {"value": 1, "name": "vi"}]},
+    "temp_unit": {"fallback": 0, "values": [
+      {"value": 0, "name": "celsius"}, {"value": 1, "name": "fahrenheit"}]},
+    "transfer_kind": {"fallback": 0, "values": [
+      {"value": 0, "name": "unknown"}, {"value": 1, "name": "asset"}, {"value": 2, "name": "firmware"}]},
+    "asset_type": {"fallback": 0, "values": [
+      {"value": 0, "name": "unknown"}, {"value": 1, "name": "font"}, {"value": 2, "name": "background"},
+      {"value": 3, "name": "theme"},
+      {"value": 5, "name": "app_icon", "description": "per-app notification icon, since 0.4.0; id = app_icon_id(app_id), see asset-formats.md"}]},
+    "asset_format": {"fallback": 0, "values": [
+      {"value": 0, "name": "unknown"}, {"value": 1, "name": "mono1"}, {"value": 2, "name": "rgb565"},
+      {"value": 3, "name": "font_v1"}, {"value": 4, "name": "theme_v1"},
+      {"value": 6, "name": "rgb565a8", "description": "since 0.8.0: an RGB565 plane, then an 8-bit alpha plane (asset-formats.md)"}]},
+    "xfer_state": {"fallback": 0, "values": [
+      {"value": 0, "name": "idle"}, {"value": 1, "name": "receiving"}, {"value": 2, "name": "verifying"},
+      {"value": 3, "name": "complete"}, {"value": 4, "name": "failed"}]},
+    "external_power": {"fallback": 2, "values": [
+      {"value": 0, "name": "no"}, {"value": 1, "name": "yes"}, {"value": 2, "name": "unknown"}]},
+    "ota_state": {"fallback": 0, "values": [
+      {"value": 0, "name": "none"}, {"value": 1, "name": "pending_verify"}, {"value": 2, "name": "rolled_back"},
+      {"value": 3, "name": "updated"}]},
+    "wifi_state": {"fallback": 0, "values": [
+      {"value": 0, "name": "unconfigured"}, {"value": 1, "name": "idle"}, {"value": 2, "name": "connecting"},
+      {"value": 3, "name": "connected"}, {"value": 4, "name": "auth_failed"}, {"value": 5, "name": "not_found"},
+      {"value": 6, "name": "no_internet"}]},
+    "weather_state": {"fallback": 0, "values": [
+      {"value": 0, "name": "off"}, {"value": 1, "name": "waiting"}, {"value": 2, "name": "ok"},
+      {"value": 3, "name": "stale"}, {"value": 4, "name": "locate_failed"}, {"value": 5, "name": "fetch_failed"}]}
+  },
+  "bitmasks": {
+    "features": [
+      {"bit": 0, "name": "ancs"}, {"bit": 1, "name": "android_notifications"}, {"bit": 2, "name": "assets"},
+      {"bit": 3, "name": "ota"}, {"bit": 4, "name": "battery"}, {"bit": 5, "name": "rtc"},
+      {"bit": 6, "name": "animation"},
+      {"bit": 9, "name": "touch"}, {"bit": 10, "name": "buttons"},
+      {"bit": 11, "name": "climate"}, {"bit": 12, "name": "weather"}, {"bit": 13, "name": "wifi"}],
+    "transports": [{"bit": 0, "name": "ble"}, {"bit": 1, "name": "wifi"}],
+    "notif_flags": [
+      {"bit": 0, "name": "silent"}, {"bit": 1, "name": "important"}, {"bit": 2, "name": "pre_existing"},
+      {"bit": 3, "name": "positive_action"}, {"bit": 4, "name": "negative_action"}],
+    "category_mask": [
+      {"bit": 0, "name": "other"}, {"bit": 1, "name": "incoming_call"}, {"bit": 2, "name": "missed_call"},
+      {"bit": 3, "name": "voicemail"}, {"bit": 4, "name": "social"}, {"bit": 5, "name": "schedule"},
+      {"bit": 6, "name": "email"}, {"bit": 7, "name": "news"}, {"bit": 8, "name": "health_and_fitness"},
+      {"bit": 9, "name": "business_and_finance"}, {"bit": 10, "name": "location"}, {"bit": 11, "name": "entertainment"}]
+  },
+  "structs": {
+    "display_info": {"description": "Display properties.", "fields": [
+      {"tag": 1, "name": "type", "type": "u8", "enum": "display_type", "required": true},
+      {"tag": 2, "name": "width", "type": "u16", "required": true},
+      {"tag": 3, "name": "height", "type": "u16", "required": true},
+      {"tag": 4, "name": "color_depth", "type": "u8", "required": true, "description": "Bits per pixel."},
+      {"tag": 5, "name": "refresh_class", "type": "u8", "enum": "refresh_class", "required": true}]},
+    "asset_support": {"description": "One supported asset type/format.", "fields": [
+      {"tag": 1, "name": "asset_type", "type": "u8", "enum": "asset_type", "required": true},
+      {"tag": 2, "name": "format", "type": "u8", "enum": "asset_format", "required": true},
+      {"tag": 3, "name": "max_size", "type": "u32", "required": true},
+      {"tag": 4, "name": "width", "type": "u16", "description": "Exact image width in pixels this board requires for this type/format (since 0.4.0; always sent for app_icon). Absent: no fixed size."},
+      {"tag": 5, "name": "height", "type": "u16", "description": "Exact image height in pixels, as width."}]},
+    "config_entry": {"description": "One config key and its encoded value.", "fields": [
+      {"tag": 1, "name": "key", "type": "u16", "required": true},
+      {"tag": 2, "name": "value", "type": "bytes", "max_len": 64, "required": true}]},
+    "key_status": {"description": "Per-key result of CONFIG_SET.", "fields": [
+      {"tag": 1, "name": "key", "type": "u16", "required": true},
+      {"tag": 2, "name": "status", "type": "u8", "enum": "status", "required": true}]},
+    "app_entry": {"description": "A seen app.", "fields": [
+      {"tag": 1, "name": "app_id", "type": "str", "max_len": 64, "min_len": 1, "required": true},
+      {"tag": 2, "name": "name", "type": "text", "max_len": 64},
+      {"tag": 3, "name": "policy", "type": "u8", "enum": "app_policy", "required": true},
+      {"tag": 4, "name": "source", "type": "u8", "enum": "notif_source"},
+      {"tag": 5, "name": "last_seen", "type": "u32", "description": "UTC seconds, 0 = unknown."}]},
+    "policy_entry": {"description": "Policy assignment for one app.", "fields": [
+      {"tag": 1, "name": "app_id", "type": "str", "max_len": 64, "min_len": 1, "required": true},
+      {"tag": 2, "name": "policy", "type": "u8", "enum": "app_policy", "required": true}]},
+    "asset_entry": {"description": "An installed asset.", "fields": [
+      {"tag": 1, "name": "asset_type", "type": "u8", "enum": "asset_type", "required": true},
+      {"tag": 2, "name": "id", "type": "id", "required": true},
+      {"tag": 3, "name": "size", "type": "u32", "required": true},
+      {"tag": 4, "name": "version", "type": "str", "max_len": 32}]}
+  },
+  "messages": [
+    {"id": 1, "name": "PING", "kind": "request", "channel": "any", "description": "Echo request.", "fields": [
+      {"tag": 1, "name": "payload", "type": "bytes", "max_len": 512}]},
+    {"id": 129, "name": "PING_RSP", "kind": "response", "channel": "any", "fields": [
+      {"tag": 1, "name": "status", "type": "u8", "enum": "status", "required": true},
+      {"tag": 2, "name": "payload", "type": "bytes", "max_len": 512}]},
+
+    {"id": 16, "name": "CONFIG_GET", "kind": "request", "channel": "config", "description": "Read keys (none listed = all).", "fields": [
+      {"tag": 1, "name": "key", "type": "u16", "repeated": true}]},
+    {"id": 144, "name": "CONFIG_GET_RSP", "kind": "response", "channel": "config", "fields": [
+      {"tag": 1, "name": "status", "type": "u8", "enum": "status", "required": true},
+      {"tag": 2, "name": "revision", "type": "u32"},
+      {"tag": 3, "name": "entry", "type": "struct", "struct": "config_entry", "repeated": true}]},
+
+    {"id": 17, "name": "CONFIG_SET", "kind": "request", "channel": "config", "description": "Atomic batch write.", "fields": [
+      {"tag": 1, "name": "expected_revision", "type": "u32"},
+      {"tag": 2, "name": "entry", "type": "struct", "struct": "config_entry", "repeated": true, "required": true}]},
+    {"id": 145, "name": "CONFIG_SET_RSP", "kind": "response", "channel": "config", "fields": [
+      {"tag": 1, "name": "status", "type": "u8", "enum": "status", "required": true},
+      {"tag": 2, "name": "revision", "type": "u32"},
+      {"tag": 3, "name": "key_status", "type": "struct", "struct": "key_status", "repeated": true}]},
+
+    {"id": 18, "name": "CONFIG_RESET", "kind": "request", "channel": "config", "description": "Reset all keys to defaults.", "fields": []},
+    {"id": 146, "name": "CONFIG_RESET_RSP", "kind": "response", "channel": "config", "fields": [
+      {"tag": 1, "name": "status", "type": "u8", "enum": "status", "required": true},
+      {"tag": 2, "name": "revision", "type": "u32"}]},
+
+    {"id": 19, "name": "TIME_SYNC", "kind": "request", "channel": "config", "description": "Set the clock.", "fields": [
+      {"tag": 1, "name": "utc_s", "type": "u32", "required": true},
+      {"tag": 2, "name": "tz_offset_min", "type": "i16", "min": -720, "max": 840, "required": true}]},
+    {"id": 147, "name": "TIME_SYNC_RSP", "kind": "response", "channel": "config", "fields": [
+      {"tag": 1, "name": "status", "type": "u8", "enum": "status", "required": true}]},
+    {"id": 20, "name": "WIFI_SET", "kind": "request", "channel": "config", "description": "Since 0.10.0: add/update, or forget saved Wi-Fi networks (boards with the wifi feature).", "fields": [
+      {"tag": 1, "name": "ssid", "type": "str", "max_len": 32, "min_len": 1, "description": "Network name; required unless forgetting all saved networks."},
+      {"tag": 2, "name": "password", "type": "str", "max_len": 63, "description": "Empty or absent = open network, else 8-63 bytes (WPA2/WPA3 passphrase). Write-only."},
+      {"tag": 3, "name": "forget", "type": "bool", "description": "True without ssid: erase all saved networks. True with ssid: erase that network; password is ignored."}]},
+    {"id": 148, "name": "WIFI_SET_RSP", "kind": "response", "channel": "config", "fields": [
+      {"tag": 1, "name": "status", "type": "u8", "enum": "status", "required": true}]},
+
+    {"id": 24, "name": "APPS_LIST", "kind": "request", "channel": "config", "description": "Page through seen apps.", "fields": [
+      {"tag": 1, "name": "offset", "type": "u16"},
+      {"tag": 2, "name": "limit", "type": "u8", "min": 1, "max": 16}]},
+    {"id": 152, "name": "APPS_LIST_RSP", "kind": "response", "channel": "config", "fields": [
+      {"tag": 1, "name": "status", "type": "u8", "enum": "status", "required": true},
+      {"tag": 2, "name": "total", "type": "u16"},
+      {"tag": 3, "name": "app", "type": "struct", "struct": "app_entry", "repeated": true}]},
+
+    {"id": 25, "name": "APPS_SET_POLICY", "kind": "request", "channel": "config", "description": "Set per-app policies.", "fields": [
+      {"tag": 1, "name": "entry", "type": "struct", "struct": "policy_entry", "repeated": true, "required": true}]},
+    {"id": 153, "name": "APPS_SET_POLICY_RSP", "kind": "response", "channel": "config", "fields": [
+      {"tag": 1, "name": "status", "type": "u8", "enum": "status", "required": true},
+      {"tag": 2, "name": "revision", "type": "u32"}]},
+
+    {"id": 26, "name": "APPS_FORGET", "kind": "request", "channel": "config", "description": "Forget listed apps (none = all).", "fields": [
+      {"tag": 1, "name": "app_id", "type": "str", "max_len": 64, "min_len": 1, "repeated": true}]},
+    {"id": 154, "name": "APPS_FORGET_RSP", "kind": "response", "channel": "config", "fields": [
+      {"tag": 1, "name": "status", "type": "u8", "enum": "status", "required": true},
+      {"tag": 2, "name": "revision", "type": "u32"}]},
+
+    {"id": 32, "name": "NOTIF_POST", "kind": "request", "channel": "notification", "description": "Android: add or update a notification.", "fields": [
+      {"tag": 1, "name": "key", "type": "str", "max_len": 64, "min_len": 1, "required": true},
+      {"tag": 2, "name": "app_id", "type": "str", "max_len": 64, "min_len": 1, "required": true},
+      {"tag": 3, "name": "app_name", "type": "text", "max_len": 64},
+      {"tag": 4, "name": "title", "type": "text", "max_len": 256},
+      {"tag": 5, "name": "subtitle", "type": "text", "max_len": 256},
+      {"tag": 6, "name": "body", "type": "text", "max_len": 1024},
+      {"tag": 7, "name": "timestamp", "type": "u32", "description": "UTC seconds; 0 or absent = now."},
+      {"tag": 8, "name": "category", "type": "u8", "enum": "category"},
+      {"tag": 9, "name": "priority", "type": "u8", "enum": "priority"},
+      {"tag": 10, "name": "flags", "type": "u8", "bitmask": "notif_flags"}]},
+    {"id": 160, "name": "NOTIF_POST_RSP", "kind": "response", "channel": "notification", "fields": [
+      {"tag": 1, "name": "status", "type": "u8", "enum": "status", "required": true},
+      {"tag": 2, "name": "notif_id", "type": "u32"},
+      {"tag": 3, "name": "shown", "type": "bool"}]},
+
+    {"id": 33, "name": "NOTIF_REMOVE", "kind": "request", "channel": "notification", "description": "Android: remove by key.", "fields": [
+      {"tag": 1, "name": "key", "type": "str", "max_len": 64, "min_len": 1, "required": true}]},
+    {"id": 161, "name": "NOTIF_REMOVE_RSP", "kind": "response", "channel": "notification", "fields": [
+      {"tag": 1, "name": "status", "type": "u8", "enum": "status", "required": true}]},
+
+    {"id": 34, "name": "NOTIF_CLEAR", "kind": "request", "channel": "notification", "description": "Remove all Android notifications.", "fields": []},
+    {"id": 162, "name": "NOTIF_CLEAR_RSP", "kind": "response", "channel": "notification", "fields": [
+      {"tag": 1, "name": "status", "type": "u8", "enum": "status", "required": true}]},
+
+    {"id": 48, "name": "XFER_BEGIN", "kind": "request", "channel": "transfer", "description": "Start or resume a transfer.", "fields": [
+      {"tag": 1, "name": "kind", "type": "u8", "enum": "transfer_kind", "required": true},
+      {"tag": 2, "name": "id", "type": "id", "required": true},
+      {"tag": 3, "name": "asset_type", "type": "u8", "enum": "asset_type"},
+      {"tag": 4, "name": "size", "type": "u32", "min": 1, "required": true},
+      {"tag": 5, "name": "crc32", "type": "u32", "required": true},
+      {"tag": 6, "name": "sha256", "type": "bytes", "min_len": 32, "max_len": 32, "required": true},
+      {"tag": 7, "name": "version", "type": "str", "max_len": 32},
+      {"tag": 8, "name": "restart", "type": "bool"}]},
+    {"id": 176, "name": "XFER_BEGIN_RSP", "kind": "response", "channel": "transfer", "fields": [
+      {"tag": 1, "name": "status", "type": "u8", "enum": "status", "required": true},
+      {"tag": 2, "name": "handle", "type": "u8"},
+      {"tag": 3, "name": "offset", "type": "u32"},
+      {"tag": 4, "name": "prefix_crc32", "type": "u32"},
+      {"tag": 5, "name": "max_chunk", "type": "u16"},
+      {"tag": 6, "name": "ack_window", "type": "u32"}]},
+
+    {"id": 49, "name": "XFER_CHUNK", "kind": "request", "channel": "transfer", "description": "Data at offset; answered by XFER_ACK events.", "fields": [
+      {"tag": 1, "name": "handle", "type": "u8", "required": true},
+      {"tag": 2, "name": "offset", "type": "u32", "required": true},
+      {"tag": 3, "name": "data", "type": "bytes", "min_len": 1, "max_len": 1024, "required": true}]},
+
+    {"id": 50, "name": "XFER_STATUS", "kind": "request", "channel": "transfer", "description": "Query a transfer.", "fields": [
+      {"tag": 1, "name": "handle", "type": "u8", "required": true}]},
+    {"id": 178, "name": "XFER_STATUS_RSP", "kind": "response", "channel": "transfer", "fields": [
+      {"tag": 1, "name": "status", "type": "u8", "enum": "status", "required": true},
+      {"tag": 2, "name": "state", "type": "u8", "enum": "xfer_state"},
+      {"tag": 3, "name": "offset", "type": "u32"},
+      {"tag": 4, "name": "prefix_crc32", "type": "u32"}]},
+
+    {"id": 51, "name": "XFER_FINISH", "kind": "request", "channel": "transfer", "description": "Verify and install.", "fields": [
+      {"tag": 1, "name": "handle", "type": "u8", "required": true}]},
+    {"id": 179, "name": "XFER_FINISH_RSP", "kind": "response", "channel": "transfer", "fields": [
+      {"tag": 1, "name": "status", "type": "u8", "enum": "status", "required": true}]},
+
+    {"id": 52, "name": "XFER_ABORT", "kind": "request", "channel": "transfer", "description": "Discard a transfer.", "fields": [
+      {"tag": 1, "name": "handle", "type": "u8", "required": true}]},
+    {"id": 180, "name": "XFER_ABORT_RSP", "kind": "response", "channel": "transfer", "fields": [
+      {"tag": 1, "name": "status", "type": "u8", "enum": "status", "required": true}]},
+
+    {"id": 56, "name": "STORAGE_INFO", "kind": "request", "channel": "transfer", "description": "Asset storage usage.", "fields": []},
+    {"id": 184, "name": "STORAGE_INFO_RSP", "kind": "response", "channel": "transfer", "fields": [
+      {"tag": 1, "name": "status", "type": "u8", "enum": "status", "required": true},
+      {"tag": 2, "name": "total", "type": "u32"},
+      {"tag": 3, "name": "free", "type": "u32"},
+      {"tag": 4, "name": "asset_count", "type": "u16"}]},
+
+    {"id": 57, "name": "ASSET_LIST", "kind": "request", "channel": "transfer", "description": "Page through installed assets.", "fields": [
+      {"tag": 1, "name": "offset", "type": "u16"},
+      {"tag": 2, "name": "limit", "type": "u8", "min": 1, "max": 16}]},
+    {"id": 185, "name": "ASSET_LIST_RSP", "kind": "response", "channel": "transfer", "fields": [
+      {"tag": 1, "name": "status", "type": "u8", "enum": "status", "required": true},
+      {"tag": 2, "name": "total", "type": "u16"},
+      {"tag": 3, "name": "asset", "type": "struct", "struct": "asset_entry", "repeated": true}]},
+
+    {"id": 58, "name": "ASSET_DELETE", "kind": "request", "channel": "transfer", "description": "Delete an installed asset.", "fields": [
+      {"tag": 1, "name": "asset_type", "type": "u8", "enum": "asset_type", "required": true},
+      {"tag": 2, "name": "id", "type": "id", "required": true}]},
+    {"id": 186, "name": "ASSET_DELETE_RSP", "kind": "response", "channel": "transfer", "fields": [
+      {"tag": 1, "name": "status", "type": "u8", "enum": "status", "required": true}]},
+
+    {"id": 96, "name": "CONFIG_CHANGED", "kind": "event", "channel": "config", "description": "Config or app policies changed.", "fields": [
+      {"tag": 1, "name": "revision", "type": "u32", "required": true},
+      {"tag": 2, "name": "key", "type": "u16", "repeated": true}]},
+    {"id": 97, "name": "XFER_ACK", "kind": "event", "channel": "transfer", "description": "Flow control and chunk errors.", "fields": [
+      {"tag": 1, "name": "handle", "type": "u8", "required": true},
+      {"tag": 2, "name": "offset", "type": "u32", "required": true},
+      {"tag": 3, "name": "status", "type": "u8", "enum": "status", "required": true}]},
+    {"id": 98, "name": "APP_SEEN", "kind": "event", "channel": "config", "description": "An app ID was seen for the first time.", "fields": [
+      {"tag": 1, "name": "app", "type": "struct", "struct": "app_entry", "required": true}]},
+    {"id": 99, "name": "NOTIF_DISMISSED", "kind": "event", "channel": "notification", "description": "Since 0.8.0: the user dismissed a notification on the board.", "fields": [
+      {"tag": 1, "name": "notif_id", "type": "u32", "required": true, "description": "The board's id (NOTIF_POST_RSP.notif_id for Android)."},
+      {"tag": 2, "name": "source", "type": "u8", "enum": "notif_source", "required": true},
+      {"tag": 3, "name": "key", "type": "str", "max_len": 64, "min_len": 1, "description": "Android: the NOTIF_POST key; absent for ANCS."}]},
+    {"id": 112, "name": "DEVICE_STATUS", "kind": "event", "channel": "status", "description": "Device state; also the Status read value.", "fields": [
+      {"tag": 1, "name": "battery_pct", "type": "u8", "description": "0-100, 255 = unknown/no battery."},
+      {"tag": 2, "name": "external_power", "type": "u8", "enum": "external_power"},
+      {"tag": 3, "name": "uptime_s", "type": "u32"},
+      {"tag": 4, "name": "notif_count", "type": "u16", "description": "Notifications currently shown (passed the filters)."},
+      {"tag": 5, "name": "bonded_count", "type": "u8"},
+      {"tag": 6, "name": "pairing_mode", "type": "bool"},
+      {"tag": 7, "name": "ota_state", "type": "u8", "enum": "ota_state"},
+      {"tag": 8, "name": "wifi_state", "type": "u8", "enum": "wifi_state", "description": "Since 0.9.0, boards with the wifi feature."},
+      {"tag": 9, "name": "wifi_ssid", "type": "str", "max_len": 32, "description": "Since 0.9.0: the stored network's name; absent when none is stored."},
+      {"tag": 10, "name": "weather_state", "type": "u8", "enum": "weather_state", "description": "Since 0.9.0, boards with the weather feature."}]},
+    {"id": 126, "name": "CAPABILITIES", "kind": "read", "channel": "capabilities", "description": "Capabilities read value.", "fields": [
+      {"tag": 1, "name": "contract_version", "type": "str", "max_len": 16, "min_len": 5, "required": true},
+      {"tag": 2, "name": "device_name", "type": "str", "max_len": 20, "min_len": 1, "required": true},
+      {"tag": 3, "name": "board_id", "type": "str", "max_len": 48, "min_len": 1, "required": true},
+      {"tag": 4, "name": "variant", "type": "u8", "enum": "variant", "required": true},
+      {"tag": 5, "name": "firmware_version", "type": "str", "max_len": 32, "min_len": 1, "required": true},
+      {"tag": 6, "name": "display", "type": "struct", "struct": "display_info", "required": true},
+      {"tag": 7, "name": "features", "type": "u32", "bitmask": "features", "required": true},
+      {"tag": 8, "name": "transports", "type": "u8", "bitmask": "transports", "required": true},
+      {"tag": 9, "name": "storage_total", "type": "u32"},
+      {"tag": 10, "name": "storage_free", "type": "u32"},
+      {"tag": 11, "name": "asset_support", "type": "struct", "struct": "asset_support", "repeated": true},
+      {"tag": 12, "name": "max_mtu", "type": "u16", "description": "Board's preferred ATT MTU (hint)."},
+      {"tag": 13, "name": "config_revision", "type": "u32"},
+      {"tag": 14, "name": "pairing_mode", "type": "bool", "description": "The board accepts new bonds now (since 0.7.0); readable before bonding."}]},
+    {"id": 255, "name": "ERROR", "kind": "error", "channel": "any", "description": "Unattributable request error.", "fields": [
+      {"tag": 1, "name": "status", "type": "u8", "enum": "status", "required": true},
+      {"tag": 2, "name": "msg_type", "type": "u8", "description": "Type byte of the offending message, if any."}]}
+  ],
+  "config_keys": [
+    {"id": 1, "name": "ui.language", "type": "u8", "enum": "language", "default": 0, "since": "0.1.0", "description": "On-device UI language."},
+    {"id": 2, "name": "display.orientation", "type": "u8", "min": 0, "max": 3, "default": 0, "since": "0.1.0", "description": "Rotation in 90 degree steps."},
+    {"id": 3, "name": "display.full_refresh_every", "type": "u8", "min": 1, "max": 100, "default": 30, "variants": ["paper"], "since": "0.1.0", "description": "E-paper: full refresh after this many partial refreshes (a clock redraw counts as one, anything else as a quarter; a full refresh that falls due waits for a quiet moment). Default 10 before 0.9.2."},
+    {"id": 4, "name": "display.show_body", "type": "bool", "default": true, "since": "0.1.0", "description": "Show message body (false = title only, for privacy)."},
+    {"id": 5, "name": "ui.clock_24h", "type": "bool", "default": true, "since": "0.6.0", "description": "Clock format: true = 24-hour, false = 12-hour with AM/PM."},
+    {"id": 6, "name": "ui.temp_unit", "type": "u8", "enum": "temp_unit", "default": 0, "since": "0.6.0", "description": "Unit of the temperature shown on boards with the climate feature."},
+    {"id": 7, "name": "display.brightness", "type": "u8", "min": 0, "max": 100, "default": 70, "variants": ["lcd"], "since": "0.8.0", "description": "Backlight brightness in percent while active (0 = off)."},
+    {"id": 8, "name": "display.idle_dim_s", "type": "u16", "default": 30, "variants": ["lcd"], "since": "0.8.0", "description": "Dim the backlight after this many seconds without activity; 0 = never."},
+    {"id": 9, "name": "display.idle_off_s", "type": "u16", "default": 60, "variants": ["lcd"], "since": "0.8.0", "description": "Switch the backlight and the panel off after this many seconds without activity; 0 = never. Default 300 before 0.12.1."},
+    {"id": 10, "name": "display.mask_numbers", "type": "bool", "default": false, "since": "0.10.1", "description": "Privacy: show every number of 4 or more digits as **** on the cards (one-time codes, balances); digits may be joined by . or , (1.234 and 1,234,567 are one number)."},
+    {"id": 16, "name": "notif.default_app_policy", "type": "u8", "enum": "default_policy", "default": 0, "since": "0.1.0", "description": "Policy for apps without an explicit allow/block."},
+    {"id": 17, "name": "notif.category_mask", "type": "u16", "bitmask": "category_mask", "default": 4095, "since": "0.1.0", "description": "Bit per category; cleared bits are hidden."},
+    {"id": 18, "name": "notif.min_priority", "type": "u8", "enum": "priority", "default": 0, "since": "0.1.0", "description": "Hide notifications below this priority."},
+    {"id": 19, "name": "notif.show_silent", "type": "bool", "default": true, "since": "0.1.0", "description": "Show notifications flagged silent."},
+    {"id": 32, "name": "quiet.enabled", "type": "bool", "default": false, "since": "0.1.0", "description": "Quiet hours on/off."},
+    {"id": 33, "name": "quiet.start_min", "type": "u16", "min": 0, "max": 1439, "default": 1320, "since": "0.1.0", "description": "Quiet hours start, minutes after local midnight."},
+    {"id": 34, "name": "quiet.end_min", "type": "u16", "min": 0, "max": 1439, "default": 420, "since": "0.1.0", "description": "Quiet hours end, minutes after local midnight (may be before start: spans midnight)."},
+    {"id": 48, "name": "time.tz_offset_min", "type": "i16", "min": -720, "max": 840, "default": 0, "since": "0.1.0", "description": "Local time offset from UTC in minutes."},
+    {"id": 64, "name": "ui.theme_id", "type": "str", "max_len": 32, "default": "", "since": "0.1.0", "description": "Installed theme asset id; empty = built-in."},
+    {"id": 65, "name": "ui.font_id", "type": "str", "max_len": 32, "default": "", "since": "0.1.0", "description": "Installed font asset id; empty = built-in."},
+    {"id": 66, "name": "ui.background_id", "type": "str", "max_len": 32, "default": "", "since": "0.7.0", "description": "Installed background asset id; empty = none. Takes precedence over a theme's background."},
+    {"id": 80, "name": "weather.enabled", "type": "bool", "default": true, "variants": ["lcd", "paper"], "since": "0.9.0", "description": "Fetch the weather over Wi-Fi and show it on the idle screen."},
+    {"id": 81, "name": "weather.city", "type": "str", "max_len": 64, "default": "", "variants": ["lcd", "paper"], "since": "0.9.0", "description": "Place name the board looks up for the weather; empty = locate by the network's IP address."},
+    {"id": 82, "name": "weather.interval_min", "type": "u16", "min": 15, "max": 240, "default": 60, "variants": ["lcd", "paper"], "since": "0.9.0", "description": "Minutes between weather fetches (each one joins Wi-Fi and runs a TLS handshake). Default 30 before 0.12.1."}
+  ]
+}

@@ -1,0 +1,15 @@
+# LCD variant: what is true for every colour LCD board. Shared settings are in variants/sdkconfig.common,
+# the chip and its memory in boards/<board>/sdkconfig.board. Every line says why.
+
+# --- product or P1a bring-up image (variants/lcd/main/Kconfig.projbuild); the debug console
+# (components/app/Kconfig, D57) is off: enable it with an extra sdkconfig fragment for development.
+CONFIG_EPAGER_LCD_BRINGUP=n
+# Battery log (components/app/Kconfig) until hw-checklist 27 is done: the level on battery alone, read
+# back at the next boot with USB attached. Remove once the level table is settled.
+CONFIG_EPAGER_BATTERY_LOG=y
+
+# --- features (components/core/Kconfig): touch; animation is off
+CONFIG_EPAGER_FEATURE_TOUCH=y
+# --- UI (components/ui_common/Kconfig, PLAN D51): the colour LCD layout only
+CONFIG_EPAGER_UI_COLOUR=y
+CONFIG_EPAGER_UI_MONO=n

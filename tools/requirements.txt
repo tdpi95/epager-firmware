@@ -1,0 +1,8 @@
+# Python tools (create with: python3 -m venv tools/.venv && tools/.venv/bin/pip install -r tools/requirements.txt)
+jsonschema>=4.18,<5
+pytest>=8
+# M3: fake board BLE transport, test client over BLE, font generator
+bless==0.3.0
+bleak==3.0.2
+Pillow>=10
+fonttools>=4.40

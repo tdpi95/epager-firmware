@@ -1,0 +1,10 @@
+menu "LCD"
+
+    config EPAGER_LCD_BRINGUP
+        bool "P1a bring-up image instead of the product"
+        default n
+        help
+            Test patterns, touch canvas and targets, keys and battery on the console (docs/MILESTONES.md
+            P1a), for re-running the hardware checklist items 21-28.
+
+endmenu

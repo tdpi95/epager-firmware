@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epager.local/contracts/schemas/capabilities.schema.json",
+  "title": "ePager capabilities messages (logical form, protocol.md 2.3)",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/CAPABILITIES"
+    }
+  ],
+  "$defs": {
+    "CAPABILITIES": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "fields"
+      ],
+      "description": "0x7E read on capabilities. Capabilities read value.",
+      "properties": {
+        "ver": {
+          "const": 0
+        },
+        "type": {
+          "const": "CAPABILITIES"
+        },
+        "req_id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "fields": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "contract_version": {
+              "type": "string",
+              "minLength": 1,
+              "description": "str: max 16 UTF-8 bytes; min 5 bytes"
+            },
+            "device_name": {
+              "type": "string",
+              "minLength": 1,
+              "description": "str: max 20 UTF-8 bytes; min 1 bytes"
+            },
+            "board_id": {
+              "type": "string",
+              "minLength": 1,
+              "description": "str: max 48 UTF-8 bytes; min 1 bytes"
+            },
+            "variant": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255,
+              "description": "enum variant (unknown values -> 0): 0 unknown, 1 paper, 2 lcd"
+            },
+            "firmware_version": {
+              "type": "string",
+              "minLength": 1,
+              "description": "str: max 32 UTF-8 bytes; min 1 bytes"
+            },
+            "display": {
+              "$ref": "common.schema.json#/$defs/display_info"
+            },
+            "features": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295,
+              "description": "bitmask features: bit 0 ancs, bit 1 android_notifications, bit 2 assets, bit 3 ota, bit 4 battery, bit 5 rtc, bit 6 animation, bit 9 touch, bit 10 buttons, bit 11 climate, bit 12 weather, bit 13 wifi"
+            },
+            "transports": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255,
+              "description": "bitmask transports: bit 0 ble, bit 1 wifi"
+            },
+            "storage_total": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "storage_free": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "asset_support": {
+              "type": "array",
+              "items": {
+                "$ref": "common.schema.json#/$defs/asset_support"
+              }
+            },
+            "max_mtu": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65535,
+              "description": "Board's preferred ATT MTU (hint)."
+            },
+            "config_revision": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "pairing_mode": {
+              "type": "boolean",
+              "description": "The board accepts new bonds now (since 0.7.0); readable before bonding."
+            }
+          },
+          "required": [
+            "contract_version",
+            "device_name",
+            "board_id",
+            "variant",
+            "firmware_version",
+            "display",
+            "features",
+            "transports"
+          ]
+        }
+      }
+    }
+  }
+}

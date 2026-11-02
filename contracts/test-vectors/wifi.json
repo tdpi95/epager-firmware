@@ -1,0 +1,169 @@
+{
+ "contract_version": "0.13.0",
+ "description": "Board rules for WIFI_SET after message validation (protocol.md 5, Wi-Fi and weather). On a secure link, a board with (has_wifi) or without the wifi feature answers WIFI_SET_RSP with 'expect'. Cases run in order on one board: after an OK, saved_ssids is the LRU-to-MRU profile list (at most three); DEVICE_STATUS.wifi_ssid is 'stored_ssid' when that operation selects a network (null = absent). The password is never readable.",
+ "scope": "board",
+ "cases": [
+  {
+   "name": "set_wpa2",
+   "description": "Network with a passphrase",
+   "has_wifi": true,
+   "hex": "00140100010d005175c3a16e2043616665203547020a006d61746b686175313233",
+   "expect": "OK",
+   "saved_ssids": [
+    "Quán Cafe 5G"
+   ],
+   "stored_ssid": "Quán Cafe 5G"
+  },
+  {
+   "name": "set_open",
+   "description": "Open network",
+   "has_wifi": true,
+   "hex": "001401000108004361666546726565",
+   "expect": "OK",
+   "saved_ssids": [
+    "Quán Cafe 5G",
+    "CafeFree"
+   ],
+   "stored_ssid": "CafeFree"
+  },
+  {
+   "name": "set_open_empty_password",
+   "description": "Empty password = open network",
+   "has_wifi": true,
+   "hex": "001401000108004361666546726565020000",
+   "expect": "OK",
+   "saved_ssids": [
+    "Quán Cafe 5G",
+    "CafeFree"
+   ],
+   "stored_ssid": "CafeFree"
+  },
+  {
+   "name": "set_password_8",
+   "description": "Shortest passphrase",
+   "has_wifi": true,
+   "hex": "00140100010400486f6d650208003132333435363738",
+   "expect": "OK",
+   "saved_ssids": [
+    "Quán Cafe 5G",
+    "CafeFree",
+    "Home"
+   ],
+   "stored_ssid": "Home"
+  },
+  {
+   "name": "set_password_7",
+   "description": "Passphrase shorter than 8 bytes",
+   "has_wifi": true,
+   "hex": "00140100010400486f6d6502070031323334353637",
+   "expect": "OUT_OF_RANGE"
+  },
+  {
+   "name": "set_password_1",
+   "description": "",
+   "has_wifi": true,
+   "hex": "00140100010400486f6d6502010078",
+   "expect": "OUT_OF_RANGE"
+  },
+  {
+   "name": "set_no_ssid",
+   "description": "No ssid and no forget",
+   "has_wifi": true,
+   "hex": "001401000208003132333435363738",
+   "expect": "MISSING_FIELD"
+  },
+  {
+   "name": "set_forget_false_no_ssid",
+   "description": "forget false needs an ssid",
+   "has_wifi": true,
+   "hex": "0014010003010000",
+   "expect": "MISSING_FIELD"
+  },
+  {
+   "name": "set_second",
+   "description": "A second saved network",
+   "has_wifi": true,
+   "hex": "001401000106004f66666963650208003132333435363738",
+   "expect": "OK",
+   "saved_ssids": [
+    "CafeFree",
+    "Home",
+    "Office"
+   ],
+   "stored_ssid": "Office"
+  },
+  {
+   "name": "set_third",
+   "description": "A third saved network",
+   "has_wifi": true,
+   "hex": "0014010001050050686f6e650208003132333435363738",
+   "expect": "OK",
+   "saved_ssids": [
+    "Home",
+    "Office",
+    "Phone"
+   ],
+   "stored_ssid": "Phone"
+  },
+  {
+   "name": "set_fourth_evicts_lru",
+   "description": "A fourth network evicts the least recently used one",
+   "has_wifi": true,
+   "hex": "0014010001060054726176656c0208003132333435363738",
+   "expect": "OK",
+   "saved_ssids": [
+    "Office",
+    "Phone",
+    "Travel"
+   ],
+   "stored_ssid": "Travel"
+  },
+  {
+   "name": "update_moves_to_mru",
+   "description": "Updating a saved SSID keeps three profiles and refreshes its recency",
+   "has_wifi": true,
+   "hex": "001401000106004f66666963650208003837363534333231",
+   "expect": "OK",
+   "saved_ssids": [
+    "Phone",
+    "Travel",
+    "Office"
+   ],
+   "stored_ssid": "Office"
+  },
+  {
+   "name": "forget_one",
+   "description": "Forget one saved network; password is ignored",
+   "has_wifi": true,
+   "hex": "0014010001050050686f6e650201003103010001",
+   "expect": "OK",
+   "saved_ssids": [
+    "Travel",
+    "Office"
+   ]
+  },
+  {
+   "name": "forget",
+   "description": "Forget all saved networks",
+   "has_wifi": true,
+   "hex": "0014010003010001",
+   "expect": "OK",
+   "saved_ssids": [],
+   "stored_ssid": null
+  },
+  {
+   "name": "no_wifi_feature",
+   "description": "A board without the wifi feature",
+   "has_wifi": false,
+   "hex": "00140100010400486f6d650208003132333435363738",
+   "expect": "UNSUPPORTED"
+  },
+  {
+   "name": "no_wifi_feature_forget",
+   "description": "",
+   "has_wifi": false,
+   "hex": "0014010003010001",
+   "expect": "UNSUPPORTED"
+  }
+ ]
+}

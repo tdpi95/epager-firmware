@@ -1,0 +1,578 @@
+{
+ "contract_version": "0.13.0",
+ "description": "ANCS client helpers (Apple ANCS spec). notification_source: 8-byte packets. requests: exact Control Point bytes. data_source: feeding 'fragments' to a reassembler for 'request' yields 'expect' at fragment index 'at_fragment' (NEED_MORE = still incomplete). dates: yyyyMMdd'T'HHmmSS to seconds since 1970-01-01 local time.",
+ "scope": "board",
+ "notification_source": [
+  {
+   "name": "added_social",
+   "hex": "0000040204030201",
+   "expect": "OK",
+   "parsed": {
+    "event_id": 0,
+    "event_flags": 0,
+    "category_id": 4,
+    "category_count": 2,
+    "uid": 16909060
+   }
+  },
+  {
+   "name": "removed",
+   "hex": "0200060007000000",
+   "expect": "OK",
+   "parsed": {
+    "event_id": 2,
+    "event_flags": 0,
+    "category_id": 6,
+    "category_count": 0,
+    "uid": 7
+   }
+  },
+  {
+   "name": "all_flags_call",
+   "hex": "001f0101ffffffff",
+   "expect": "OK",
+   "parsed": {
+    "event_id": 0,
+    "event_flags": 31,
+    "category_id": 1,
+    "category_count": 1,
+    "uid": 4294967295
+   }
+  },
+  {
+   "name": "modified_preexisting",
+   "hex": "0104000901000000",
+   "expect": "OK",
+   "parsed": {
+    "event_id": 1,
+    "event_flags": 4,
+    "category_id": 0,
+    "category_count": 9,
+    "uid": 1
+   }
+  },
+  {
+   "name": "reserved_category",
+   "hex": "0000c80105000000",
+   "expect": "OK",
+   "parsed": {
+    "event_id": 0,
+    "event_flags": 0,
+    "category_id": 200,
+    "category_count": 1,
+    "uid": 5
+   }
+  },
+  {
+   "name": "longer_packet_ok",
+   "hex": "000004020900000000",
+   "expect": "OK",
+   "parsed": {
+    "event_id": 0,
+    "event_flags": 0,
+    "category_id": 4,
+    "category_count": 2,
+    "uid": 9
+   }
+  },
+  {
+   "name": "short_packet",
+   "hex": "00000402010000",
+   "expect": "MALFORMED"
+  }
+ ],
+ "requests": [
+  {
+   "name": "get_notification_attributes",
+   "command": 0,
+   "uid": 16909060,
+   "attributes": [
+    {
+     "id": 0
+    },
+    {
+     "id": 1,
+     "max_len": 128
+    },
+    {
+     "id": 2,
+     "max_len": 128
+    },
+    {
+     "id": 3,
+     "max_len": 1024
+    },
+    {
+     "id": 5
+    }
+   ],
+   "hex": "00040302010001800002800003000405"
+  },
+  {
+   "name": "get_app_attributes",
+   "command": 1,
+   "app_id": "com.apple.MobileSMS",
+   "attributes": [
+    {
+     "id": 0
+    }
+   ],
+   "hex": "01636f6d2e6170706c652e4d6f62696c65534d530000"
+  },
+  {
+   "name": "perform_negative_action",
+   "command": 2,
+   "uid": 7,
+   "action_id": 1,
+   "hex": "020700000001"
+  }
+ ],
+ "data_source": [
+  {
+   "name": "single_fragment",
+   "request": {
+    "command": 0,
+    "attribute_ids": [
+     0,
+     1,
+     2,
+     3,
+     5
+    ],
+    "capacity": 2048,
+    "uid": 16909060
+   },
+   "fragments": [
+    "0004030201000d00636f6d2e7a696e672e7a616c6f0110004e677579e1bb856e2056c4836e20416e02000003120054e1bb9169206e617920c4836e2067c3ac3f050f00323032363130313154303933303135"
+   ],
+   "expect": "OK",
+   "at_fragment": 0,
+   "attributes": {
+    "0": "636f6d2e7a696e672e7a616c6f",
+    "1": "4e677579e1bb856e2056c4836e20416e",
+    "2": "",
+    "3": "54e1bb9169206e617920c4836e2067c3ac3f",
+    "5": "323032363130313154303933303135"
+   }
+  },
+  {
+   "name": "split_in_header",
+   "request": {
+    "command": 0,
+    "attribute_ids": [
+     0,
+     1,
+     2,
+     3,
+     5
+    ],
+    "capacity": 2048,
+    "uid": 16909060
+   },
+   "fragments": [
+    "000403",
+    "0201000d00636f6d2e7a696e672e7a616c6f0110004e677579e1bb856e2056c4836e20416e02000003120054e1bb9169206e617920c4836e2067c3ac3f050f00323032363130313154303933303135"
+   ],
+   "expect": "OK",
+   "at_fragment": 1,
+   "attributes": {
+    "0": "636f6d2e7a696e672e7a616c6f",
+    "1": "4e677579e1bb856e2056c4836e20416e",
+    "2": "",
+    "3": "54e1bb9169206e617920c4836e2067c3ac3f",
+    "5": "323032363130313154303933303135"
+   }
+  },
+  {
+   "name": "split_in_length",
+   "request": {
+    "command": 0,
+    "attribute_ids": [
+     0,
+     1,
+     2,
+     3,
+     5
+    ],
+    "capacity": 2048,
+    "uid": 16909060
+   },
+   "fragments": [
+    "0004030201000d",
+    "00636f6d2e7a696e672e7a616c6f0110004e677579e1bb856e2056c4836e20416e02000003120054e1bb9169206e617920c4836e2067c3ac3f050f00323032363130313154303933303135"
+   ],
+   "expect": "OK",
+   "at_fragment": 1,
+   "attributes": {
+    "0": "636f6d2e7a696e672e7a616c6f",
+    "1": "4e677579e1bb856e2056c4836e20416e",
+    "2": "",
+    "3": "54e1bb9169206e617920c4836e2067c3ac3f",
+    "5": "323032363130313154303933303135"
+   }
+  },
+  {
+   "name": "byte_by_byte",
+   "request": {
+    "command": 0,
+    "attribute_ids": [
+     0,
+     1,
+     2,
+     3,
+     5
+    ],
+    "capacity": 2048,
+    "uid": 16909060
+   },
+   "fragments": [
+    "00",
+    "04",
+    "03",
+    "02",
+    "01",
+    "00",
+    "0d",
+    "00",
+    "63",
+    "6f",
+    "6d",
+    "2e",
+    "7a",
+    "69",
+    "6e",
+    "67",
+    "2e",
+    "7a",
+    "61",
+    "6c",
+    "6f",
+    "01",
+    "10",
+    "00",
+    "4e",
+    "67",
+    "75",
+    "79",
+    "e1",
+    "bb",
+    "85",
+    "6e",
+    "20",
+    "56",
+    "c4",
+    "83",
+    "6e",
+    "20",
+    "41",
+    "6e",
+    "02",
+    "00",
+    "00",
+    "03",
+    "12",
+    "00",
+    "54",
+    "e1",
+    "bb",
+    "91",
+    "69",
+    "20",
+    "6e",
+    "61",
+    "79",
+    "20",
+    "c4",
+    "83",
+    "6e",
+    "20",
+    "67",
+    "c3",
+    "ac",
+    "3f",
+    "05",
+    "0f",
+    "00",
+    "32",
+    "30",
+    "32",
+    "36",
+    "31",
+    "30",
+    "31",
+    "31",
+    "54",
+    "30",
+    "39",
+    "33",
+    "30",
+    "31",
+    "35"
+   ],
+   "expect": "OK",
+   "at_fragment": 81,
+   "attributes": {
+    "0": "636f6d2e7a696e672e7a616c6f",
+    "1": "4e677579e1bb856e2056c4836e20416e",
+    "2": "",
+    "3": "54e1bb9169206e617920c4836e2067c3ac3f",
+    "5": "323032363130313154303933303135"
+   }
+  },
+  {
+   "name": "mtu_20_fragments",
+   "request": {
+    "command": 0,
+    "attribute_ids": [
+     0,
+     1,
+     2,
+     3,
+     5
+    ],
+    "capacity": 2048,
+    "uid": 16909060
+   },
+   "fragments": [
+    "0004030201000d00636f6d2e7a696e672e7a616c",
+    "6f0110004e677579e1bb856e2056c4836e20416e",
+    "02000003120054e1bb9169206e617920c4836e20",
+    "67c3ac3f050f0032303236313031315430393330",
+    "3135"
+   ],
+   "expect": "OK",
+   "at_fragment": 4,
+   "attributes": {
+    "0": "636f6d2e7a696e672e7a616c6f",
+    "1": "4e677579e1bb856e2056c4836e20416e",
+    "2": "",
+    "3": "54e1bb9169206e617920c4836e2067c3ac3f",
+    "5": "323032363130313154303933303135"
+   }
+  },
+  {
+   "name": "trailing_after_complete_ignored",
+   "request": {
+    "command": 0,
+    "attribute_ids": [
+     0,
+     1,
+     2,
+     3,
+     5
+    ],
+    "capacity": 2048,
+    "uid": 16909060
+   },
+   "fragments": [
+    "0004030201000d00636f6d2e7a696e672e7a616c6f0110004e677579e1bb856e2056c4836e20416e02000003120054e1bb9169206e617920c4836e2067c3ac3f050f003230323631303131543039333031350909",
+    "0102"
+   ],
+   "expect": "OK",
+   "at_fragment": 0,
+   "attributes": {
+    "0": "636f6d2e7a696e672e7a616c6f",
+    "1": "4e677579e1bb856e2056c4836e20416e",
+    "2": "",
+    "3": "54e1bb9169206e617920c4836e2067c3ac3f",
+    "5": "323032363130313154303933303135"
+   }
+  },
+  {
+   "name": "incomplete",
+   "request": {
+    "command": 0,
+    "attribute_ids": [
+     0,
+     1,
+     2,
+     3,
+     5
+    ],
+    "capacity": 2048,
+    "uid": 16909060
+   },
+   "fragments": [
+    "0004030201000d00636f6d2e7a696e672e7a616c6f0110004e677579e1bb856e2056c4836e20416e02000003120054e1bb9169206e617920c4836e2067c3ac3f050f003230323631303131543039333031"
+   ],
+   "expect": "NEED_MORE"
+  },
+  {
+   "name": "wrong_uid",
+   "request": {
+    "command": 0,
+    "attribute_ids": [
+     0,
+     1,
+     2,
+     3,
+     5
+    ],
+    "capacity": 2048,
+    "uid": 16909060
+   },
+   "fragments": [
+    "0063000000000d00636f6d2e7a696e672e7a616c6f0110004e677579e1bb856e2056c4836e20416e02000003120054e1bb9169206e617920c4836e2067c3ac3f050f00323032363130313154303933303135"
+   ],
+   "expect": "MALFORMED",
+   "at_fragment": 0
+  },
+  {
+   "name": "wrong_command",
+   "request": {
+    "command": 0,
+    "attribute_ids": [
+     0,
+     1,
+     2,
+     3,
+     5
+    ],
+    "capacity": 2048,
+    "uid": 16909060
+   },
+   "fragments": [
+    "0104030201000d00636f6d2e7a696e672e7a616c6f0110004e677579e1bb856e2056c4836e20416e02000003120054e1bb9169206e617920c4836e2067c3ac3f050f00323032363130313154303933303135"
+   ],
+   "expect": "MALFORMED",
+   "at_fragment": 0
+  },
+  {
+   "name": "attribute_order_mismatch",
+   "request": {
+    "command": 0,
+    "attribute_ids": [
+     0,
+     1,
+     2,
+     3,
+     5
+    ],
+    "capacity": 2048,
+    "uid": 16909060
+   },
+   "fragments": [
+    "0004030201010d00636f6d2e7a696e672e7a616c6f0110004e677579e1bb856e2056c4836e20416e02000003120054e1bb9169206e617920c4836e2067c3ac3f050f00323032363130313154303933303135"
+   ],
+   "expect": "MALFORMED",
+   "at_fragment": 0
+  },
+  {
+   "name": "capacity_exceeded",
+   "request": {
+    "command": 0,
+    "attribute_ids": [
+     0,
+     1,
+     2,
+     3,
+     5
+    ],
+    "capacity": 40,
+    "uid": 16909060
+   },
+   "fragments": [
+    "0004030201000d00636f6d2e7a696e672e7a616c6f0110004e677579e1bb856e2056c4836e20416e",
+    "02000003120054e1bb9169206e617920c4836e2067c3ac3f050f00323032363130313154303933303135"
+   ],
+   "expect": "TOO_LARGE",
+   "at_fragment": 1
+  },
+  {
+   "name": "app_attributes",
+   "request": {
+    "command": 1,
+    "attribute_ids": [
+     0
+    ],
+    "capacity": 2048,
+    "app_id": "com.apple.MobileSMS"
+   },
+   "fragments": [
+    "01636f6d2e6170706c65",
+    "2e4d6f62696c65534d5300000a0054696e206e68e1baaf6e"
+   ],
+   "expect": "OK",
+   "at_fragment": 1,
+   "attributes": {
+    "0": "54696e206e68e1baaf6e"
+   }
+  },
+  {
+   "name": "app_attributes_wrong_app",
+   "request": {
+    "command": 1,
+    "attribute_ids": [
+     0
+    ],
+    "capacity": 2048,
+    "app_id": "com.other"
+   },
+   "fragments": [
+    "01636f6d2e6170706c652e4d6f62696c65534d5300000a0054696e206e68e1baaf6e"
+   ],
+   "expect": "MALFORMED",
+   "at_fragment": 0
+  }
+ ],
+ "dates": [
+  {
+   "name": "valid",
+   "input": "20261011T093015",
+   "expect": "OK",
+   "local_epoch_s": 1791711015
+  },
+  {
+   "name": "leap_day",
+   "input": "20280229T235959",
+   "expect": "OK",
+   "local_epoch_s": 1835481599
+  },
+  {
+   "name": "epoch_2000",
+   "input": "20000101T000000",
+   "expect": "OK",
+   "local_epoch_s": 946684800
+  },
+  {
+   "name": "not_leap",
+   "input": "20270229T120000",
+   "expect": "OUT_OF_RANGE"
+  },
+  {
+   "name": "month_13",
+   "input": "20261311T093015",
+   "expect": "OUT_OF_RANGE"
+  },
+  {
+   "name": "hour_24",
+   "input": "20261011T243015",
+   "expect": "OUT_OF_RANGE"
+  },
+  {
+   "name": "year_1999",
+   "input": "19991231T235959",
+   "expect": "OUT_OF_RANGE"
+  },
+  {
+   "name": "missing_t",
+   "input": "20261011 093015",
+   "expect": "MALFORMED"
+  },
+  {
+   "name": "non_digit",
+   "input": "2026101aT093015",
+   "expect": "MALFORMED"
+  },
+  {
+   "name": "too_short",
+   "input": "20261011T0930",
+   "expect": "MALFORMED"
+  },
+  {
+   "name": "too_long",
+   "input": "20261011T0930150",
+   "expect": "MALFORMED"
+  }
+ ]
+}

@@ -1,0 +1,14 @@
+# Paper variant: what is true for every e-paper board (200x200 B/W, no touch). Shared settings are in
+# variants/sdkconfig.common, the chip and its memory in boards/<board>/sdkconfig.board. Every line says why.
+
+# The 1-bit layout is the components/ui_common default (CONFIG_EPAGER_UI_MONO); no touch, animation off.
+
+# --- hardware checks (PLAN D86): the event ring in RTC memory (reset reasons, light sleep, BLE links) is read at the
+# next boot over USB; no content. Switch it off when the checks are done.
+CONFIG_EPAGER_EVENT_LOG=y
+
+# The battery log on the assets partition (hw-checklist 27, 71): the level, the phone link, Wi-Fi joins and wake-ups
+# every 5 minutes, read back with `batlog` or at the next boot over USB. Overnight runs on battery need it; the event
+# ring above holds only the last 25 minutes. A write costs a few milliseconds awake: 5 minutes keeps it negligible.
+CONFIG_EPAGER_BATTERY_LOG=y
+CONFIG_EPAGER_BATTERY_LOG_PERIOD_S=300

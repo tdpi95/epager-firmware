@@ -1,0 +1,331 @@
+{
+ "contract_version": "0.13.0",
+ "description": "Board text normalisation (protocol.md 8) against the reference renderable set in registry text.renderable_ranges and text.emoji_ranges. Board scope: the app need not implement this.",
+ "scope": "board",
+ "placeholder": "U+25A1",
+ "cases": [
+  {
+   "name": "ascii",
+   "input_hex": "48656c6c6f2c20776f726c6421",
+   "input": "Hello, world!",
+   "output": "Hello, world!",
+   "output_hex": "48656c6c6f2c20776f726c6421"
+  },
+  {
+   "name": "empty",
+   "input_hex": "",
+   "input": "",
+   "output": "",
+   "output_hex": ""
+  },
+  {
+   "name": "vietnamese_nfc",
+   "input_hex": "5469e1babf6e67205669e1bb87743a20c4836e2c20c6a1692c20e1bbab2c20e1baa12c20e1bbb92c20c49020c4912c20e1bb9e20c491c3a279",
+   "input": "Tiếng Việt: ăn, ơi, ừ, ạ, ỹ, Đ đ, Ở đây",
+   "output": "Tiếng Việt: ăn, ơi, ừ, ạ, ỹ, Đ đ, Ở đây",
+   "output_hex": "5469e1babf6e67205669e1bb87743a20c4836e2c20c6a1692c20e1bbab2c20e1baa12c20e1bbb92c20c49020c4912c20e1bb9e20c491c3a279"
+  },
+  {
+   "name": "vietnamese_nfd",
+   "input_hex": "546965cc82cc816e6720566965cca3cc82743a2061cc866e2c206fcc9b692c2075cc9bcc802c2061cca32c2079cc832c20c49020c4912c204fcc9bcc8920c49161cc8279",
+   "input": "Tiếng Việt: ăn, ơi, ừ, ạ, ỹ, Đ đ, Ở đây",
+   "output": "Tiếng Việt: ăn, ơi, ừ, ạ, ỹ, Đ đ, Ở đây",
+   "output_hex": "5469e1babf6e67205669e1bb87743a20c4836e2c20c6a1692c20e1bbab2c20e1baa12c20e1bbb92c20c49020c4912c20e1bb9e20c491c3a279"
+  },
+  {
+   "name": "marks_out_of_order",
+   "input_hex": "65cc82cca32065cca3cc82206fcc9bcc812075cc89cc9b",
+   "input": "ệ ệ ớ ử",
+   "output": "ệ ệ ớ ử",
+   "output_hex": "e1bb8720e1bb8720e1bb9b20e1bbad"
+  },
+  {
+   "name": "combining_on_uncomposable_base",
+   "input_hex": "71cc832078cc81",
+   "input": "q̃ x́",
+   "output": "q x",
+   "output_hex": "712078"
+  },
+  {
+   "name": "intermediate_composition",
+   "input_hex": "45cc86cca72065cca7cc86",
+   "input": "Ḝ ḝ",
+   "output": "Ḝ ḝ",
+   "output_hex": "e1b89c20e1b89d"
+  },
+  {
+   "name": "mark_at_start",
+   "input_hex": "cc81616263",
+   "input": "́abc",
+   "output": "□abc",
+   "output_hex": "e296a1616263"
+  },
+  {
+   "name": "zalgo_capped",
+   "input_hex": "65cc81cc82cc83cc84cc86cc87cc88cc89cc8acc8bcc81cc82cc83cc84cc86cc87cc88cc89cc8acc8bcc81cc82cc83cc84cc86cc87cc88cc89cc8acc8b21",
+   "input": "é̂̃̄̆̇̈̉̊̋́̂̃̄̆̇̈̉̊̋́̂̃̄̆̇̈̉̊̋!",
+   "output": "é!",
+   "output_hex": "c3a921"
+  },
+  {
+   "name": "emoji_single",
+   "input_hex": "486920f09f9880207468657265",
+   "input": "Hi 😀 there",
+   "output": "Hi 😀 there",
+   "output_hex": "486920f09f9880207468657265"
+  },
+  {
+   "name": "emoji_run",
+   "input_hex": "f09f9880f09f9880f09f9880206f6b",
+   "input": "😀😀😀 ok",
+   "output": "😀😀😀 ok",
+   "output_hex": "f09f9880f09f9880f09f9880206f6b"
+  },
+  {
+   "name": "emoji_zwj_family",
+   "input_hex": "6120f09f91a8e2808df09f91a9e2808df09f91a72062",
+   "input": "a 👨‍👩‍👧 b",
+   "output": "a 👨 b",
+   "output_hex": "6120f09f91a82062"
+  },
+  {
+   "name": "emoji_skin_tone",
+   "input_hex": "f09f918df09f8fbd",
+   "input": "👍🏽",
+   "output": "👍",
+   "output_hex": "f09f918d"
+  },
+  {
+   "name": "flag",
+   "input_hex": "f09f87bbf09f87b320564e",
+   "input": "🇻🇳 VN",
+   "output": "🏳 VN",
+   "output_hex": "f09f8fb320564e"
+  },
+  {
+   "name": "keycap",
+   "input_hex": "31efb88fe283a3",
+   "input": "1️⃣",
+   "output": "1",
+   "output_hex": "31"
+  },
+  {
+   "name": "emoji_common",
+   "input_hex": "486920f09f988020f09f8e8920e29da4efb88f20e29c8520e2ad9020f09f94a520f09f918d",
+   "input": "Hi 😀 🎉 ❤️ ✅ ⭐ 🔥 👍",
+   "output": "Hi 😀 🎉 ❤ ✅ ⭐ 🔥 👍",
+   "output_hex": "486920f09f988020f09f8e8920e29da420e29c8520e2ad9020f09f94a520f09f918d"
+  },
+  {
+   "name": "emoji_vietnamese_text",
+   "input_hex": "4368c3ba63206de1bbab6e672073696e68206e68e1baad7420f09f8e82f09f8e81",
+   "input": "Chúc mừng sinh nhật 🎂🎁",
+   "output": "Chúc mừng sinh nhật 🎂🎁",
+   "output_hex": "4368c3ba63206de1bbab6e672073696e68206e68e1baad7420f09f8e82f09f8e81"
+  },
+  {
+   "name": "emoji_variation_selectors",
+   "input_hex": "e29da4efb88f20e298baefb88e20e29c94efb88f",
+   "input": "❤️ ☺︎ ✔️",
+   "output": "❤ ☺ ✔",
+   "output_hex": "e29da420e298ba20e29c94"
+  },
+  {
+   "name": "emoji_zwj_with_variation",
+   "input_hex": "f09f91a9e2808de29da4efb88fe2808df09f91a821",
+   "input": "👩‍❤️‍👨!",
+   "output": "👩!",
+   "output_hex": "f09f91a921"
+  },
+  {
+   "name": "emoji_zwj_then_plain",
+   "input_hex": "f09f91a9e2808d782061e2808d62",
+   "input": "👩‍x a‍b",
+   "output": "👩x ab",
+   "output_hex": "f09f91a978206162"
+  },
+  {
+   "name": "emoji_zwj_dangling",
+   "input_hex": "f09f91a8e2808d",
+   "input": "👨‍",
+   "output": "👨",
+   "output_hex": "f09f91a8"
+  },
+  {
+   "name": "emoji_rainbow_flag",
+   "input_hex": "f09f8fb3efb88fe2808df09f8c88",
+   "input": "🏳️‍🌈",
+   "output": "🏳",
+   "output_hex": "f09f8fb3"
+  },
+  {
+   "name": "emoji_subdivision_flag",
+   "input_hex": "f09f8fb4f3a081a7f3a081a2f3a081a5f3a081aef3a081a7f3a081bf",
+   "input": "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
+   "output": "🏴",
+   "output_hex": "f09f8fb4"
+  },
+  {
+   "name": "flags_two",
+   "input_hex": "f09f87bbf09f87b3f09f87baf09f87b8",
+   "input": "🇻🇳🇺🇸",
+   "output": "🏳🏳",
+   "output_hex": "f09f8fb3f09f8fb3"
+  },
+  {
+   "name": "flag_odd_indicator",
+   "input_hex": "f09f87bbf09f87b3f09f87ba2078",
+   "input": "🇻🇳🇺 x",
+   "output": "🏳🏳 x",
+   "output_hex": "f09f8fb3f09f8fb32078"
+  },
+  {
+   "name": "emoji_unassigned",
+   "input_hex": "61f09fabbf62",
+   "input": "a🫿b",
+   "output": "a□b",
+   "output_hex": "61e296a162"
+  },
+  {
+   "name": "emoji_then_cjk",
+   "input_hex": "f09f9880e4bda0f09f9880",
+   "input": "😀你😀",
+   "output": "😀□😀",
+   "output_hex": "f09f9880e296a1f09f9880"
+  },
+  {
+   "name": "emoji_budget_truncates",
+   "input_hex": "f09f9880f09f9880f09f9880f09f9880",
+   "input": "😀😀😀😀",
+   "budget": 10,
+   "output": "😀…",
+   "output_hex": "f09f9880e280a6"
+  },
+  {
+   "name": "emoji_budget_exact",
+   "input_hex": "f09f9880f09f9880",
+   "input": "😀😀",
+   "budget": 8,
+   "output": "😀😀",
+   "output_hex": "f09f9880f09f9880"
+  },
+  {
+   "name": "cjk",
+   "input_hex": "e4bda0e5a5bd20776f726c64",
+   "input": "你好 world",
+   "output": "□ world",
+   "output_hex": "e296a120776f726c64"
+  },
+  {
+   "name": "cyrillic_and_greek",
+   "input_hex": "d09fd180d0b8d0b2d0b5d18220cea96d656761",
+   "input": "Привет Ωmega",
+   "output": "□ □mega",
+   "output_hex": "e296a120e296a16d656761"
+  },
+  {
+   "name": "invalid_bytes",
+   "input_hex": "6f6bfffe6f6b20e18062",
+   "output": "ok□ok □b",
+   "output_hex": "6f6be296a16f6b20e296a162"
+  },
+  {
+   "name": "controls",
+   "input_hex": "61096201637f640d0a650d660a",
+   "input": "a\tb\u0001cd\r\ne\rf\n",
+   "output": "a bcd\ne\nf\n",
+   "output_hex": "61206263640a650a660a"
+  },
+  {
+   "name": "c1_control_nel",
+   "input_hex": "61c28562",
+   "input": "ab",
+   "output": "ab",
+   "output_hex": "6162"
+  },
+  {
+   "name": "format_chars_removed",
+   "input_hex": "736f6674c2ad68797068656e207a65726fe2808b776964746820efbbbf626f6d2061e2808d62",
+   "input": "soft­hyphen zero​width ﻿bom a‍b",
+   "output": "softhyphen zerowidth bom ab",
+   "output_hex": "736f667468797068656e207a65726f776964746820626f6d206162"
+  },
+  {
+   "name": "dong_and_punctuation",
+   "input_hex": "4769c3a13a2035302e303030e282ab20e2809320e2809c6f6be2809d20e280a620e282ac20e284a2",
+   "input": "Giá: 50.000₫ – “ok” … € ™",
+   "output": "Giá: 50.000₫ – “ok” … € ™",
+   "output_hex": "4769c3a13a2035302e303030e282ab20e2809320e2809c6f6be2809d20e280a620e282ac20e284a2"
+  },
+  {
+   "name": "literal_placeholder",
+   "input_hex": "e296a1f09f9880",
+   "input": "□😀",
+   "output": "□😀",
+   "output_hex": "e296a1f09f9880"
+  },
+  {
+   "name": "nbsp_kept",
+   "input_hex": "61c2a062",
+   "input": "a b",
+   "output": "a b",
+   "output_hex": "61c2a062"
+  },
+  {
+   "name": "budget_no_truncation",
+   "input_hex": "65786163746c79",
+   "input": "exactly",
+   "budget": 7,
+   "output": "exactly",
+   "output_hex": "65786163746c79"
+  },
+  {
+   "name": "budget_truncates_ascii",
+   "input_hex": "48656c6c6f2c20776f726c6421",
+   "input": "Hello, world!",
+   "budget": 10,
+   "output": "Hello, …",
+   "output_hex": "48656c6c6f2c20e280a6"
+  },
+  {
+   "name": "budget_truncates_before_multibyte",
+   "input_hex": "c490c3a279206cc3a0206de1bb99742074696e206e68e1baaf6e2064c3a069",
+   "input": "Đây là một tin nhắn dài",
+   "budget": 16,
+   "output": "Đây là m…",
+   "output_hex": "c490c3a279206cc3a0206de280a6"
+  },
+  {
+   "name": "budget_after_composition",
+   "input_hex": "566965cca3cc8274204e616d",
+   "input": "Việt Nam",
+   "budget": 9,
+   "output": "Việt…",
+   "output_hex": "5669e1bb8774e280a6"
+  },
+  {
+   "name": "budget_tiny",
+   "input_hex": "e1bb87e1bb87e1bb87",
+   "input": "ệệệ",
+   "budget": 2,
+   "output": "",
+   "output_hex": ""
+  },
+  {
+   "name": "budget_three",
+   "input_hex": "e1bb87e1bb87e1bb87",
+   "input": "ệệệ",
+   "budget": 3,
+   "output": "…",
+   "output_hex": "e280a6"
+  },
+  {
+   "name": "budget_zero",
+   "input_hex": "616263",
+   "input": "abc",
+   "budget": 0,
+   "output": "",
+   "output_hex": ""
+  }
+ ]
+}

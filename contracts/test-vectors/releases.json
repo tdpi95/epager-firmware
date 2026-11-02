@@ -1,0 +1,827 @@
+{
+ "contract_version": "0.13.0",
+ "description": "Firmware release manifests (releases.md). 'manifests': 'problem' is null for a valid manifest, else 'schema' (fails release-manifest.schema.json), 'duplicate_board_id' or 'file_name'. 'select': with the board's Capabilities fields, the app's contract version and developer mode, the app must offer exactly 'expect' (an image file name, or the first refusal reason in releases.md order).",
+ "scope": "app",
+ "manifests": [
+  {
+   "name": "valid",
+   "manifest": {
+    "manifest_version": 1,
+    "version": "0.2.0",
+    "contract_version": "0.7.0",
+    "images": [
+     {
+      "board_id": "waveshare_s3_epaper_154_v2",
+      "variant": "paper",
+      "file": "epager-waveshare_s3_epaper_154_v2-0.2.0.bin",
+      "size": 1234567,
+      "sha256": "8ba345e0c909a3dee48a57ab059c88668f4562ca4e3d02e458072cf61cc2bbbe"
+     }
+    ],
+    "notes_url": "https://example.invalid/epager/releases/v0.2.0"
+   },
+   "problem": null
+  },
+  {
+   "name": "valid_minimal",
+   "manifest": {
+    "manifest_version": 1,
+    "version": "0.2.0",
+    "contract_version": "0.7.0",
+    "images": [
+     {
+      "board_id": "waveshare_s3_epaper_154_v2",
+      "variant": "paper",
+      "file": "epager-waveshare_s3_epaper_154_v2-0.2.0.bin",
+      "size": 1234567,
+      "sha256": "8ba345e0c909a3dee48a57ab059c88668f4562ca4e3d02e458072cf61cc2bbbe"
+     }
+    ]
+   },
+   "problem": null
+  },
+  {
+   "name": "valid_prerelease_two_boards",
+   "manifest": {
+    "manifest_version": 1,
+    "version": "0.3.0-rc.1",
+    "contract_version": "0.7.0",
+    "images": [
+     {
+      "board_id": "waveshare_s3_epaper_154_v2",
+      "variant": "paper",
+      "file": "epager-waveshare_s3_epaper_154_v2-0.3.0-rc.1.bin",
+      "size": 1234567,
+      "sha256": "a1715d0390c25205bdb25c99c95d204ce97ae24308d2253a9d69cb424badf801"
+     },
+     {
+      "board_id": "sim_epaper_154",
+      "variant": "paper",
+      "file": "epager-sim_epaper_154-0.3.0-rc.1.bin",
+      "size": 1234567,
+      "sha256": "a95fe613d71449a891943ae2ff6ee0fed953428987463db4ab5147f67d5a5b50"
+     }
+    ]
+   },
+   "problem": null
+  },
+  {
+   "name": "valid_unknown_fields_ignored",
+   "manifest": {
+    "manifest_version": 1,
+    "version": "0.2.0",
+    "contract_version": "0.7.0",
+    "images": [
+     {
+      "board_id": "waveshare_s3_epaper_154_v2",
+      "variant": "paper",
+      "file": "epager-waveshare_s3_epaper_154_v2-0.2.0.bin",
+      "size": 1234567,
+      "sha256": "8ba345e0c909a3dee48a57ab059c88668f4562ca4e3d02e458072cf61cc2bbbe",
+      "future_image_field": 1
+     }
+    ],
+    "notes_url": "https://example.invalid/epager/releases/v0.2.0",
+    "future_field": {
+     "x": 1
+    }
+   },
+   "problem": null
+  },
+  {
+   "name": "valid_min_app_contract",
+   "manifest": {
+    "manifest_version": 1,
+    "version": "0.2.0",
+    "contract_version": "0.7.0",
+    "images": [
+     {
+      "board_id": "waveshare_s3_epaper_154_v2",
+      "variant": "paper",
+      "file": "epager-waveshare_s3_epaper_154_v2-0.2.0.bin",
+      "size": 1234567,
+      "sha256": "8ba345e0c909a3dee48a57ab059c88668f4562ca4e3d02e458072cf61cc2bbbe",
+      "min_app_contract": "0.7.0"
+     }
+    ],
+    "notes_url": "https://example.invalid/epager/releases/v0.2.0"
+   },
+   "problem": null
+  },
+  {
+   "name": "missing_images",
+   "manifest": {
+    "manifest_version": 1,
+    "version": "0.2.0",
+    "contract_version": "0.7.0"
+   },
+   "problem": "schema"
+  },
+  {
+   "name": "empty_images",
+   "manifest": {
+    "manifest_version": 1,
+    "version": "0.2.0",
+    "contract_version": "0.7.0",
+    "images": []
+   },
+   "problem": "schema"
+  },
+  {
+   "name": "manifest_version_2",
+   "manifest": {
+    "manifest_version": 2,
+    "version": "0.2.0",
+    "contract_version": "0.7.0",
+    "images": [
+     {
+      "board_id": "waveshare_s3_epaper_154_v2",
+      "variant": "paper",
+      "file": "epager-waveshare_s3_epaper_154_v2-0.2.0.bin",
+      "size": 1234567,
+      "sha256": "8ba345e0c909a3dee48a57ab059c88668f4562ca4e3d02e458072cf61cc2bbbe"
+     }
+    ],
+    "notes_url": "https://example.invalid/epager/releases/v0.2.0"
+   },
+   "problem": "schema"
+  },
+  {
+   "name": "version_build_metadata",
+   "manifest": {
+    "manifest_version": 1,
+    "version": "0.2.0+abc",
+    "contract_version": "0.7.0",
+    "images": [
+     {
+      "board_id": "waveshare_s3_epaper_154_v2",
+      "variant": "paper",
+      "file": "epager-waveshare_s3_epaper_154_v2-0.2.0+abc.bin",
+      "size": 1234567,
+      "sha256": "8bc1bd120256c0e6d8ee2ddfcd1a064da5668802014dc443219a148de4b8bc07"
+     }
+    ]
+   },
+   "problem": "schema"
+  },
+  {
+   "name": "version_leading_zero",
+   "manifest": {
+    "manifest_version": 1,
+    "version": "0.02.0",
+    "contract_version": "0.7.0",
+    "images": [
+     {
+      "board_id": "waveshare_s3_epaper_154_v2",
+      "variant": "paper",
+      "file": "epager-waveshare_s3_epaper_154_v2-0.02.0.bin",
+      "size": 1234567,
+      "sha256": "eff7f0f533854208beff28d81a5dba1b602b4d8644b768c23c99a6eeb630c9a4"
+     }
+    ]
+   },
+   "problem": "schema"
+  },
+  {
+   "name": "contract_version_prerelease",
+   "manifest": {
+    "manifest_version": 1,
+    "version": "0.2.0",
+    "contract_version": "0.7.0-rc.1",
+    "images": [
+     {
+      "board_id": "waveshare_s3_epaper_154_v2",
+      "variant": "paper",
+      "file": "epager-waveshare_s3_epaper_154_v2-0.2.0.bin",
+      "size": 1234567,
+      "sha256": "8ba345e0c909a3dee48a57ab059c88668f4562ca4e3d02e458072cf61cc2bbbe"
+     }
+    ],
+    "notes_url": "https://example.invalid/epager/releases/v0.2.0"
+   },
+   "problem": "schema"
+  },
+  {
+   "name": "sha256_upper_case",
+   "manifest": {
+    "manifest_version": 1,
+    "version": "0.2.0",
+    "contract_version": "0.7.0",
+    "images": [
+     {
+      "board_id": "waveshare_s3_epaper_154_v2",
+      "variant": "paper",
+      "file": "epager-waveshare_s3_epaper_154_v2-0.2.0.bin",
+      "size": 1234567,
+      "sha256": "8BA345E0C909A3DEE48A57AB059C88668F4562CA4E3D02E458072CF61CC2BBBE"
+     }
+    ],
+    "notes_url": "https://example.invalid/epager/releases/v0.2.0"
+   },
+   "problem": "schema"
+  },
+  {
+   "name": "sha256_short",
+   "manifest": {
+    "manifest_version": 1,
+    "version": "0.2.0",
+    "contract_version": "0.7.0",
+    "images": [
+     {
+      "board_id": "waveshare_s3_epaper_154_v2",
+      "variant": "paper",
+      "file": "epager-waveshare_s3_epaper_154_v2-0.2.0.bin",
+      "size": 1234567,
+      "sha256": "ababababababababababababababababababababababababababababababab"
+     }
+    ],
+    "notes_url": "https://example.invalid/epager/releases/v0.2.0"
+   },
+   "problem": "schema"
+  },
+  {
+   "name": "size_zero",
+   "manifest": {
+    "manifest_version": 1,
+    "version": "0.2.0",
+    "contract_version": "0.7.0",
+    "images": [
+     {
+      "board_id": "waveshare_s3_epaper_154_v2",
+      "variant": "paper",
+      "file": "epager-waveshare_s3_epaper_154_v2-0.2.0.bin",
+      "size": 0,
+      "sha256": "8ba345e0c909a3dee48a57ab059c88668f4562ca4e3d02e458072cf61cc2bbbe"
+     }
+    ],
+    "notes_url": "https://example.invalid/epager/releases/v0.2.0"
+   },
+   "problem": "schema"
+  },
+  {
+   "name": "size_string",
+   "manifest": {
+    "manifest_version": 1,
+    "version": "0.2.0",
+    "contract_version": "0.7.0",
+    "images": [
+     {
+      "board_id": "waveshare_s3_epaper_154_v2",
+      "variant": "paper",
+      "file": "epager-waveshare_s3_epaper_154_v2-0.2.0.bin",
+      "size": "1234567",
+      "sha256": "8ba345e0c909a3dee48a57ab059c88668f4562ca4e3d02e458072cf61cc2bbbe"
+     }
+    ],
+    "notes_url": "https://example.invalid/epager/releases/v0.2.0"
+   },
+   "problem": "schema"
+  },
+  {
+   "name": "board_id_upper_case",
+   "manifest": {
+    "manifest_version": 1,
+    "version": "0.2.0",
+    "contract_version": "0.7.0",
+    "images": [
+     {
+      "board_id": "Waveshare",
+      "variant": "paper",
+      "file": "epager-waveshare_s3_epaper_154_v2-0.2.0.bin",
+      "size": 1234567,
+      "sha256": "8ba345e0c909a3dee48a57ab059c88668f4562ca4e3d02e458072cf61cc2bbbe"
+     }
+    ],
+    "notes_url": "https://example.invalid/epager/releases/v0.2.0"
+   },
+   "problem": "schema"
+  },
+  {
+   "name": "image_missing_variant",
+   "manifest": {
+    "manifest_version": 1,
+    "version": "0.2.0",
+    "contract_version": "0.7.0",
+    "images": [
+     {
+      "board_id": "waveshare_s3_epaper_154_v2",
+      "file": "epager-waveshare_s3_epaper_154_v2-0.2.0.bin",
+      "size": 1234567,
+      "sha256": "8ba345e0c909a3dee48a57ab059c88668f4562ca4e3d02e458072cf61cc2bbbe"
+     }
+    ]
+   },
+   "problem": "schema"
+  },
+  {
+   "name": "notes_url_http",
+   "manifest": {
+    "manifest_version": 1,
+    "version": "0.2.0",
+    "contract_version": "0.7.0",
+    "images": [
+     {
+      "board_id": "waveshare_s3_epaper_154_v2",
+      "variant": "paper",
+      "file": "epager-waveshare_s3_epaper_154_v2-0.2.0.bin",
+      "size": 1234567,
+      "sha256": "8ba345e0c909a3dee48a57ab059c88668f4562ca4e3d02e458072cf61cc2bbbe"
+     }
+    ],
+    "notes_url": "http://example.invalid/notes"
+   },
+   "problem": "schema"
+  },
+  {
+   "name": "duplicate_board_id",
+   "manifest": {
+    "manifest_version": 1,
+    "version": "0.2.0",
+    "contract_version": "0.7.0",
+    "images": [
+     {
+      "board_id": "waveshare_s3_epaper_154_v2",
+      "variant": "paper",
+      "file": "epager-waveshare_s3_epaper_154_v2-0.2.0.bin",
+      "size": 1234567,
+      "sha256": "8ba345e0c909a3dee48a57ab059c88668f4562ca4e3d02e458072cf61cc2bbbe"
+     },
+     {
+      "board_id": "waveshare_s3_epaper_154_v2",
+      "variant": "paper",
+      "file": "epager-waveshare_s3_epaper_154_v2-0.2.0.bin",
+      "size": 1234567,
+      "sha256": "8ba345e0c909a3dee48a57ab059c88668f4562ca4e3d02e458072cf61cc2bbbe"
+     }
+    ]
+   },
+   "problem": "duplicate_board_id"
+  },
+  {
+   "name": "file_name_other_version",
+   "manifest": {
+    "manifest_version": 1,
+    "version": "0.2.0",
+    "contract_version": "0.7.0",
+    "images": [
+     {
+      "board_id": "waveshare_s3_epaper_154_v2",
+      "variant": "paper",
+      "file": "epager-waveshare_s3_epaper_154_v2-0.1.0.bin",
+      "size": 1234567,
+      "sha256": "8ba345e0c909a3dee48a57ab059c88668f4562ca4e3d02e458072cf61cc2bbbe"
+     }
+    ],
+    "notes_url": "https://example.invalid/epager/releases/v0.2.0"
+   },
+   "problem": "file_name"
+  },
+  {
+   "name": "file_name_other_board",
+   "manifest": {
+    "manifest_version": 1,
+    "version": "0.2.0",
+    "contract_version": "0.7.0",
+    "images": [
+     {
+      "board_id": "waveshare_s3_epaper_154_v2",
+      "variant": "paper",
+      "file": "epager-sim_epaper_154-0.2.0.bin",
+      "size": 1234567,
+      "sha256": "8ba345e0c909a3dee48a57ab059c88668f4562ca4e3d02e458072cf61cc2bbbe"
+     }
+    ],
+    "notes_url": "https://example.invalid/epager/releases/v0.2.0"
+   },
+   "problem": "file_name"
+  }
+ ],
+ "select": [
+  {
+   "name": "offer",
+   "manifest": {
+    "manifest_version": 1,
+    "version": "0.2.0",
+    "contract_version": "0.7.0",
+    "images": [
+     {
+      "board_id": "waveshare_s3_epaper_154_v2",
+      "variant": "paper",
+      "file": "epager-waveshare_s3_epaper_154_v2-0.2.0.bin",
+      "size": 1234567,
+      "sha256": "8ba345e0c909a3dee48a57ab059c88668f4562ca4e3d02e458072cf61cc2bbbe"
+     }
+    ],
+    "notes_url": "https://example.invalid/epager/releases/v0.2.0"
+   },
+   "board": {
+    "board_id": "waveshare_s3_epaper_154_v2",
+    "variant": "paper",
+    "firmware_version": "0.1.0"
+   },
+   "app_contract": "0.7.0",
+   "developer_mode": false,
+   "expect": {
+    "image": "epager-waveshare_s3_epaper_154_v2-0.2.0.bin"
+   }
+  },
+  {
+   "name": "invalid_manifest",
+   "manifest": {
+    "manifest_version": 1,
+    "version": "0.2.0",
+    "contract_version": "0.7.0",
+    "images": [
+     {
+      "board_id": "waveshare_s3_epaper_154_v2",
+      "variant": "paper",
+      "file": "epager-waveshare_s3_epaper_154_v2-0.2.0.bin",
+      "size": 1234567,
+      "sha256": "8ba345e0c909a3dee48a57ab059c88668f4562ca4e3d02e458072cf61cc2bbbe"
+     },
+     {
+      "board_id": "waveshare_s3_epaper_154_v2",
+      "variant": "paper",
+      "file": "epager-waveshare_s3_epaper_154_v2-0.2.0.bin",
+      "size": 1234567,
+      "sha256": "8ba345e0c909a3dee48a57ab059c88668f4562ca4e3d02e458072cf61cc2bbbe"
+     }
+    ]
+   },
+   "board": {
+    "board_id": "waveshare_s3_epaper_154_v2",
+    "variant": "paper",
+    "firmware_version": "0.1.0"
+   },
+   "app_contract": "0.7.0",
+   "developer_mode": false,
+   "expect": {
+    "refuse": "invalid_manifest"
+   }
+  },
+  {
+   "name": "prerelease_hidden",
+   "manifest": {
+    "manifest_version": 1,
+    "version": "0.3.0-rc.1",
+    "contract_version": "0.7.0",
+    "images": [
+     {
+      "board_id": "waveshare_s3_epaper_154_v2",
+      "variant": "paper",
+      "file": "epager-waveshare_s3_epaper_154_v2-0.3.0-rc.1.bin",
+      "size": 1234567,
+      "sha256": "a1715d0390c25205bdb25c99c95d204ce97ae24308d2253a9d69cb424badf801"
+     }
+    ]
+   },
+   "board": {
+    "board_id": "waveshare_s3_epaper_154_v2",
+    "variant": "paper",
+    "firmware_version": "0.1.0"
+   },
+   "app_contract": "0.7.0",
+   "developer_mode": false,
+   "expect": {
+    "refuse": "prerelease"
+   }
+  },
+  {
+   "name": "prerelease_developer_mode",
+   "manifest": {
+    "manifest_version": 1,
+    "version": "0.3.0-rc.1",
+    "contract_version": "0.7.0",
+    "images": [
+     {
+      "board_id": "waveshare_s3_epaper_154_v2",
+      "variant": "paper",
+      "file": "epager-waveshare_s3_epaper_154_v2-0.3.0-rc.1.bin",
+      "size": 1234567,
+      "sha256": "a1715d0390c25205bdb25c99c95d204ce97ae24308d2253a9d69cb424badf801"
+     }
+    ]
+   },
+   "board": {
+    "board_id": "waveshare_s3_epaper_154_v2",
+    "variant": "paper",
+    "firmware_version": "0.1.0"
+   },
+   "app_contract": "0.7.0",
+   "developer_mode": true,
+   "expect": {
+    "image": "epager-waveshare_s3_epaper_154_v2-0.3.0-rc.1.bin"
+   }
+  },
+  {
+   "name": "no_image_for_board",
+   "manifest": {
+    "manifest_version": 1,
+    "version": "0.2.0",
+    "contract_version": "0.7.0",
+    "images": [
+     {
+      "board_id": "waveshare_s3_epaper_154_v2",
+      "variant": "paper",
+      "file": "epager-waveshare_s3_epaper_154_v2-0.2.0.bin",
+      "size": 1234567,
+      "sha256": "8ba345e0c909a3dee48a57ab059c88668f4562ca4e3d02e458072cf61cc2bbbe"
+     }
+    ],
+    "notes_url": "https://example.invalid/epager/releases/v0.2.0"
+   },
+   "board": {
+    "board_id": "other_board",
+    "variant": "paper",
+    "firmware_version": "0.1.0"
+   },
+   "app_contract": "0.7.0",
+   "developer_mode": false,
+   "expect": {
+    "refuse": "no_image"
+   }
+  },
+  {
+   "name": "variant_mismatch",
+   "manifest": {
+    "manifest_version": 1,
+    "version": "0.2.0",
+    "contract_version": "0.7.0",
+    "images": [
+     {
+      "board_id": "waveshare_s3_epaper_154_v2",
+      "variant": "paper",
+      "file": "epager-waveshare_s3_epaper_154_v2-0.2.0.bin",
+      "size": 1234567,
+      "sha256": "8ba345e0c909a3dee48a57ab059c88668f4562ca4e3d02e458072cf61cc2bbbe"
+     }
+    ],
+    "notes_url": "https://example.invalid/epager/releases/v0.2.0"
+   },
+   "board": {
+    "board_id": "waveshare_s3_epaper_154_v2",
+    "variant": "lcd",
+    "firmware_version": "0.1.0"
+   },
+   "app_contract": "0.7.0",
+   "developer_mode": false,
+   "expect": {
+    "refuse": "variant_mismatch"
+   }
+  },
+  {
+   "name": "contract_major_newer",
+   "manifest": {
+    "manifest_version": 1,
+    "version": "0.2.0",
+    "contract_version": "1.0.0",
+    "images": [
+     {
+      "board_id": "waveshare_s3_epaper_154_v2",
+      "variant": "paper",
+      "file": "epager-waveshare_s3_epaper_154_v2-0.2.0.bin",
+      "size": 1234567,
+      "sha256": "8ba345e0c909a3dee48a57ab059c88668f4562ca4e3d02e458072cf61cc2bbbe"
+     }
+    ],
+    "notes_url": "https://example.invalid/epager/releases/v0.2.0"
+   },
+   "board": {
+    "board_id": "waveshare_s3_epaper_154_v2",
+    "variant": "paper",
+    "firmware_version": "0.1.0"
+   },
+   "app_contract": "0.7.0",
+   "developer_mode": false,
+   "expect": {
+    "refuse": "contract_major"
+   }
+  },
+  {
+   "name": "contract_minor_newer",
+   "manifest": {
+    "manifest_version": 1,
+    "version": "0.2.0",
+    "contract_version": "0.9.0",
+    "images": [
+     {
+      "board_id": "waveshare_s3_epaper_154_v2",
+      "variant": "paper",
+      "file": "epager-waveshare_s3_epaper_154_v2-0.2.0.bin",
+      "size": 1234567,
+      "sha256": "8ba345e0c909a3dee48a57ab059c88668f4562ca4e3d02e458072cf61cc2bbbe"
+     }
+    ],
+    "notes_url": "https://example.invalid/epager/releases/v0.2.0"
+   },
+   "board": {
+    "board_id": "waveshare_s3_epaper_154_v2",
+    "variant": "paper",
+    "firmware_version": "0.1.0"
+   },
+   "app_contract": "0.7.0",
+   "developer_mode": false,
+   "expect": {
+    "image": "epager-waveshare_s3_epaper_154_v2-0.2.0.bin"
+   }
+  },
+  {
+   "name": "app_too_old",
+   "manifest": {
+    "manifest_version": 1,
+    "version": "0.2.0",
+    "contract_version": "0.7.0",
+    "images": [
+     {
+      "board_id": "waveshare_s3_epaper_154_v2",
+      "variant": "paper",
+      "file": "epager-waveshare_s3_epaper_154_v2-0.2.0.bin",
+      "size": 1234567,
+      "sha256": "8ba345e0c909a3dee48a57ab059c88668f4562ca4e3d02e458072cf61cc2bbbe",
+      "min_app_contract": "0.8.0"
+     }
+    ],
+    "notes_url": "https://example.invalid/epager/releases/v0.2.0"
+   },
+   "board": {
+    "board_id": "waveshare_s3_epaper_154_v2",
+    "variant": "paper",
+    "firmware_version": "0.1.0"
+   },
+   "app_contract": "0.7.0",
+   "developer_mode": false,
+   "expect": {
+    "refuse": "app_too_old"
+   }
+  },
+  {
+   "name": "app_at_min_contract",
+   "manifest": {
+    "manifest_version": 1,
+    "version": "0.2.0",
+    "contract_version": "0.7.0",
+    "images": [
+     {
+      "board_id": "waveshare_s3_epaper_154_v2",
+      "variant": "paper",
+      "file": "epager-waveshare_s3_epaper_154_v2-0.2.0.bin",
+      "size": 1234567,
+      "sha256": "8ba345e0c909a3dee48a57ab059c88668f4562ca4e3d02e458072cf61cc2bbbe",
+      "min_app_contract": "0.7.0"
+     }
+    ],
+    "notes_url": "https://example.invalid/epager/releases/v0.2.0"
+   },
+   "board": {
+    "board_id": "waveshare_s3_epaper_154_v2",
+    "variant": "paper",
+    "firmware_version": "0.1.0"
+   },
+   "app_contract": "0.7.0",
+   "developer_mode": false,
+   "expect": {
+    "image": "epager-waveshare_s3_epaper_154_v2-0.2.0.bin"
+   }
+  },
+  {
+   "name": "same_version",
+   "manifest": {
+    "manifest_version": 1,
+    "version": "0.2.0",
+    "contract_version": "0.7.0",
+    "images": [
+     {
+      "board_id": "waveshare_s3_epaper_154_v2",
+      "variant": "paper",
+      "file": "epager-waveshare_s3_epaper_154_v2-0.2.0.bin",
+      "size": 1234567,
+      "sha256": "8ba345e0c909a3dee48a57ab059c88668f4562ca4e3d02e458072cf61cc2bbbe"
+     }
+    ],
+    "notes_url": "https://example.invalid/epager/releases/v0.2.0"
+   },
+   "board": {
+    "board_id": "waveshare_s3_epaper_154_v2",
+    "variant": "paper",
+    "firmware_version": "0.2.0"
+   },
+   "app_contract": "0.7.0",
+   "developer_mode": false,
+   "expect": {
+    "refuse": "not_newer"
+   }
+  },
+  {
+   "name": "older_version",
+   "manifest": {
+    "manifest_version": 1,
+    "version": "0.2.0",
+    "contract_version": "0.7.0",
+    "images": [
+     {
+      "board_id": "waveshare_s3_epaper_154_v2",
+      "variant": "paper",
+      "file": "epager-waveshare_s3_epaper_154_v2-0.2.0.bin",
+      "size": 1234567,
+      "sha256": "8ba345e0c909a3dee48a57ab059c88668f4562ca4e3d02e458072cf61cc2bbbe"
+     }
+    ],
+    "notes_url": "https://example.invalid/epager/releases/v0.2.0"
+   },
+   "board": {
+    "board_id": "waveshare_s3_epaper_154_v2",
+    "variant": "paper",
+    "firmware_version": "0.10.0"
+   },
+   "app_contract": "0.7.0",
+   "developer_mode": false,
+   "expect": {
+    "refuse": "not_newer"
+   }
+  },
+  {
+   "name": "release_after_its_prerelease",
+   "manifest": {
+    "manifest_version": 1,
+    "version": "0.2.0",
+    "contract_version": "0.7.0",
+    "images": [
+     {
+      "board_id": "waveshare_s3_epaper_154_v2",
+      "variant": "paper",
+      "file": "epager-waveshare_s3_epaper_154_v2-0.2.0.bin",
+      "size": 1234567,
+      "sha256": "8ba345e0c909a3dee48a57ab059c88668f4562ca4e3d02e458072cf61cc2bbbe"
+     }
+    ],
+    "notes_url": "https://example.invalid/epager/releases/v0.2.0"
+   },
+   "board": {
+    "board_id": "waveshare_s3_epaper_154_v2",
+    "variant": "paper",
+    "firmware_version": "0.2.0-rc.2"
+   },
+   "app_contract": "0.7.0",
+   "developer_mode": false,
+   "expect": {
+    "image": "epager-waveshare_s3_epaper_154_v2-0.2.0.bin"
+   }
+  },
+  {
+   "name": "running_build_metadata_ignored",
+   "manifest": {
+    "manifest_version": 1,
+    "version": "0.2.0",
+    "contract_version": "0.7.0",
+    "images": [
+     {
+      "board_id": "waveshare_s3_epaper_154_v2",
+      "variant": "paper",
+      "file": "epager-waveshare_s3_epaper_154_v2-0.2.0.bin",
+      "size": 1234567,
+      "sha256": "8ba345e0c909a3dee48a57ab059c88668f4562ca4e3d02e458072cf61cc2bbbe"
+     }
+    ],
+    "notes_url": "https://example.invalid/epager/releases/v0.2.0"
+   },
+   "board": {
+    "board_id": "waveshare_s3_epaper_154_v2",
+    "variant": "paper",
+    "firmware_version": "0.2.0+dirty"
+   },
+   "app_contract": "0.7.0",
+   "developer_mode": false,
+   "expect": {
+    "refuse": "not_newer"
+   }
+  },
+  {
+   "name": "running_version_unparsable",
+   "manifest": {
+    "manifest_version": 1,
+    "version": "0.2.0",
+    "contract_version": "0.7.0",
+    "images": [
+     {
+      "board_id": "waveshare_s3_epaper_154_v2",
+      "variant": "paper",
+      "file": "epager-waveshare_s3_epaper_154_v2-0.2.0.bin",
+      "size": 1234567,
+      "sha256": "8ba345e0c909a3dee48a57ab059c88668f4562ca4e3d02e458072cf61cc2bbbe"
+     }
+    ],
+    "notes_url": "https://example.invalid/epager/releases/v0.2.0"
+   },
+   "board": {
+    "board_id": "waveshare_s3_epaper_154_v2",
+    "variant": "paper",
+    "firmware_version": "dev"
+   },
+   "app_contract": "0.7.0",
+   "developer_mode": false,
+   "expect": {
+    "image": "epager-waveshare_s3_epaper_154_v2-0.2.0.bin"
+   }
+  }
+ ]
+}

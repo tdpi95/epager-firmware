@@ -1,0 +1,909 @@
+{
+ "contract_version": "0.13.0",
+ "description": "Board dispatch (protocol.md 2.1 and 2.4: reassembly, header checks, routing, security gate, body validation, answers segmented at the link MTU). Each case starts on a fresh connection with the given ATT MTU and security. For every 'write' to a characteristic the board must notify exactly the 'expect' segments, in order. No transfer session exists and only PING reaches a handler.",
+ "scope": "board",
+ "cases": [
+  {
+   "name": "ping_each_channel",
+   "description": "PING is accepted on every request characteristic",
+   "mtu": 517,
+   "secure": true,
+   "steps": [
+    {
+     "write": {
+      "char": "config",
+      "hex": "c000010100"
+     },
+     "expect": [
+      {
+       "char": "config",
+       "hex": "c00081010001010000"
+      }
+     ]
+    },
+    {
+     "write": {
+      "char": "notification",
+      "hex": "c00001020001010001"
+     },
+     "expect": [
+      {
+       "char": "notification",
+       "hex": "c0008102000101000002010001"
+      }
+     ]
+    },
+    {
+     "write": {
+      "char": "transfer",
+      "hex": "c000010300"
+     },
+     "expect": [
+      {
+       "char": "transfer",
+       "hex": "c00081030001010000"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "ping_response_segmented_mtu23",
+   "description": "A 400-byte PING payload answered in 20-byte segments (MTU 23)",
+   "mtu": 23,
+   "secure": true,
+   "steps": [
+    {
+     "write": {
+      "char": "config",
+      "hex": "800001040001900100070e151c232a31383f464d"
+     },
+     "expect": []
+    },
+    {
+     "write": {
+      "char": "config",
+      "hex": "01545b626970777e858c939aa1a8afb6bdc4cbd2"
+     },
+     "expect": []
+    },
+    {
+     "write": {
+      "char": "config",
+      "hex": "02d9e0e7eef5fc030a11181f262d343b42495057"
+     },
+     "expect": []
+    },
+    {
+     "write": {
+      "char": "config",
+      "hex": "035e656c737a81888f969da4abb2b9c0c7ced5dc"
+     },
+     "expect": []
+    },
+    {
+     "write": {
+      "char": "config",
+      "hex": "04e3eaf1f8ff060d141b222930373e454c535a61"
+     },
+     "expect": []
+    },
+    {
+     "write": {
+      "char": "config",
+      "hex": "05686f767d848b9299a0a7aeb5bcc3cad1d8dfe6"
+     },
+     "expect": []
+    },
+    {
+     "write": {
+      "char": "config",
+      "hex": "06edf4fb020910171e252c333a41484f565d646b"
+     },
+     "expect": []
+    },
+    {
+     "write": {
+      "char": "config",
+      "hex": "07727980878e959ca3aab1b8bfc6cdd4dbe2e9f0"
+     },
+     "expect": []
+    },
+    {
+     "write": {
+      "char": "config",
+      "hex": "08f7fe050c131a21282f363d444b525960676e75"
+     },
+     "expect": []
+    },
+    {
+     "write": {
+      "char": "config",
+      "hex": "097c838a91989fa6adb4bbc2c9d0d7dee5ecf3fa"
+     },
+     "expect": []
+    },
+    {
+     "write": {
+      "char": "config",
+      "hex": "0a01080f161d242b323940474e555c636a71787f"
+     },
+     "expect": []
+    },
+    {
+     "write": {
+      "char": "config",
+      "hex": "0b868d949ba2a9b0b7bec5ccd3dae1e8eff6fd04"
+     },
+     "expect": []
+    },
+    {
+     "write": {
+      "char": "config",
+      "hex": "0c0b121920272e353c434a51585f666d747b8289"
+     },
+     "expect": []
+    },
+    {
+     "write": {
+      "char": "config",
+      "hex": "0d90979ea5acb3bac1c8cfd6dde4ebf2f900070e"
+     },
+     "expect": []
+    },
+    {
+     "write": {
+      "char": "config",
+      "hex": "0e151c232a31383f464d545b626970777e858c93"
+     },
+     "expect": []
+    },
+    {
+     "write": {
+      "char": "config",
+      "hex": "0f9aa1a8afb6bdc4cbd2d9e0e7eef5fc030a1118"
+     },
+     "expect": []
+    },
+    {
+     "write": {
+      "char": "config",
+      "hex": "101f262d343b424950575e656c737a81888f969d"
+     },
+     "expect": []
+    },
+    {
+     "write": {
+      "char": "config",
+      "hex": "11a4abb2b9c0c7ced5dce3eaf1f8ff060d141b22"
+     },
+     "expect": []
+    },
+    {
+     "write": {
+      "char": "config",
+      "hex": "122930373e454c535a61686f767d848b9299a0a7"
+     },
+     "expect": []
+    },
+    {
+     "write": {
+      "char": "config",
+      "hex": "13aeb5bcc3cad1d8dfe6edf4fb020910171e252c"
+     },
+     "expect": []
+    },
+    {
+     "write": {
+      "char": "config",
+      "hex": "14333a41484f565d646b727980878e959ca3aab1"
+     },
+     "expect": []
+    },
+    {
+     "write": {
+      "char": "config",
+      "hex": "55b8bfc6cdd4dbe2e9"
+     },
+     "expect": [
+      {
+       "char": "config",
+       "hex": "80008104000101000002900100070e151c232a31"
+      },
+      {
+       "char": "config",
+       "hex": "01383f464d545b626970777e858c939aa1a8afb6"
+      },
+      {
+       "char": "config",
+       "hex": "02bdc4cbd2d9e0e7eef5fc030a11181f262d343b"
+      },
+      {
+       "char": "config",
+       "hex": "03424950575e656c737a81888f969da4abb2b9c0"
+      },
+      {
+       "char": "config",
+       "hex": "04c7ced5dce3eaf1f8ff060d141b222930373e45"
+      },
+      {
+       "char": "config",
+       "hex": "054c535a61686f767d848b9299a0a7aeb5bcc3ca"
+      },
+      {
+       "char": "config",
+       "hex": "06d1d8dfe6edf4fb020910171e252c333a41484f"
+      },
+      {
+       "char": "config",
+       "hex": "07565d646b727980878e959ca3aab1b8bfc6cdd4"
+      },
+      {
+       "char": "config",
+       "hex": "08dbe2e9f0f7fe050c131a21282f363d444b5259"
+      },
+      {
+       "char": "config",
+       "hex": "0960676e757c838a91989fa6adb4bbc2c9d0d7de"
+      },
+      {
+       "char": "config",
+       "hex": "0ae5ecf3fa01080f161d242b323940474e555c63"
+      },
+      {
+       "char": "config",
+       "hex": "0b6a71787f868d949ba2a9b0b7bec5ccd3dae1e8"
+      },
+      {
+       "char": "config",
+       "hex": "0ceff6fd040b121920272e353c434a51585f666d"
+      },
+      {
+       "char": "config",
+       "hex": "0d747b828990979ea5acb3bac1c8cfd6dde4ebf2"
+      },
+      {
+       "char": "config",
+       "hex": "0ef900070e151c232a31383f464d545b62697077"
+      },
+      {
+       "char": "config",
+       "hex": "0f7e858c939aa1a8afb6bdc4cbd2d9e0e7eef5fc"
+      },
+      {
+       "char": "config",
+       "hex": "10030a11181f262d343b424950575e656c737a81"
+      },
+      {
+       "char": "config",
+       "hex": "11888f969da4abb2b9c0c7ced5dce3eaf1f8ff06"
+      },
+      {
+       "char": "config",
+       "hex": "120d141b222930373e454c535a61686f767d848b"
+      },
+      {
+       "char": "config",
+       "hex": "139299a0a7aeb5bcc3cad1d8dfe6edf4fb020910"
+      },
+      {
+       "char": "config",
+       "hex": "14171e252c333a41484f565d646b727980878e95"
+      },
+      {
+       "char": "config",
+       "hex": "559ca3aab1b8bfc6cdd4dbe2e9"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "ping_response_segmented_mtu185",
+   "description": "The same answer at MTU 185",
+   "mtu": 185,
+   "secure": true,
+   "steps": [
+    {
+     "write": {
+      "char": "notification",
+      "hex": "c00001050001900100070e151c232a31383f464d545b626970777e858c939aa1a8afb6bdc4cbd2d9e0e7eef5fc030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dce3eaf1f8ff060d141b222930373e454c535a61686f767d848b9299a0a7aeb5bcc3cad1d8dfe6edf4fb020910171e252c333a41484f565d646b727980878e959ca3aab1b8bfc6cdd4dbe2e9f0f7fe050c131a21282f363d444b525960676e757c838a91989fa6adb4bbc2c9d0d7dee5ecf3fa01080f161d242b323940474e555c636a71787f868d949ba2a9b0b7bec5ccd3dae1e8eff6fd040b121920272e353c434a51585f666d747b828990979ea5acb3bac1c8cfd6dde4ebf2f900070e151c232a31383f464d545b626970777e858c939aa1a8afb6bdc4cbd2d9e0e7eef5fc030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dce3eaf1f8ff060d141b222930373e454c535a61686f767d848b9299a0a7aeb5bcc3cad1d8dfe6edf4fb020910171e252c333a41484f565d646b727980878e959ca3aab1b8bfc6cdd4dbe2e9"
+     },
+     "expect": [
+      {
+       "char": "notification",
+       "hex": "80008105000101000002900100070e151c232a31383f464d545b626970777e858c939aa1a8afb6bdc4cbd2d9e0e7eef5fc030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dce3eaf1f8ff060d141b222930373e454c535a61686f767d848b9299a0a7aeb5bcc3cad1d8dfe6edf4fb020910171e252c333a41484f565d646b727980878e959ca3aab1b8bfc6cdd4dbe2e9f0f7fe050c131a21282f363d444b525960676e757c838a91989f"
+      },
+      {
+       "char": "notification",
+       "hex": "01a6adb4bbc2c9d0d7dee5ecf3fa01080f161d242b323940474e555c636a71787f868d949ba2a9b0b7bec5ccd3dae1e8eff6fd040b121920272e353c434a51585f666d747b828990979ea5acb3bac1c8cfd6dde4ebf2f900070e151c232a31383f464d545b626970777e858c939aa1a8afb6bdc4cbd2d9e0e7eef5fc030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dce3eaf1f8ff060d141b222930373e454c535a61686f767d848b92"
+      },
+      {
+       "char": "notification",
+       "hex": "4299a0a7aeb5bcc3cad1d8dfe6edf4fb020910171e252c333a41484f565d646b727980878e959ca3aab1b8bfc6cdd4dbe2e9"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "response_written",
+   "description": "A response type written by the app: ERROR UNKNOWN_MESSAGE",
+   "mtu": 517,
+   "secure": true,
+   "steps": [
+    {
+     "write": {
+      "char": "config",
+      "hex": "c00081060001010000"
+     },
+     "expect": [
+      {
+       "char": "config",
+       "hex": "c000ff06000101000102010081"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "event_written",
+   "description": "An event type written by the app",
+   "mtu": 517,
+   "secure": true,
+   "steps": [
+    {
+     "write": {
+      "char": "config",
+      "hex": "c00060070001040001000000"
+     },
+     "expect": [
+      {
+       "char": "config",
+       "hex": "c000ff07000101000102010060"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "read_value_written",
+   "description": "CAPABILITIES written by the app",
+   "mtu": 517,
+   "secure": true,
+   "steps": [
+    {
+     "write": {
+      "char": "config",
+      "hex": "c0007e0800010600302e31332e30020b006550616765722d31413242031a007761766573686172655f73335f6570617065725f3135345f763204010001050500302e312e3006160001010001020200c800030200c80004010001050100010704003f0c00000801000109040000001e000a0400e0fd1c000b0f000101000102010003030400000004000b0f000101000202010001030400981300000b0f000101000302010004030400001000000b1900010100050201000103040058000000040200180005020018000c020005020d0400030000000e010000"
+     },
+     "expect": [
+      {
+       "char": "config",
+       "hex": "c000ff0800010100010201007e"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "error_written",
+   "description": "ERROR written by the app",
+   "mtu": 517,
+   "secure": true,
+   "steps": [
+    {
+     "write": {
+      "char": "transfer",
+      "hex": "c000ff090001010001"
+     },
+     "expect": [
+      {
+       "char": "transfer",
+       "hex": "c000ff090001010001020100ff"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "wrong_channel",
+   "description": "Requests on another request characteristic: ERROR UNKNOWN_MESSAGE there",
+   "mtu": 517,
+   "secure": true,
+   "steps": [
+    {
+     "write": {
+      "char": "notification",
+      "hex": "c000100a00"
+     },
+     "expect": [
+      {
+       "char": "notification",
+       "hex": "c000ff0a000101000102010010"
+      }
+     ]
+    },
+    {
+     "write": {
+      "char": "config",
+      "hex": "c000220b00"
+     },
+     "expect": [
+      {
+       "char": "config",
+       "hex": "c000ff0b000101000102010022"
+      }
+     ]
+    },
+    {
+     "write": {
+      "char": "config",
+      "hex": "c000320c0001010001"
+     },
+     "expect": [
+      {
+       "char": "config",
+       "hex": "c000ff0c000101000102010032"
+      }
+     ]
+    },
+    {
+     "write": {
+      "char": "transfer",
+      "hex": "c000120d00"
+     },
+     "expect": [
+      {
+       "char": "transfer",
+       "hex": "c000ff0d000101000102010012"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "wrong_channel_invalid_body",
+   "description": "Routing is checked before the body",
+   "mtu": 517,
+   "secure": true,
+   "steps": [
+    {
+     "write": {
+      "char": "notification",
+      "hex": "c000110e000205"
+     },
+     "expect": [
+      {
+       "char": "notification",
+       "hex": "c000ff0e000101000102010011"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "insecure_requests",
+   "description": "Link not secure: status-only INSUFFICIENT_SECURITY answers",
+   "mtu": 517,
+   "secure": false,
+   "steps": [
+    {
+     "write": {
+      "char": "config",
+      "hex": "c000100f00"
+     },
+     "expect": [
+      {
+       "char": "config",
+       "hex": "c000900f000101000d"
+      }
+     ]
+    },
+    {
+     "write": {
+      "char": "config",
+      "hex": "c000011000"
+     },
+     "expect": [
+      {
+       "char": "config",
+       "hex": "c0008110000101000d"
+      }
+     ]
+    },
+    {
+     "write": {
+      "char": "notification",
+      "hex": "c000221100"
+     },
+     "expect": [
+      {
+       "char": "notification",
+       "hex": "c000a211000101000d"
+      }
+     ]
+    },
+    {
+     "write": {
+      "char": "transfer",
+      "hex": "c000310000010100030204000000000003010000"
+     },
+     "expect": [
+      {
+       "char": "transfer",
+       "hex": "c00061000001010000020400000000000301000d"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "insecure_checked_before_body",
+   "description": "The security gate comes before body validation",
+   "mtu": 517,
+   "secure": false,
+   "steps": [
+    {
+     "write": {
+      "char": "config",
+      "hex": "c0001112000205"
+     },
+     "expect": [
+      {
+       "char": "config",
+       "hex": "c0009112000101000d"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "insecure_wrong_channel",
+   "description": "Routing comes before the security gate",
+   "mtu": 517,
+   "secure": false,
+   "steps": [
+    {
+     "write": {
+      "char": "transfer",
+      "hex": "c000101300"
+     },
+     "expect": [
+      {
+       "char": "transfer",
+       "hex": "c000ff13000101000102010010"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "header_errors",
+   "description": "Short header, wrong version, unknown type",
+   "mtu": 517,
+   "secure": true,
+   "steps": [
+    {
+     "write": {
+      "char": "config",
+      "hex": "c0000105"
+     },
+     "expect": [
+      {
+       "char": "config",
+       "hex": "c000ff00000101000202010001"
+      }
+     ]
+    },
+    {
+     "write": {
+      "char": "config",
+      "hex": "c007"
+     },
+     "expect": [
+      {
+       "char": "config",
+       "hex": "c000ff000001010002"
+      }
+     ]
+    },
+    {
+     "write": {
+      "char": "config",
+      "hex": "c001011400"
+     },
+     "expect": [
+      {
+       "char": "config",
+       "hex": "c000ff14000101000302010001"
+      }
+     ]
+    },
+    {
+     "write": {
+      "char": "notification",
+      "hex": "c0005e1500"
+     },
+     "expect": [
+      {
+       "char": "notification",
+       "hex": "c000ff1500010100010201005e"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "body_errors",
+   "description": "Invalid bodies: the request's response type with only the status",
+   "mtu": 517,
+   "secure": true,
+   "steps": [
+    {
+     "write": {
+      "char": "config",
+      "hex": "c0001016000102"
+     },
+     "expect": [
+      {
+       "char": "config",
+       "hex": "c00090160001010002"
+      }
+     ]
+    },
+    {
+     "write": {
+      "char": "config",
+      "hex": "c000011700010102000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+     },
+     "expect": [
+      {
+       "char": "config",
+       "hex": "c00081170001010005"
+      }
+     ]
+    },
+    {
+     "write": {
+      "char": "notification",
+      "hex": "c000211800"
+     },
+     "expect": [
+      {
+       "char": "notification",
+       "hex": "c000a1180001010004"
+      }
+     ]
+    },
+    {
+     "write": {
+      "char": "transfer",
+      "hex": "c0003319000102000102"
+     },
+     "expect": [
+      {
+       "char": "transfer",
+       "hex": "c000b3190001010002"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "chunk_errors",
+   "description": "Invalid XFER_CHUNKs are acked with the handle as sent (0 if unreadable)",
+   "mtu": 517,
+   "secure": true,
+   "steps": [
+    {
+     "write": {
+      "char": "transfer",
+      "hex": "c0003100000101000502040000000000"
+     },
+     "expect": [
+      {
+       "char": "transfer",
+       "hex": "c000610000010100050204000000000003010004"
+      }
+     ]
+    },
+    {
+     "write": {
+      "char": "transfer",
+      "hex": "c00031000001020005000204000000000003010000"
+     },
+     "expect": [
+      {
+       "char": "transfer",
+       "hex": "c000610000010100000204000000000003010002"
+      }
+     ]
+    },
+    {
+     "write": {
+      "char": "transfer",
+      "hex": "c0003100000101"
+     },
+     "expect": [
+      {
+       "char": "transfer",
+       "hex": "c000610000010100000204000000000003010002"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "segment_errors",
+   "description": "Reassembly errors are reported with ERROR on the characteristic, req_id 0",
+   "mtu": 517,
+   "secure": true,
+   "steps": [
+    {
+     "write": {
+      "char": "config",
+      "hex": "8000011a"
+     },
+     "expect": []
+    },
+    {
+     "write": {
+      "char": "config",
+      "hex": "4200"
+     },
+     "expect": [
+      {
+       "char": "config",
+       "hex": "c000ff00000101001a"
+      }
+     ]
+    },
+    {
+     "write": {
+      "char": "config",
+      "hex": "c000011b00"
+     },
+     "expect": [
+      {
+       "char": "config",
+       "hex": "c000811b0001010000"
+      }
+     ]
+    },
+    {
+     "write": {
+      "char": "notification",
+      "hex": "417a7a"
+     },
+     "expect": [
+      {
+       "char": "notification",
+       "hex": "c000ff00000101001a"
+      }
+     ]
+    },
+    {
+     "write": {
+      "char": "transfer",
+      "hex": "c0"
+     },
+     "expect": [
+      {
+       "char": "transfer",
+       "hex": "c000ff00000101001a"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "too_large",
+   "description": "A Config message above max_message_config",
+   "mtu": 517,
+   "secure": true,
+   "steps": [
+    {
+     "write": {
+      "char": "config",
+      "hex": "8000011c00014c04000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+     },
+     "expect": []
+    },
+    {
+     "write": {
+      "char": "config",
+      "hex": "0100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+     },
+     "expect": []
+    },
+    {
+     "write": {
+      "char": "config",
+      "hex": "4200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+     },
+     "expect": [
+      {
+       "char": "config",
+       "hex": "c000ff000001010005"
+      }
+     ]
+    },
+    {
+     "write": {
+      "char": "config",
+      "hex": "c000011d00"
+     },
+     "expect": [
+      {
+       "char": "config",
+       "hex": "c000811d0001010000"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "interleaved",
+   "description": "Each characteristic reassembles independently",
+   "mtu": 23,
+   "secure": true,
+   "steps": [
+    {
+     "write": {
+      "char": "config",
+      "hex": "8000011e00011e00000000000000000000000000"
+     },
+     "expect": []
+    },
+    {
+     "write": {
+      "char": "notification",
+      "hex": "8000011f00011e00000000000000000000000000"
+     },
+     "expect": []
+    },
+    {
+     "write": {
+      "char": "config",
+      "hex": "41000000000000000000000000000000000000"
+     },
+     "expect": [
+      {
+       "char": "config",
+       "hex": "8000811e0001010000021e000000000000000000"
+      },
+      {
+       "char": "config",
+       "hex": "0100000000000000000000000000000000000000"
+      },
+      {
+       "char": "config",
+       "hex": "42000000"
+      }
+     ]
+    },
+    {
+     "write": {
+      "char": "notification",
+      "hex": "41000000000000000000000000000000000000"
+     },
+     "expect": [
+      {
+       "char": "notification",
+       "hex": "8000811f0001010000021e000000000000000000"
+      },
+      {
+       "char": "notification",
+       "hex": "0100000000000000000000000000000000000000"
+      },
+      {
+       "char": "notification",
+       "hex": "42000000"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

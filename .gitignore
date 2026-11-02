@@ -1,0 +1,35 @@
+# Build outputs
+build/
+build-*/
+*.o
+*.a
+*.so
+*.elf
+*.map
+
+# ESP-IDF generated / downloaded
+sdkconfig
+sdkconfig.old
+managed_components/
+
+# Python
+tools/.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Secrets: signing keys are never committed
+keys/
+*.pem
+
+# Editors / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Local Claude Code settings
+.claude/settings.local.json
+
+# Downloaded dependencies (LVGL archive, source fonts): pinned by SHA-256, fetched on demand
+.deps/

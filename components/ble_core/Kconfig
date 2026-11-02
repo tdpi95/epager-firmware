@@ -1,0 +1,18 @@
+menu "ePager BLE"
+
+    config EPAGER_BLE_STATS
+        bool "Log connection parameters, MTU and PHY (hardware checks)"
+        default n
+        help
+            hw-checklist 1 (throughput): one line when the MTU, the connection parameters or the PHY
+            change, and the bytes received and sent per second while a transfer runs. Counts only: no
+            notification content, no peer address.
+
+    config EPAGER_BLE_2M_PHY
+        bool "Ask for the 2M PHY after connecting"
+        default n
+        help
+            Twice the radio speed when the phone supports it; the throughput check (hw-checklist 1)
+            compares it with 1M before it becomes the default.
+
+endmenu

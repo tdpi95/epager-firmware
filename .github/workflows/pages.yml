@@ -1,0 +1,97 @@
+name: Flashing page
+
+# Builds both firmware images and publishes them, with the web flasher (web/), to GitHub Pages.
+# Runs for a version tag or by hand; a push to main does not publish firmware.
+# Signing: add the RSA-3072 key (PEM, `espsecure.py generate_signing_key --version 2`) as the repository
+# secret EPAGER_SIGNING_KEY to publish signed images that accept OTA updates (docs/recovery.md §4).
+# Without it the images are unsigned development builds and the page says so.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        variant: [paper, lcd]
+    container: espressif/idf:v5.5.5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Allow git in the container
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: Check the tag matches the variant version
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          test "v$(cat variants/${{ matrix.variant }}/version.txt)" = "${GITHUB_REF_NAME}"
+      - name: Signing key
+        id: key
+        env:
+          EPAGER_SIGNING_KEY: ${{ secrets.EPAGER_SIGNING_KEY }}
+        run: |
+          if [ -n "$EPAGER_SIGNING_KEY" ]; then
+            mkdir -p keys
+            printf '%s\n' "$EPAGER_SIGNING_KEY" > keys/dev_signing_key.pem
+            chmod 600 keys/dev_signing_key.pem
+            echo "sign=ON" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::EPAGER_SIGNING_KEY is not set: building unsigned images"
+            echo "sign=OFF" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Build
+        run: |
+          . "$IDF_PATH/export.sh"
+          idf.py -C variants/${{ matrix.variant }} -B build/${{ matrix.variant }} \
+            -DEPAGER_SIGN=${{ steps.key.outputs.sign }} build
+      - name: Remove the key
+        if: always()
+        run: rm -rf keys
+      # The common parent of these paths is build/<variant>, which becomes the artifact's root.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ matrix.variant }}
+          if-no-files-found: error
+          path: |
+            build/${{ matrix.variant }}/flasher_args.json
+            build/${{ matrix.variant }}/project_description.json
+            build/${{ matrix.variant }}/sdkconfig
+            build/${{ matrix.variant }}/bootloader/bootloader.bin
+            build/${{ matrix.variant }}/partition_table/partition-table.bin
+            build/${{ matrix.variant }}/ota_data_initial.bin
+            build/${{ matrix.variant }}/epager_${{ matrix.variant }}.bin
+
+  site:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: build-*
+          path: build
+      - name: Assemble the site
+        run: |
+          python3 tools/web/make_site.py --out site \
+            --board paper=build/build-paper \
+            --board lcd=build/build-lcd
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deploy
+        uses: actions/deploy-pages@v4

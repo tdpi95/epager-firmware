@@ -1,0 +1,233 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epager.local/contracts/schemas/common.schema.json",
+  "title": "ePager shared structs",
+  "$defs": {
+    "display_info": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "description": "enum display_type (unknown values -> 0): 0 unknown, 1 epaper_bw, 2 lcd_color"
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "color_depth": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "description": "Bits per pixel."
+        },
+        "refresh_class": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "description": "enum refresh_class (unknown values -> 0): 0 unknown, 1 epaper, 2 lcd"
+        }
+      },
+      "required": [
+        "type",
+        "width",
+        "height",
+        "color_depth",
+        "refresh_class"
+      ],
+      "description": "Display properties."
+    },
+    "asset_support": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "asset_type": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "description": "enum asset_type (unknown values -> 0): 0 unknown, 1 font, 2 background, 3 theme, 5 app_icon"
+        },
+        "format": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "description": "enum asset_format (unknown values -> 0): 0 unknown, 1 mono1, 2 rgb565, 3 font_v1, 4 theme_v1, 6 rgb565a8"
+        },
+        "max_size": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535,
+          "description": "Exact image width in pixels this board requires for this type/format (since 0.4.0; always sent for app_icon). Absent: no fixed size."
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535,
+          "description": "Exact image height in pixels, as width."
+        }
+      },
+      "required": [
+        "asset_type",
+        "format",
+        "max_size"
+      ],
+      "description": "One supported asset type/format."
+    },
+    "config_entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "value": {
+          "type": "string",
+          "pattern": "^([0-9a-f]{2})*$",
+          "maxLength": 128,
+          "description": "hex-encoded bytes"
+        }
+      },
+      "required": [
+        "key",
+        "value"
+      ],
+      "description": "One config key and its encoded value."
+    },
+    "key_status": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "status": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "description": "status code: 0 OK, 1 UNKNOWN_MESSAGE, 2 MALFORMED, 3 UNSUPPORTED_VERSION, 4 MISSING_FIELD, 5 TOO_LARGE, 6 INVALID_UTF8, 7 INVALID_ID, 8 OUT_OF_RANGE, 9 UNKNOWN_KEY, 10 TYPE_MISMATCH, 11 READ_ONLY, 12 REVISION_CONFLICT, 13 INSUFFICIENT_SECURITY, 14 BUSY, 15 NO_SPACE, 16 BAD_OFFSET, 17 NO_SESSION, 18 CRC_MISMATCH, 19 HASH_MISMATCH, 20 SIGNATURE_INVALID, 21 IMAGE_INVALID, 22 LOW_BATTERY, 23 VERSION_REJECTED, 24 NOT_FOUND, 25 UNSUPPORTED, 26 SEGMENT_ERROR, 27 INTERNAL"
+        }
+      },
+      "required": [
+        "key",
+        "status"
+      ],
+      "description": "Per-key result of CONFIG_SET."
+    },
+    "app_entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "app_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "str: max 64 UTF-8 bytes; min 1 bytes"
+        },
+        "name": {
+          "type": "string",
+          "description": "text: max 64 UTF-8 bytes"
+        },
+        "policy": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "description": "enum app_policy (unknown values -> 0): 0 default, 1 allow, 2 block"
+        },
+        "source": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "description": "enum notif_source (unknown values -> 0): 0 unknown, 1 ancs, 2 android"
+        },
+        "last_seen": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295,
+          "description": "UTC seconds, 0 = unknown."
+        }
+      },
+      "required": [
+        "app_id",
+        "policy"
+      ],
+      "description": "A seen app."
+    },
+    "policy_entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "app_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "str: max 64 UTF-8 bytes; min 1 bytes"
+        },
+        "policy": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "description": "enum app_policy (unknown values -> 0): 0 default, 1 allow, 2 block"
+        }
+      },
+      "required": [
+        "app_id",
+        "policy"
+      ],
+      "description": "Policy assignment for one app."
+    },
+    "asset_entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "asset_type": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "description": "enum asset_type (unknown values -> 0): 0 unknown, 1 font, 2 background, 3 theme, 5 app_icon"
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9_-][a-z0-9._-]{0,31}$",
+          "minLength": 1,
+          "description": "id: max 32 UTF-8 bytes; min 1 bytes"
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "version": {
+          "type": "string",
+          "description": "str: max 32 UTF-8 bytes"
+        }
+      },
+      "required": [
+        "asset_type",
+        "id",
+        "size"
+      ],
+      "description": "An installed asset."
+    },
+    "status_code": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255,
+      "description": "status code: 0 OK, 1 UNKNOWN_MESSAGE, 2 MALFORMED, 3 UNSUPPORTED_VERSION, 4 MISSING_FIELD, 5 TOO_LARGE, 6 INVALID_UTF8, 7 INVALID_ID, 8 OUT_OF_RANGE, 9 UNKNOWN_KEY, 10 TYPE_MISMATCH, 11 READ_ONLY, 12 REVISION_CONFLICT, 13 INSUFFICIENT_SECURITY, 14 BUSY, 15 NO_SPACE, 16 BAD_OFFSET, 17 NO_SESSION, 18 CRC_MISMATCH, 19 HASH_MISMATCH, 20 SIGNATURE_INVALID, 21 IMAGE_INVALID, 22 LOW_BATTERY, 23 VERSION_REJECTED, 24 NOT_FOUND, 25 UNSUPPORTED, 26 SEGMENT_ERROR, 27 INTERNAL"
+    }
+  }
+}

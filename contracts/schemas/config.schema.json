@@ -1,0 +1,659 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epager.local/contracts/schemas/config.schema.json",
+  "title": "ePager config messages (logical form, protocol.md 2.3)",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/CONFIG_GET"
+    },
+    {
+      "$ref": "#/$defs/CONFIG_GET_RSP"
+    },
+    {
+      "$ref": "#/$defs/CONFIG_SET"
+    },
+    {
+      "$ref": "#/$defs/CONFIG_SET_RSP"
+    },
+    {
+      "$ref": "#/$defs/CONFIG_RESET"
+    },
+    {
+      "$ref": "#/$defs/CONFIG_RESET_RSP"
+    },
+    {
+      "$ref": "#/$defs/TIME_SYNC"
+    },
+    {
+      "$ref": "#/$defs/TIME_SYNC_RSP"
+    },
+    {
+      "$ref": "#/$defs/WIFI_SET"
+    },
+    {
+      "$ref": "#/$defs/WIFI_SET_RSP"
+    },
+    {
+      "$ref": "#/$defs/CONFIG_CHANGED"
+    }
+  ],
+  "$defs": {
+    "CONFIG_GET": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "fields"
+      ],
+      "description": "0x10 request on config. Read keys (none listed = all).",
+      "properties": {
+        "ver": {
+          "const": 0
+        },
+        "type": {
+          "const": "CONFIG_GET"
+        },
+        "req_id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "fields": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "key": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 65535
+              }
+            }
+          }
+        }
+      }
+    },
+    "CONFIG_GET_RSP": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "fields"
+      ],
+      "description": "0x90 response on config.",
+      "properties": {
+        "ver": {
+          "const": 0
+        },
+        "type": {
+          "const": "CONFIG_GET_RSP"
+        },
+        "req_id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "fields": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "status": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255,
+              "description": "status code: 0 OK, 1 UNKNOWN_MESSAGE, 2 MALFORMED, 3 UNSUPPORTED_VERSION, 4 MISSING_FIELD, 5 TOO_LARGE, 6 INVALID_UTF8, 7 INVALID_ID, 8 OUT_OF_RANGE, 9 UNKNOWN_KEY, 10 TYPE_MISMATCH, 11 READ_ONLY, 12 REVISION_CONFLICT, 13 INSUFFICIENT_SECURITY, 14 BUSY, 15 NO_SPACE, 16 BAD_OFFSET, 17 NO_SESSION, 18 CRC_MISMATCH, 19 HASH_MISMATCH, 20 SIGNATURE_INVALID, 21 IMAGE_INVALID, 22 LOW_BATTERY, 23 VERSION_REJECTED, 24 NOT_FOUND, 25 UNSUPPORTED, 26 SEGMENT_ERROR, 27 INTERNAL"
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "entry": {
+              "type": "array",
+              "items": {
+                "$ref": "common.schema.json#/$defs/config_entry"
+              }
+            }
+          },
+          "required": [
+            "status"
+          ]
+        }
+      }
+    },
+    "CONFIG_SET": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "fields"
+      ],
+      "description": "0x11 request on config. Atomic batch write.",
+      "properties": {
+        "ver": {
+          "const": 0
+        },
+        "type": {
+          "const": "CONFIG_SET"
+        },
+        "req_id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "fields": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "expected_revision": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "entry": {
+              "type": "array",
+              "items": {
+                "$ref": "common.schema.json#/$defs/config_entry"
+              }
+            }
+          },
+          "required": [
+            "entry"
+          ]
+        }
+      }
+    },
+    "CONFIG_SET_RSP": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "fields"
+      ],
+      "description": "0x91 response on config.",
+      "properties": {
+        "ver": {
+          "const": 0
+        },
+        "type": {
+          "const": "CONFIG_SET_RSP"
+        },
+        "req_id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "fields": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "status": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255,
+              "description": "status code: 0 OK, 1 UNKNOWN_MESSAGE, 2 MALFORMED, 3 UNSUPPORTED_VERSION, 4 MISSING_FIELD, 5 TOO_LARGE, 6 INVALID_UTF8, 7 INVALID_ID, 8 OUT_OF_RANGE, 9 UNKNOWN_KEY, 10 TYPE_MISMATCH, 11 READ_ONLY, 12 REVISION_CONFLICT, 13 INSUFFICIENT_SECURITY, 14 BUSY, 15 NO_SPACE, 16 BAD_OFFSET, 17 NO_SESSION, 18 CRC_MISMATCH, 19 HASH_MISMATCH, 20 SIGNATURE_INVALID, 21 IMAGE_INVALID, 22 LOW_BATTERY, 23 VERSION_REJECTED, 24 NOT_FOUND, 25 UNSUPPORTED, 26 SEGMENT_ERROR, 27 INTERNAL"
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "key_status": {
+              "type": "array",
+              "items": {
+                "$ref": "common.schema.json#/$defs/key_status"
+              }
+            }
+          },
+          "required": [
+            "status"
+          ]
+        }
+      }
+    },
+    "CONFIG_RESET": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "fields"
+      ],
+      "description": "0x12 request on config. Reset all keys to defaults.",
+      "properties": {
+        "ver": {
+          "const": 0
+        },
+        "type": {
+          "const": "CONFIG_RESET"
+        },
+        "req_id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "fields": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {}
+        }
+      }
+    },
+    "CONFIG_RESET_RSP": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "fields"
+      ],
+      "description": "0x92 response on config.",
+      "properties": {
+        "ver": {
+          "const": 0
+        },
+        "type": {
+          "const": "CONFIG_RESET_RSP"
+        },
+        "req_id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "fields": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "status": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255,
+              "description": "status code: 0 OK, 1 UNKNOWN_MESSAGE, 2 MALFORMED, 3 UNSUPPORTED_VERSION, 4 MISSING_FIELD, 5 TOO_LARGE, 6 INVALID_UTF8, 7 INVALID_ID, 8 OUT_OF_RANGE, 9 UNKNOWN_KEY, 10 TYPE_MISMATCH, 11 READ_ONLY, 12 REVISION_CONFLICT, 13 INSUFFICIENT_SECURITY, 14 BUSY, 15 NO_SPACE, 16 BAD_OFFSET, 17 NO_SESSION, 18 CRC_MISMATCH, 19 HASH_MISMATCH, 20 SIGNATURE_INVALID, 21 IMAGE_INVALID, 22 LOW_BATTERY, 23 VERSION_REJECTED, 24 NOT_FOUND, 25 UNSUPPORTED, 26 SEGMENT_ERROR, 27 INTERNAL"
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            }
+          },
+          "required": [
+            "status"
+          ]
+        }
+      }
+    },
+    "TIME_SYNC": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "fields"
+      ],
+      "description": "0x13 request on config. Set the clock.",
+      "properties": {
+        "ver": {
+          "const": 0
+        },
+        "type": {
+          "const": "TIME_SYNC"
+        },
+        "req_id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "fields": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "utc_s": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "tz_offset_min": {
+              "type": "integer",
+              "minimum": -720,
+              "maximum": 840
+            }
+          },
+          "required": [
+            "utc_s",
+            "tz_offset_min"
+          ]
+        }
+      }
+    },
+    "TIME_SYNC_RSP": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "fields"
+      ],
+      "description": "0x93 response on config.",
+      "properties": {
+        "ver": {
+          "const": 0
+        },
+        "type": {
+          "const": "TIME_SYNC_RSP"
+        },
+        "req_id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "fields": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "status": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255,
+              "description": "status code: 0 OK, 1 UNKNOWN_MESSAGE, 2 MALFORMED, 3 UNSUPPORTED_VERSION, 4 MISSING_FIELD, 5 TOO_LARGE, 6 INVALID_UTF8, 7 INVALID_ID, 8 OUT_OF_RANGE, 9 UNKNOWN_KEY, 10 TYPE_MISMATCH, 11 READ_ONLY, 12 REVISION_CONFLICT, 13 INSUFFICIENT_SECURITY, 14 BUSY, 15 NO_SPACE, 16 BAD_OFFSET, 17 NO_SESSION, 18 CRC_MISMATCH, 19 HASH_MISMATCH, 20 SIGNATURE_INVALID, 21 IMAGE_INVALID, 22 LOW_BATTERY, 23 VERSION_REJECTED, 24 NOT_FOUND, 25 UNSUPPORTED, 26 SEGMENT_ERROR, 27 INTERNAL"
+            }
+          },
+          "required": [
+            "status"
+          ]
+        }
+      }
+    },
+    "WIFI_SET": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "fields"
+      ],
+      "description": "0x14 request on config. Since 0.10.0: add/update, or forget saved Wi-Fi networks (boards with the wifi feature).",
+      "properties": {
+        "ver": {
+          "const": 0
+        },
+        "type": {
+          "const": "WIFI_SET"
+        },
+        "req_id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "fields": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "ssid": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Network name; required unless forgetting all saved networks.; str: max 32 UTF-8 bytes; min 1 bytes"
+            },
+            "password": {
+              "type": "string",
+              "description": "Empty or absent = open network, else 8-63 bytes (WPA2/WPA3 passphrase). Write-only.; str: max 63 UTF-8 bytes"
+            },
+            "forget": {
+              "type": "boolean",
+              "description": "True without ssid: erase all saved networks. True with ssid: erase that network; password is ignored."
+            }
+          }
+        }
+      }
+    },
+    "WIFI_SET_RSP": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "fields"
+      ],
+      "description": "0x94 response on config.",
+      "properties": {
+        "ver": {
+          "const": 0
+        },
+        "type": {
+          "const": "WIFI_SET_RSP"
+        },
+        "req_id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "fields": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "status": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255,
+              "description": "status code: 0 OK, 1 UNKNOWN_MESSAGE, 2 MALFORMED, 3 UNSUPPORTED_VERSION, 4 MISSING_FIELD, 5 TOO_LARGE, 6 INVALID_UTF8, 7 INVALID_ID, 8 OUT_OF_RANGE, 9 UNKNOWN_KEY, 10 TYPE_MISMATCH, 11 READ_ONLY, 12 REVISION_CONFLICT, 13 INSUFFICIENT_SECURITY, 14 BUSY, 15 NO_SPACE, 16 BAD_OFFSET, 17 NO_SESSION, 18 CRC_MISMATCH, 19 HASH_MISMATCH, 20 SIGNATURE_INVALID, 21 IMAGE_INVALID, 22 LOW_BATTERY, 23 VERSION_REJECTED, 24 NOT_FOUND, 25 UNSUPPORTED, 26 SEGMENT_ERROR, 27 INTERNAL"
+            }
+          },
+          "required": [
+            "status"
+          ]
+        }
+      }
+    },
+    "CONFIG_CHANGED": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "fields"
+      ],
+      "description": "0x60 event on config. Config or app policies changed.",
+      "properties": {
+        "ver": {
+          "const": 0
+        },
+        "type": {
+          "const": "CONFIG_CHANGED"
+        },
+        "req_id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "fields": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "revision": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "key": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 65535
+              }
+            }
+          },
+          "required": [
+            "revision"
+          ]
+        }
+      }
+    },
+    "config_values": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Typed view of config values by key name (registry config_keys).",
+      "properties": {
+        "ui.language": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "description": "key 1 (0x0001), since 0.1.0. On-device UI language. enum language (unknown values -> 0): 0 en, 1 vi",
+          "enum": [
+            0,
+            1
+          ],
+          "default": 0
+        },
+        "display.orientation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3,
+          "default": 0,
+          "description": "key 2 (0x0002), since 0.1.0. Rotation in 90 degree steps."
+        },
+        "display.full_refresh_every": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 30,
+          "description": "key 3 (0x0003), since 0.1.0, variants ['paper']. E-paper: full refresh after this many partial refreshes (a clock redraw counts as one, anything else as a quarter; a full refresh that falls due waits for a quiet moment). Default 10 before 0.9.2."
+        },
+        "display.show_body": {
+          "type": "boolean",
+          "default": true,
+          "description": "key 4 (0x0004), since 0.1.0. Show message body (false = title only, for privacy)."
+        },
+        "ui.clock_24h": {
+          "type": "boolean",
+          "default": true,
+          "description": "key 5 (0x0005), since 0.6.0. Clock format: true = 24-hour, false = 12-hour with AM/PM."
+        },
+        "ui.temp_unit": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "description": "key 6 (0x0006), since 0.6.0. Unit of the temperature shown on boards with the climate feature. enum temp_unit (unknown values -> 0): 0 celsius, 1 fahrenheit",
+          "enum": [
+            0,
+            1
+          ],
+          "default": 0
+        },
+        "display.brightness": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 70,
+          "description": "key 7 (0x0007), since 0.8.0, variants ['lcd']. Backlight brightness in percent while active (0 = off)."
+        },
+        "display.idle_dim_s": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535,
+          "default": 30,
+          "description": "key 8 (0x0008), since 0.8.0, variants ['lcd']. Dim the backlight after this many seconds without activity; 0 = never."
+        },
+        "display.idle_off_s": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535,
+          "default": 60,
+          "description": "key 9 (0x0009), since 0.8.0, variants ['lcd']. Switch the backlight and the panel off after this many seconds without activity; 0 = never. Default 300 before 0.12.1."
+        },
+        "display.mask_numbers": {
+          "type": "boolean",
+          "default": false,
+          "description": "key 10 (0x000A), since 0.10.1. Privacy: show every number of 4 or more digits as **** on the cards (one-time codes, balances); digits may be joined by . or , (1.234 and 1,234,567 are one number)."
+        },
+        "notif.default_app_policy": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "description": "key 16 (0x0010), since 0.1.0. Policy for apps without an explicit allow/block. enum default_policy (unknown values -> 0): 0 allow, 1 block",
+          "enum": [
+            0,
+            1
+          ],
+          "default": 0
+        },
+        "notif.category_mask": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535,
+          "description": "key 17 (0x0011), since 0.1.0. Bit per category; cleared bits are hidden. bitmask category_mask: bit 0 other, bit 1 incoming_call, bit 2 missed_call, bit 3 voicemail, bit 4 social, bit 5 schedule, bit 6 email, bit 7 news, bit 8 health_and_fitness, bit 9 business_and_finance, bit 10 location, bit 11 entertainment",
+          "default": 4095
+        },
+        "notif.min_priority": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "description": "key 18 (0x0012), since 0.1.0. Hide notifications below this priority. enum priority (unknown values -> 1): 0 low, 1 normal, 2 high, 3 urgent",
+          "enum": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "default": 0
+        },
+        "notif.show_silent": {
+          "type": "boolean",
+          "default": true,
+          "description": "key 19 (0x0013), since 0.1.0. Show notifications flagged silent."
+        },
+        "quiet.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "key 32 (0x0020), since 0.1.0. Quiet hours on/off."
+        },
+        "quiet.start_min": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1439,
+          "default": 1320,
+          "description": "key 33 (0x0021), since 0.1.0. Quiet hours start, minutes after local midnight."
+        },
+        "quiet.end_min": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1439,
+          "default": 420,
+          "description": "key 34 (0x0022), since 0.1.0. Quiet hours end, minutes after local midnight (may be before start: spans midnight)."
+        },
+        "time.tz_offset_min": {
+          "type": "integer",
+          "minimum": -720,
+          "maximum": 840,
+          "default": 0,
+          "description": "key 48 (0x0030), since 0.1.0. Local time offset from UTC in minutes."
+        },
+        "ui.theme_id": {
+          "type": "string",
+          "description": "key 64 (0x0040), since 0.1.0. Installed theme asset id; empty = built-in. str: max 32 UTF-8 bytes",
+          "default": ""
+        },
+        "ui.font_id": {
+          "type": "string",
+          "description": "key 65 (0x0041), since 0.1.0. Installed font asset id; empty = built-in. str: max 32 UTF-8 bytes",
+          "default": ""
+        },
+        "ui.background_id": {
+          "type": "string",
+          "description": "key 66 (0x0042), since 0.7.0. Installed background asset id; empty = none. Takes precedence over a theme's background. str: max 32 UTF-8 bytes",
+          "default": ""
+        },
+        "weather.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "key 80 (0x0050), since 0.9.0, variants ['lcd', 'paper']. Fetch the weather over Wi-Fi and show it on the idle screen."
+        },
+        "weather.city": {
+          "type": "string",
+          "description": "key 81 (0x0051), since 0.9.0, variants ['lcd', 'paper']. Place name the board looks up for the weather; empty = locate by the network's IP address. str: max 64 UTF-8 bytes",
+          "default": ""
+        },
+        "weather.interval_min": {
+          "type": "integer",
+          "minimum": 15,
+          "maximum": 240,
+          "default": 60,
+          "description": "key 82 (0x0052), since 0.9.0, variants ['lcd', 'paper']. Minutes between weather fetches (each one joins Wi-Fi and runs a TLS handshake). Default 30 before 0.12.1."
+        }
+      }
+    }
+  }
+}

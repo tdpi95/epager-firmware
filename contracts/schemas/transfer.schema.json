@@ -1,0 +1,776 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epager.local/contracts/schemas/transfer.schema.json",
+  "title": "ePager transfer messages (logical form, protocol.md 2.3)",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/XFER_BEGIN"
+    },
+    {
+      "$ref": "#/$defs/XFER_BEGIN_RSP"
+    },
+    {
+      "$ref": "#/$defs/XFER_CHUNK"
+    },
+    {
+      "$ref": "#/$defs/XFER_STATUS"
+    },
+    {
+      "$ref": "#/$defs/XFER_STATUS_RSP"
+    },
+    {
+      "$ref": "#/$defs/XFER_FINISH"
+    },
+    {
+      "$ref": "#/$defs/XFER_FINISH_RSP"
+    },
+    {
+      "$ref": "#/$defs/XFER_ABORT"
+    },
+    {
+      "$ref": "#/$defs/XFER_ABORT_RSP"
+    },
+    {
+      "$ref": "#/$defs/STORAGE_INFO"
+    },
+    {
+      "$ref": "#/$defs/STORAGE_INFO_RSP"
+    },
+    {
+      "$ref": "#/$defs/ASSET_LIST"
+    },
+    {
+      "$ref": "#/$defs/ASSET_LIST_RSP"
+    },
+    {
+      "$ref": "#/$defs/ASSET_DELETE"
+    },
+    {
+      "$ref": "#/$defs/ASSET_DELETE_RSP"
+    },
+    {
+      "$ref": "#/$defs/XFER_ACK"
+    }
+  ],
+  "$defs": {
+    "XFER_BEGIN": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "fields"
+      ],
+      "description": "0x30 request on transfer. Start or resume a transfer.",
+      "properties": {
+        "ver": {
+          "const": 0
+        },
+        "type": {
+          "const": "XFER_BEGIN"
+        },
+        "req_id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "fields": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255,
+              "description": "enum transfer_kind (unknown values -> 0): 0 unknown, 1 asset, 2 firmware"
+            },
+            "id": {
+              "type": "string",
+              "pattern": "^[a-z0-9_-][a-z0-9._-]{0,31}$",
+              "minLength": 1,
+              "description": "id: max 32 UTF-8 bytes; min 1 bytes"
+            },
+            "asset_type": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255,
+              "description": "enum asset_type (unknown values -> 0): 0 unknown, 1 font, 2 background, 3 theme, 5 app_icon"
+            },
+            "size": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4294967295
+            },
+            "crc32": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^([0-9a-f]{2})*$",
+              "maxLength": 64,
+              "minLength": 64,
+              "description": "hex-encoded bytes"
+            },
+            "version": {
+              "type": "string",
+              "description": "str: max 32 UTF-8 bytes"
+            },
+            "restart": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "kind",
+            "id",
+            "size",
+            "crc32",
+            "sha256"
+          ]
+        }
+      }
+    },
+    "XFER_BEGIN_RSP": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "fields"
+      ],
+      "description": "0xB0 response on transfer.",
+      "properties": {
+        "ver": {
+          "const": 0
+        },
+        "type": {
+          "const": "XFER_BEGIN_RSP"
+        },
+        "req_id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "fields": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "status": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255,
+              "description": "status code: 0 OK, 1 UNKNOWN_MESSAGE, 2 MALFORMED, 3 UNSUPPORTED_VERSION, 4 MISSING_FIELD, 5 TOO_LARGE, 6 INVALID_UTF8, 7 INVALID_ID, 8 OUT_OF_RANGE, 9 UNKNOWN_KEY, 10 TYPE_MISMATCH, 11 READ_ONLY, 12 REVISION_CONFLICT, 13 INSUFFICIENT_SECURITY, 14 BUSY, 15 NO_SPACE, 16 BAD_OFFSET, 17 NO_SESSION, 18 CRC_MISMATCH, 19 HASH_MISMATCH, 20 SIGNATURE_INVALID, 21 IMAGE_INVALID, 22 LOW_BATTERY, 23 VERSION_REJECTED, 24 NOT_FOUND, 25 UNSUPPORTED, 26 SEGMENT_ERROR, 27 INTERNAL"
+            },
+            "handle": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            },
+            "offset": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "prefix_crc32": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "max_chunk": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65535
+            },
+            "ack_window": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            }
+          },
+          "required": [
+            "status"
+          ]
+        }
+      }
+    },
+    "XFER_CHUNK": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "fields"
+      ],
+      "description": "0x31 request on transfer. Data at offset; answered by XFER_ACK events.",
+      "properties": {
+        "ver": {
+          "const": 0
+        },
+        "type": {
+          "const": "XFER_CHUNK"
+        },
+        "req_id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "fields": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "handle": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            },
+            "offset": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "data": {
+              "type": "string",
+              "pattern": "^([0-9a-f]{2})*$",
+              "maxLength": 2048,
+              "minLength": 2,
+              "description": "hex-encoded bytes"
+            }
+          },
+          "required": [
+            "handle",
+            "offset",
+            "data"
+          ]
+        }
+      }
+    },
+    "XFER_STATUS": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "fields"
+      ],
+      "description": "0x32 request on transfer. Query a transfer.",
+      "properties": {
+        "ver": {
+          "const": 0
+        },
+        "type": {
+          "const": "XFER_STATUS"
+        },
+        "req_id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "fields": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "handle": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          },
+          "required": [
+            "handle"
+          ]
+        }
+      }
+    },
+    "XFER_STATUS_RSP": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "fields"
+      ],
+      "description": "0xB2 response on transfer.",
+      "properties": {
+        "ver": {
+          "const": 0
+        },
+        "type": {
+          "const": "XFER_STATUS_RSP"
+        },
+        "req_id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "fields": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "status": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255,
+              "description": "status code: 0 OK, 1 UNKNOWN_MESSAGE, 2 MALFORMED, 3 UNSUPPORTED_VERSION, 4 MISSING_FIELD, 5 TOO_LARGE, 6 INVALID_UTF8, 7 INVALID_ID, 8 OUT_OF_RANGE, 9 UNKNOWN_KEY, 10 TYPE_MISMATCH, 11 READ_ONLY, 12 REVISION_CONFLICT, 13 INSUFFICIENT_SECURITY, 14 BUSY, 15 NO_SPACE, 16 BAD_OFFSET, 17 NO_SESSION, 18 CRC_MISMATCH, 19 HASH_MISMATCH, 20 SIGNATURE_INVALID, 21 IMAGE_INVALID, 22 LOW_BATTERY, 23 VERSION_REJECTED, 24 NOT_FOUND, 25 UNSUPPORTED, 26 SEGMENT_ERROR, 27 INTERNAL"
+            },
+            "state": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255,
+              "description": "enum xfer_state (unknown values -> 0): 0 idle, 1 receiving, 2 verifying, 3 complete, 4 failed"
+            },
+            "offset": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "prefix_crc32": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            }
+          },
+          "required": [
+            "status"
+          ]
+        }
+      }
+    },
+    "XFER_FINISH": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "fields"
+      ],
+      "description": "0x33 request on transfer. Verify and install.",
+      "properties": {
+        "ver": {
+          "const": 0
+        },
+        "type": {
+          "const": "XFER_FINISH"
+        },
+        "req_id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "fields": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "handle": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          },
+          "required": [
+            "handle"
+          ]
+        }
+      }
+    },
+    "XFER_FINISH_RSP": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "fields"
+      ],
+      "description": "0xB3 response on transfer.",
+      "properties": {
+        "ver": {
+          "const": 0
+        },
+        "type": {
+          "const": "XFER_FINISH_RSP"
+        },
+        "req_id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "fields": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "status": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255,
+              "description": "status code: 0 OK, 1 UNKNOWN_MESSAGE, 2 MALFORMED, 3 UNSUPPORTED_VERSION, 4 MISSING_FIELD, 5 TOO_LARGE, 6 INVALID_UTF8, 7 INVALID_ID, 8 OUT_OF_RANGE, 9 UNKNOWN_KEY, 10 TYPE_MISMATCH, 11 READ_ONLY, 12 REVISION_CONFLICT, 13 INSUFFICIENT_SECURITY, 14 BUSY, 15 NO_SPACE, 16 BAD_OFFSET, 17 NO_SESSION, 18 CRC_MISMATCH, 19 HASH_MISMATCH, 20 SIGNATURE_INVALID, 21 IMAGE_INVALID, 22 LOW_BATTERY, 23 VERSION_REJECTED, 24 NOT_FOUND, 25 UNSUPPORTED, 26 SEGMENT_ERROR, 27 INTERNAL"
+            }
+          },
+          "required": [
+            "status"
+          ]
+        }
+      }
+    },
+    "XFER_ABORT": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "fields"
+      ],
+      "description": "0x34 request on transfer. Discard a transfer.",
+      "properties": {
+        "ver": {
+          "const": 0
+        },
+        "type": {
+          "const": "XFER_ABORT"
+        },
+        "req_id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "fields": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "handle": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          },
+          "required": [
+            "handle"
+          ]
+        }
+      }
+    },
+    "XFER_ABORT_RSP": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "fields"
+      ],
+      "description": "0xB4 response on transfer.",
+      "properties": {
+        "ver": {
+          "const": 0
+        },
+        "type": {
+          "const": "XFER_ABORT_RSP"
+        },
+        "req_id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "fields": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "status": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255,
+              "description": "status code: 0 OK, 1 UNKNOWN_MESSAGE, 2 MALFORMED, 3 UNSUPPORTED_VERSION, 4 MISSING_FIELD, 5 TOO_LARGE, 6 INVALID_UTF8, 7 INVALID_ID, 8 OUT_OF_RANGE, 9 UNKNOWN_KEY, 10 TYPE_MISMATCH, 11 READ_ONLY, 12 REVISION_CONFLICT, 13 INSUFFICIENT_SECURITY, 14 BUSY, 15 NO_SPACE, 16 BAD_OFFSET, 17 NO_SESSION, 18 CRC_MISMATCH, 19 HASH_MISMATCH, 20 SIGNATURE_INVALID, 21 IMAGE_INVALID, 22 LOW_BATTERY, 23 VERSION_REJECTED, 24 NOT_FOUND, 25 UNSUPPORTED, 26 SEGMENT_ERROR, 27 INTERNAL"
+            }
+          },
+          "required": [
+            "status"
+          ]
+        }
+      }
+    },
+    "STORAGE_INFO": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "fields"
+      ],
+      "description": "0x38 request on transfer. Asset storage usage.",
+      "properties": {
+        "ver": {
+          "const": 0
+        },
+        "type": {
+          "const": "STORAGE_INFO"
+        },
+        "req_id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "fields": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {}
+        }
+      }
+    },
+    "STORAGE_INFO_RSP": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "fields"
+      ],
+      "description": "0xB8 response on transfer.",
+      "properties": {
+        "ver": {
+          "const": 0
+        },
+        "type": {
+          "const": "STORAGE_INFO_RSP"
+        },
+        "req_id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "fields": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "status": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255,
+              "description": "status code: 0 OK, 1 UNKNOWN_MESSAGE, 2 MALFORMED, 3 UNSUPPORTED_VERSION, 4 MISSING_FIELD, 5 TOO_LARGE, 6 INVALID_UTF8, 7 INVALID_ID, 8 OUT_OF_RANGE, 9 UNKNOWN_KEY, 10 TYPE_MISMATCH, 11 READ_ONLY, 12 REVISION_CONFLICT, 13 INSUFFICIENT_SECURITY, 14 BUSY, 15 NO_SPACE, 16 BAD_OFFSET, 17 NO_SESSION, 18 CRC_MISMATCH, 19 HASH_MISMATCH, 20 SIGNATURE_INVALID, 21 IMAGE_INVALID, 22 LOW_BATTERY, 23 VERSION_REJECTED, 24 NOT_FOUND, 25 UNSUPPORTED, 26 SEGMENT_ERROR, 27 INTERNAL"
+            },
+            "total": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "free": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "asset_count": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65535
+            }
+          },
+          "required": [
+            "status"
+          ]
+        }
+      }
+    },
+    "ASSET_LIST": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "fields"
+      ],
+      "description": "0x39 request on transfer. Page through installed assets.",
+      "properties": {
+        "ver": {
+          "const": 0
+        },
+        "type": {
+          "const": "ASSET_LIST"
+        },
+        "req_id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "fields": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "offset": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65535
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 16
+            }
+          }
+        }
+      }
+    },
+    "ASSET_LIST_RSP": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "fields"
+      ],
+      "description": "0xB9 response on transfer.",
+      "properties": {
+        "ver": {
+          "const": 0
+        },
+        "type": {
+          "const": "ASSET_LIST_RSP"
+        },
+        "req_id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "fields": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "status": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255,
+              "description": "status code: 0 OK, 1 UNKNOWN_MESSAGE, 2 MALFORMED, 3 UNSUPPORTED_VERSION, 4 MISSING_FIELD, 5 TOO_LARGE, 6 INVALID_UTF8, 7 INVALID_ID, 8 OUT_OF_RANGE, 9 UNKNOWN_KEY, 10 TYPE_MISMATCH, 11 READ_ONLY, 12 REVISION_CONFLICT, 13 INSUFFICIENT_SECURITY, 14 BUSY, 15 NO_SPACE, 16 BAD_OFFSET, 17 NO_SESSION, 18 CRC_MISMATCH, 19 HASH_MISMATCH, 20 SIGNATURE_INVALID, 21 IMAGE_INVALID, 22 LOW_BATTERY, 23 VERSION_REJECTED, 24 NOT_FOUND, 25 UNSUPPORTED, 26 SEGMENT_ERROR, 27 INTERNAL"
+            },
+            "total": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65535
+            },
+            "asset": {
+              "type": "array",
+              "items": {
+                "$ref": "common.schema.json#/$defs/asset_entry"
+              }
+            }
+          },
+          "required": [
+            "status"
+          ]
+        }
+      }
+    },
+    "ASSET_DELETE": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "fields"
+      ],
+      "description": "0x3A request on transfer. Delete an installed asset.",
+      "properties": {
+        "ver": {
+          "const": 0
+        },
+        "type": {
+          "const": "ASSET_DELETE"
+        },
+        "req_id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "fields": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "asset_type": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255,
+              "description": "enum asset_type (unknown values -> 0): 0 unknown, 1 font, 2 background, 3 theme, 5 app_icon"
+            },
+            "id": {
+              "type": "string",
+              "pattern": "^[a-z0-9_-][a-z0-9._-]{0,31}$",
+              "minLength": 1,
+              "description": "id: max 32 UTF-8 bytes; min 1 bytes"
+            }
+          },
+          "required": [
+            "asset_type",
+            "id"
+          ]
+        }
+      }
+    },
+    "ASSET_DELETE_RSP": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "fields"
+      ],
+      "description": "0xBA response on transfer.",
+      "properties": {
+        "ver": {
+          "const": 0
+        },
+        "type": {
+          "const": "ASSET_DELETE_RSP"
+        },
+        "req_id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "fields": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "status": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255,
+              "description": "status code: 0 OK, 1 UNKNOWN_MESSAGE, 2 MALFORMED, 3 UNSUPPORTED_VERSION, 4 MISSING_FIELD, 5 TOO_LARGE, 6 INVALID_UTF8, 7 INVALID_ID, 8 OUT_OF_RANGE, 9 UNKNOWN_KEY, 10 TYPE_MISMATCH, 11 READ_ONLY, 12 REVISION_CONFLICT, 13 INSUFFICIENT_SECURITY, 14 BUSY, 15 NO_SPACE, 16 BAD_OFFSET, 17 NO_SESSION, 18 CRC_MISMATCH, 19 HASH_MISMATCH, 20 SIGNATURE_INVALID, 21 IMAGE_INVALID, 22 LOW_BATTERY, 23 VERSION_REJECTED, 24 NOT_FOUND, 25 UNSUPPORTED, 26 SEGMENT_ERROR, 27 INTERNAL"
+            }
+          },
+          "required": [
+            "status"
+          ]
+        }
+      }
+    },
+    "XFER_ACK": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "fields"
+      ],
+      "description": "0x61 event on transfer. Flow control and chunk errors.",
+      "properties": {
+        "ver": {
+          "const": 0
+        },
+        "type": {
+          "const": "XFER_ACK"
+        },
+        "req_id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "fields": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "handle": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            },
+            "offset": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "status": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255,
+              "description": "status code: 0 OK, 1 UNKNOWN_MESSAGE, 2 MALFORMED, 3 UNSUPPORTED_VERSION, 4 MISSING_FIELD, 5 TOO_LARGE, 6 INVALID_UTF8, 7 INVALID_ID, 8 OUT_OF_RANGE, 9 UNKNOWN_KEY, 10 TYPE_MISMATCH, 11 READ_ONLY, 12 REVISION_CONFLICT, 13 INSUFFICIENT_SECURITY, 14 BUSY, 15 NO_SPACE, 16 BAD_OFFSET, 17 NO_SESSION, 18 CRC_MISMATCH, 19 HASH_MISMATCH, 20 SIGNATURE_INVALID, 21 IMAGE_INVALID, 22 LOW_BATTERY, 23 VERSION_REJECTED, 24 NOT_FOUND, 25 UNSUPPORTED, 26 SEGMENT_ERROR, 27 INTERNAL"
+            }
+          },
+          "required": [
+            "handle",
+            "offset",
+            "status"
+          ]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,343 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epager.local/contracts/schemas/notification.schema.json",
+  "title": "ePager notification messages (logical form, protocol.md 2.3)",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/NOTIF_POST"
+    },
+    {
+      "$ref": "#/$defs/NOTIF_POST_RSP"
+    },
+    {
+      "$ref": "#/$defs/NOTIF_REMOVE"
+    },
+    {
+      "$ref": "#/$defs/NOTIF_REMOVE_RSP"
+    },
+    {
+      "$ref": "#/$defs/NOTIF_CLEAR"
+    },
+    {
+      "$ref": "#/$defs/NOTIF_CLEAR_RSP"
+    },
+    {
+      "$ref": "#/$defs/NOTIF_DISMISSED"
+    }
+  ],
+  "$defs": {
+    "NOTIF_POST": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "fields"
+      ],
+      "description": "0x20 request on notification. Android: add or update a notification.",
+      "properties": {
+        "ver": {
+          "const": 0
+        },
+        "type": {
+          "const": "NOTIF_POST"
+        },
+        "req_id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "fields": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "key": {
+              "type": "string",
+              "minLength": 1,
+              "description": "str: max 64 UTF-8 bytes; min 1 bytes"
+            },
+            "app_id": {
+              "type": "string",
+              "minLength": 1,
+              "description": "str: max 64 UTF-8 bytes; min 1 bytes"
+            },
+            "app_name": {
+              "type": "string",
+              "description": "text: max 64 UTF-8 bytes"
+            },
+            "title": {
+              "type": "string",
+              "description": "text: max 256 UTF-8 bytes"
+            },
+            "subtitle": {
+              "type": "string",
+              "description": "text: max 256 UTF-8 bytes"
+            },
+            "body": {
+              "type": "string",
+              "description": "text: max 1024 UTF-8 bytes"
+            },
+            "timestamp": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295,
+              "description": "UTC seconds; 0 or absent = now."
+            },
+            "category": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255,
+              "description": "enum category (unknown values -> 0): 0 other, 1 incoming_call, 2 missed_call, 3 voicemail, 4 social, 5 schedule, 6 email, 7 news, 8 health_and_fitness, 9 business_and_finance, 10 location, 11 entertainment"
+            },
+            "priority": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255,
+              "description": "enum priority (unknown values -> 1): 0 low, 1 normal, 2 high, 3 urgent"
+            },
+            "flags": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255,
+              "description": "bitmask notif_flags: bit 0 silent, bit 1 important, bit 2 pre_existing, bit 3 positive_action, bit 4 negative_action"
+            }
+          },
+          "required": [
+            "key",
+            "app_id"
+          ]
+        }
+      }
+    },
+    "NOTIF_POST_RSP": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "fields"
+      ],
+      "description": "0xA0 response on notification.",
+      "properties": {
+        "ver": {
+          "const": 0
+        },
+        "type": {
+          "const": "NOTIF_POST_RSP"
+        },
+        "req_id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "fields": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "status": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255,
+              "description": "status code: 0 OK, 1 UNKNOWN_MESSAGE, 2 MALFORMED, 3 UNSUPPORTED_VERSION, 4 MISSING_FIELD, 5 TOO_LARGE, 6 INVALID_UTF8, 7 INVALID_ID, 8 OUT_OF_RANGE, 9 UNKNOWN_KEY, 10 TYPE_MISMATCH, 11 READ_ONLY, 12 REVISION_CONFLICT, 13 INSUFFICIENT_SECURITY, 14 BUSY, 15 NO_SPACE, 16 BAD_OFFSET, 17 NO_SESSION, 18 CRC_MISMATCH, 19 HASH_MISMATCH, 20 SIGNATURE_INVALID, 21 IMAGE_INVALID, 22 LOW_BATTERY, 23 VERSION_REJECTED, 24 NOT_FOUND, 25 UNSUPPORTED, 26 SEGMENT_ERROR, 27 INTERNAL"
+            },
+            "notif_id": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "shown": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "status"
+          ]
+        }
+      }
+    },
+    "NOTIF_REMOVE": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "fields"
+      ],
+      "description": "0x21 request on notification. Android: remove by key.",
+      "properties": {
+        "ver": {
+          "const": 0
+        },
+        "type": {
+          "const": "NOTIF_REMOVE"
+        },
+        "req_id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "fields": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "key": {
+              "type": "string",
+              "minLength": 1,
+              "description": "str: max 64 UTF-8 bytes; min 1 bytes"
+            }
+          },
+          "required": [
+            "key"
+          ]
+        }
+      }
+    },
+    "NOTIF_REMOVE_RSP": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "fields"
+      ],
+      "description": "0xA1 response on notification.",
+      "properties": {
+        "ver": {
+          "const": 0
+        },
+        "type": {
+          "const": "NOTIF_REMOVE_RSP"
+        },
+        "req_id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "fields": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "status": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255,
+              "description": "status code: 0 OK, 1 UNKNOWN_MESSAGE, 2 MALFORMED, 3 UNSUPPORTED_VERSION, 4 MISSING_FIELD, 5 TOO_LARGE, 6 INVALID_UTF8, 7 INVALID_ID, 8 OUT_OF_RANGE, 9 UNKNOWN_KEY, 10 TYPE_MISMATCH, 11 READ_ONLY, 12 REVISION_CONFLICT, 13 INSUFFICIENT_SECURITY, 14 BUSY, 15 NO_SPACE, 16 BAD_OFFSET, 17 NO_SESSION, 18 CRC_MISMATCH, 19 HASH_MISMATCH, 20 SIGNATURE_INVALID, 21 IMAGE_INVALID, 22 LOW_BATTERY, 23 VERSION_REJECTED, 24 NOT_FOUND, 25 UNSUPPORTED, 26 SEGMENT_ERROR, 27 INTERNAL"
+            }
+          },
+          "required": [
+            "status"
+          ]
+        }
+      }
+    },
+    "NOTIF_CLEAR": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "fields"
+      ],
+      "description": "0x22 request on notification. Remove all Android notifications.",
+      "properties": {
+        "ver": {
+          "const": 0
+        },
+        "type": {
+          "const": "NOTIF_CLEAR"
+        },
+        "req_id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "fields": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {}
+        }
+      }
+    },
+    "NOTIF_CLEAR_RSP": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "fields"
+      ],
+      "description": "0xA2 response on notification.",
+      "properties": {
+        "ver": {
+          "const": 0
+        },
+        "type": {
+          "const": "NOTIF_CLEAR_RSP"
+        },
+        "req_id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "fields": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "status": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255,
+              "description": "status code: 0 OK, 1 UNKNOWN_MESSAGE, 2 MALFORMED, 3 UNSUPPORTED_VERSION, 4 MISSING_FIELD, 5 TOO_LARGE, 6 INVALID_UTF8, 7 INVALID_ID, 8 OUT_OF_RANGE, 9 UNKNOWN_KEY, 10 TYPE_MISMATCH, 11 READ_ONLY, 12 REVISION_CONFLICT, 13 INSUFFICIENT_SECURITY, 14 BUSY, 15 NO_SPACE, 16 BAD_OFFSET, 17 NO_SESSION, 18 CRC_MISMATCH, 19 HASH_MISMATCH, 20 SIGNATURE_INVALID, 21 IMAGE_INVALID, 22 LOW_BATTERY, 23 VERSION_REJECTED, 24 NOT_FOUND, 25 UNSUPPORTED, 26 SEGMENT_ERROR, 27 INTERNAL"
+            }
+          },
+          "required": [
+            "status"
+          ]
+        }
+      }
+    },
+    "NOTIF_DISMISSED": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "fields"
+      ],
+      "description": "0x63 event on notification. Since 0.8.0: the user dismissed a notification on the board.",
+      "properties": {
+        "ver": {
+          "const": 0
+        },
+        "type": {
+          "const": "NOTIF_DISMISSED"
+        },
+        "req_id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "fields": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "notif_id": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295,
+              "description": "The board's id (NOTIF_POST_RSP.notif_id for Android)."
+            },
+            "source": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255,
+              "description": "enum notif_source (unknown values -> 0): 0 unknown, 1 ancs, 2 android"
+            },
+            "key": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Android: the NOTIF_POST key; absent for ANCS.; str: max 64 UTF-8 bytes; min 1 bytes"
+            }
+          },
+          "required": [
+            "notif_id",
+            "source"
+          ]
+        }
+      }
+    }
+  }
+}

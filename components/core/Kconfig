@@ -1,0 +1,20 @@
+menu "ePager"
+
+    comment "Variant features: off by default, a variant enables the ones it ships (PLAN section 3)"
+
+    config EPAGER_FEATURE_ANIMATION
+        bool "Animation engine"
+        default n
+
+    config EPAGER_FEATURE_TOUCH
+        bool "Touch input"
+        default n
+
+    config EPAGER_LOG_CONTENT
+        bool "Log notification content (DEBUG ONLY)"
+        default n
+        help
+            Privacy rule: notification titles, bodies and app names never appear in logs unless this
+            is on. Never enable it in a release build.
+
+endmenu

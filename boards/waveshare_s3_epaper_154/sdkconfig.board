@@ -1,0 +1,22 @@
+# Waveshare ESP32-S3-ePaper-1.54 V2 (module ESP32-S3-PICO-1-N8R8): chip, memory, console, clock. Every line says why.
+# Loaded after variants/sdkconfig.common and the variant's sdkconfig.defaults (variants/common.cmake).
+
+# --- memory (datasheet: 8 MB QUAD flash, 8 MB OCTAL PSRAM in the package; the chip is in board.cmake)
+CONFIG_ESPTOOLPY_FLASHSIZE_8MB=y
+CONFIG_SPIRAM=y
+CONFIG_SPIRAM_MODE_OCT=y
+# TODO(hw-verify): flash mode (QIO possible with quad flash) and PSRAM speed (default 40 MHz).
+
+# The Type-C connector is wired to the S3's native USB pins (GPIO19/20): console over USB Serial/JTAG.
+CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=y
+# USB Serial/JTAG cannot work in light sleep: with a USB host connected the chip never sleeps (the console and
+# flashing keep working; measure the sleep current on battery).
+CONFIG_USJ_NO_AUTO_LS_ON_CONNECTION=y
+
+# No 32 kHz crystal on this board (schematic): the BLE low-power clock is the main XTAL, kept powered
+# in light sleep. TODO(hw-verify): idle current with the link up.
+CONFIG_BT_CTRL_LPCLK_SEL_MAIN_XTAL=y
+CONFIG_BT_CTRL_MAIN_XTAL_PU_DURING_LIGHT_SLEEP=y
+
+# A short chime at boot through the speaker (PLAN D89).
+CONFIG_EPAGER_BOOT_SOUND=y

@@ -1,0 +1,10 @@
+# Overlay for -DEPAGER_SIGN=ON: signed app images, option A of PLAN D12 (no eFuses burned, USB recovery
+# always works). RSA-3072 Secure Boot V2 signature blocks; the build signs with the git-ignored dev key.
+# Generate it once:  espsecure.py generate_signing_key --version 2 keys/dev_signing_key.pem
+# (see docs/recovery.md). tools/sign (M6) wraps key handling for release keys.
+CONFIG_SECURE_SIGNED_APPS_NO_SECURE_BOOT=y
+CONFIG_SECURE_SIGNED_ON_UPDATE_NO_SECURE_BOOT=y
+CONFIG_SECURE_SIGNED_APPS_RSA_SCHEME=y
+CONFIG_SECURE_BOOT_BUILD_SIGNED_BINARIES=y
+# Relative to the project directory (variants/<variant>, two levels below the repository root).
+CONFIG_SECURE_BOOT_SIGNING_KEY="../../keys/dev_signing_key.pem"

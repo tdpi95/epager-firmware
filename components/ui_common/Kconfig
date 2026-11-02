@@ -1,0 +1,13 @@
+menu "ePager UI"
+
+    comment "Layouts compiled into the firmware (PLAN D51); a variant enables the one its display needs"
+
+    config EPAGER_UI_MONO
+        bool "1-bit e-paper layout and frame backend (Paper)"
+        default y
+
+    config EPAGER_UI_COLOUR
+        bool "RGB565 LCD layout, area backend, touch and backlight (LCD)"
+        default n
+
+endmenu

@@ -1,0 +1,1734 @@
+{
+ "contract_version": "0.13.0",
+ "description": "Message codec vectors (protocol.md 2.2-2.4). OK cases with 'logical' and without 'decode_only' must also encode to exactly 'hex'. Error cases give the first error per the validation order.",
+ "scope": "app+board",
+ "cases": [
+  {
+   "name": "ping_empty",
+   "description": "PING with no payload",
+   "hex": "00010100",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "PING",
+    "req_id": 1,
+    "fields": {}
+   }
+  },
+  {
+   "name": "ping_payload",
+   "description": "PING with payload",
+   "hex": "0001020001030000ff10",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "PING",
+    "req_id": 2,
+    "fields": {
+     "payload": "00ff10"
+    }
+   }
+  },
+  {
+   "name": "ping_rsp",
+   "description": "",
+   "hex": "008102000101000002030000ff10",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "PING_RSP",
+    "req_id": 2,
+    "fields": {
+     "status": 0,
+     "payload": "00ff10"
+    }
+   }
+  },
+  {
+   "name": "req_id_max",
+   "description": "req_id 65535 round-trips",
+   "hex": "0001ffff",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "PING",
+    "req_id": 65535,
+    "fields": {}
+   }
+  },
+  {
+   "name": "capabilities_paper",
+   "description": "Full Paper capabilities",
+   "hex": "007e0000010600302e31332e30020b006550616765722d31413242031a007761766573686172655f73335f6570617065725f3135345f763204010001050500302e312e3006160001010001020200c800030200c80004010001050100010704003f0c00000801000109040000001e000a0400e0fd1c000b0f000101000102010003030400000004000b0f000101000202010001030400981300000b0f000101000302010004030400001000000b1900010100050201000103040058000000040200180005020018000c020005020d0400030000000e010000",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "CAPABILITIES",
+    "req_id": 0,
+    "fields": {
+     "contract_version": "0.13.0",
+     "device_name": "ePager-1A2B",
+     "board_id": "waveshare_s3_epaper_154_v2",
+     "variant": 1,
+     "firmware_version": "0.1.0",
+     "display": {
+      "type": 1,
+      "width": 200,
+      "height": 200,
+      "color_depth": 1,
+      "refresh_class": 1
+     },
+     "features": 3135,
+     "transports": 1,
+     "storage_total": 1966080,
+     "storage_free": 1900000,
+     "asset_support": [
+      {
+       "asset_type": 1,
+       "format": 3,
+       "max_size": 262144
+      },
+      {
+       "asset_type": 2,
+       "format": 1,
+       "max_size": 5016
+      },
+      {
+       "asset_type": 3,
+       "format": 4,
+       "max_size": 4096
+      },
+      {
+       "asset_type": 5,
+       "format": 1,
+       "max_size": 88,
+       "width": 24,
+       "height": 24
+      }
+     ],
+     "max_mtu": 517,
+     "config_revision": 3,
+     "pairing_mode": false
+    }
+   }
+  },
+  {
+   "name": "capabilities_paper_weather",
+   "description": "Paper with Wi-Fi and the weather (since 0.9.1)",
+   "hex": "007e0000010600302e31332e30020b006550616765722d35453646031a007761766573686172655f73335f6570617065725f3135345f763204010001050500302e312e3006160001010001020200c800030200c80004010001050100010704003f3c00000801000109040000001e000a0400e0fd1c000b0f000101000102010003030400000004000b0f000101000202010001030400981300000b0f000101000302010004030400001000000b1900010100050201000103040058000000040200180005020018000c020005020d0400030000000e010000",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "CAPABILITIES",
+    "req_id": 0,
+    "fields": {
+     "contract_version": "0.13.0",
+     "device_name": "ePager-5E6F",
+     "board_id": "waveshare_s3_epaper_154_v2",
+     "variant": 1,
+     "firmware_version": "0.1.0",
+     "display": {
+      "type": 1,
+      "width": 200,
+      "height": 200,
+      "color_depth": 1,
+      "refresh_class": 1
+     },
+     "features": 15423,
+     "transports": 1,
+     "storage_total": 1966080,
+     "storage_free": 1900000,
+     "asset_support": [
+      {
+       "asset_type": 1,
+       "format": 3,
+       "max_size": 262144
+      },
+      {
+       "asset_type": 2,
+       "format": 1,
+       "max_size": 5016
+      },
+      {
+       "asset_type": 3,
+       "format": 4,
+       "max_size": 4096
+      },
+      {
+       "asset_type": 5,
+       "format": 1,
+       "max_size": 88,
+       "width": 24,
+       "height": 24
+      }
+     ],
+     "max_mtu": 517,
+     "config_revision": 3,
+     "pairing_mode": false
+    }
+   }
+  },
+  {
+   "name": "capabilities_lcd",
+   "description": "LCD capabilities (since 0.8.0): colour LCD, touch, rgb565 background and 32x32 rgb565a8 app icons; weather and wifi features (since 0.9.0)",
+   "hex": "007e0000010600302e31332e30020b006550616765722d334334440310006f7374625f7869616f7a68695f33737404010002050500302e312e30061600010100020202002801030200f00004010010050100020704001f3600000801000109040000007e000a0400401f7d000b0f000101000202010002030400102b02000b19000101000502010006030400100c0000040200200005020020000c020005020d0400010000000e010001",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "CAPABILITIES",
+    "req_id": 0,
+    "fields": {
+     "contract_version": "0.13.0",
+     "device_name": "ePager-3C4D",
+     "board_id": "ostb_xiaozhi_3st",
+     "variant": 2,
+     "firmware_version": "0.1.0",
+     "display": {
+      "type": 2,
+      "width": 296,
+      "height": 240,
+      "color_depth": 16,
+      "refresh_class": 2
+     },
+     "features": 13855,
+     "transports": 1,
+     "storage_total": 8257536,
+     "storage_free": 8200000,
+     "asset_support": [
+      {
+       "asset_type": 2,
+       "format": 2,
+       "max_size": 142096
+      },
+      {
+       "asset_type": 5,
+       "format": 6,
+       "max_size": 3088,
+       "width": 32,
+       "height": 32
+      }
+     ],
+     "max_mtu": 517,
+     "config_revision": 1,
+     "pairing_mode": true
+    }
+   }
+  },
+  {
+   "name": "config_get_all",
+   "description": "No keys = all",
+   "hex": "00100a00",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "CONFIG_GET",
+    "req_id": 10,
+    "fields": {}
+   }
+  },
+  {
+   "name": "config_get_keys",
+   "description": "Repeated u16 keys",
+   "hex": "00100b00010200010001020003000102001000",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "CONFIG_GET",
+    "req_id": 11,
+    "fields": {
+     "key": [
+      1,
+      3,
+      16
+     ]
+    }
+   }
+  },
+  {
+   "name": "config_get_rsp",
+   "description": "",
+   "hex": "00900b00010100000204000700000003090001020001000201000103090001020003000201000a0308000102004000020000",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "CONFIG_GET_RSP",
+    "req_id": 11,
+    "fields": {
+     "status": 0,
+     "revision": 7,
+     "entry": [
+      {
+       "key": 1,
+       "value": "01"
+      },
+      {
+       "key": 3,
+       "value": "0a"
+      },
+      {
+       "key": 64,
+       "value": ""
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "config_set",
+   "description": "Batch with expected_revision",
+   "hex": "00110c0001040007000000020900010200010002010001020a0001020021000202002805020a000102003000020200a401",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "CONFIG_SET",
+    "req_id": 12,
+    "fields": {
+     "expected_revision": 7,
+     "entry": [
+      {
+       "key": 1,
+       "value": "01"
+      },
+      {
+       "key": 33,
+       "value": "2805"
+      },
+      {
+       "key": 48,
+       "value": "a401"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "config_set_rsp_partial_unknown",
+   "description": "Unknown key reported, others applied",
+   "hex": "00910c000101000002040008000000030900010200010002010000030900010200e70302010009",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "CONFIG_SET_RSP",
+    "req_id": 12,
+    "fields": {
+     "status": 0,
+     "revision": 8,
+     "key_status": [
+      {
+       "key": 1,
+       "status": 0
+      },
+      {
+       "key": 999,
+       "status": 9
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "config_set_rsp_failed",
+   "description": "Validation failure: status only",
+   "hex": "00910d0001010008",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "CONFIG_SET_RSP",
+    "req_id": 13,
+    "fields": {
+     "status": 8
+    }
+   }
+  },
+  {
+   "name": "config_reset",
+   "description": "",
+   "hex": "00120e00",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "CONFIG_RESET",
+    "req_id": 14,
+    "fields": {}
+   }
+  },
+  {
+   "name": "config_reset_rsp",
+   "description": "",
+   "hex": "00920e000101000002040009000000",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "CONFIG_RESET_RSP",
+    "req_id": 14,
+    "fields": {
+     "status": 0,
+     "revision": 9
+    }
+   }
+  },
+  {
+   "name": "time_sync_vn",
+   "description": "UTC+7",
+   "hex": "00130f00010400f72ccb6a020200a401",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "TIME_SYNC",
+    "req_id": 15,
+    "fields": {
+     "utc_s": 1791700215,
+     "tz_offset_min": 420
+    }
+   }
+  },
+  {
+   "name": "time_sync_negative_tz",
+   "description": "UTC-5 and the range edges",
+   "hex": "001310000104000000000002020030fd",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "TIME_SYNC",
+    "req_id": 16,
+    "fields": {
+     "utc_s": 0,
+     "tz_offset_min": -720
+    }
+   }
+  },
+  {
+   "name": "time_sync_max_tz",
+   "description": "",
+   "hex": "00131100010400ffffffff0202004803",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "TIME_SYNC",
+    "req_id": 17,
+    "fields": {
+     "utc_s": 4294967295,
+     "tz_offset_min": 840
+    }
+   }
+  },
+  {
+   "name": "time_sync_rsp",
+   "description": "",
+   "hex": "0093110001010000",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "TIME_SYNC_RSP",
+    "req_id": 17,
+    "fields": {
+     "status": 0
+    }
+   }
+  },
+  {
+   "name": "wifi_set",
+   "description": "Network with a WPA2 passphrase (since 0.9.0)",
+   "hex": "00141200010d005175c3a16e2043616665203547020a006d61746b686175313233",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "WIFI_SET",
+    "req_id": 18,
+    "fields": {
+     "ssid": "Quán Cafe 5G",
+     "password": "matkhau123"
+    }
+   }
+  },
+  {
+   "name": "wifi_set_open",
+   "description": "Open network: no password",
+   "hex": "001413000108004361666546726565",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "WIFI_SET",
+    "req_id": 19,
+    "fields": {
+     "ssid": "CafeFree"
+    }
+   }
+  },
+  {
+   "name": "wifi_set_max_lengths",
+   "description": "32-byte name, 63-byte passphrase",
+   "hex": "001419000120005353535353535353535353535353535353535353535353535353535353535353023f00707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "WIFI_SET",
+    "req_id": 25,
+    "fields": {
+     "ssid": "SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS",
+     "password": "ppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp"
+    }
+   }
+  },
+  {
+   "name": "wifi_set_forget",
+   "description": "Forget all saved networks",
+   "hex": "00141a0003010001",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "WIFI_SET",
+    "req_id": 26,
+    "fields": {
+     "forget": true
+    }
+   }
+  },
+  {
+   "name": "wifi_set_rsp",
+   "description": "",
+   "hex": "00941a0001010000",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "WIFI_SET_RSP",
+    "req_id": 26,
+    "fields": {
+     "status": 0
+    }
+   }
+  },
+  {
+   "name": "apps_list",
+   "description": "",
+   "hex": "00181400010200000002010010",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "APPS_LIST",
+    "req_id": 20,
+    "fields": {
+     "offset": 0,
+     "limit": 16
+    }
+   }
+  },
+  {
+   "name": "apps_list_rsp",
+   "description": "Vietnamese app name",
+   "hex": "00981400010100000202000200032600010d00636f6d2e7a696e672e7a616c6f0204005a616c6f0301000104010002050400202ccb6a032800010b00766e2e6d6f6d6f2e61707002080056c3ad204d6f4d6f030100000401000105040000000000",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "APPS_LIST_RSP",
+    "req_id": 20,
+    "fields": {
+     "status": 0,
+     "total": 2,
+     "app": [
+      {
+       "app_id": "com.zing.zalo",
+       "name": "Zalo",
+       "policy": 1,
+       "source": 2,
+       "last_seen": 1791700000
+      },
+      {
+       "app_id": "vn.momo.app",
+       "name": "Ví MoMo",
+       "policy": 0,
+       "source": 1,
+       "last_seen": 0
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "apps_set_policy",
+   "description": "",
+   "hex": "00191500011800011100636f6d2e66616365626f6f6b2e6f72636102010002011400010d00636f6d2e7a696e672e7a616c6f02010001",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "APPS_SET_POLICY",
+    "req_id": 21,
+    "fields": {
+     "entry": [
+      {
+       "app_id": "com.facebook.orca",
+       "policy": 2
+      },
+      {
+       "app_id": "com.zing.zalo",
+       "policy": 1
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "apps_set_policy_rsp",
+   "description": "",
+   "hex": "00991500010100000204000a000000",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "APPS_SET_POLICY_RSP",
+    "req_id": 21,
+    "fields": {
+     "status": 0,
+     "revision": 10
+    }
+   }
+  },
+  {
+   "name": "apps_forget_all",
+   "description": "No ids = all",
+   "hex": "001a1600",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "APPS_FORGET",
+    "req_id": 22,
+    "fields": {}
+   }
+  },
+  {
+   "name": "apps_forget_some",
+   "description": "",
+   "hex": "001a1700010500636f6d2e61010500636f6d2e62",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "APPS_FORGET",
+    "req_id": 23,
+    "fields": {
+     "app_id": [
+      "com.a",
+      "com.b"
+     ]
+    }
+   }
+  },
+  {
+   "name": "apps_forget_rsp",
+   "description": "",
+   "hex": "009a1700010100000204000b000000",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "APPS_FORGET_RSP",
+    "req_id": 23,
+    "fields": {
+     "status": 0,
+     "revision": 11
+    }
+   }
+  },
+  {
+   "name": "notif_post_full",
+   "description": "Vietnamese text, all fields",
+   "hex": "00201e00011f00307c636f6d2e7a696e672e7a616c6f7c313030317c6e756c6c7c3130313233020d00636f6d2e7a696e672e7a616c6f0304005a616c6f0410004e677579e1bb856e2056c4836e20416e0510004e68c3b36d2067696120c491c3ac6e6806290054e1bb9169206e6179206de1baa579206769e1bb9d2076e1bb8120c4836e2063c6a16d3f20f09f9880070400f72ccb6a08010004090100020a010002",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "NOTIF_POST",
+    "req_id": 30,
+    "fields": {
+     "key": "0|com.zing.zalo|1001|null|10123",
+     "app_id": "com.zing.zalo",
+     "app_name": "Zalo",
+     "title": "Nguyễn Văn An",
+     "subtitle": "Nhóm gia đình",
+     "body": "Tối nay mấy giờ về ăn cơm? 😀",
+     "timestamp": 1791700215,
+     "category": 4,
+     "priority": 2,
+     "flags": 2
+    }
+   }
+  },
+  {
+   "name": "notif_post_minimal",
+   "description": "Only required fields",
+   "hex": "00201f000101006b02010061",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "NOTIF_POST",
+    "req_id": 31,
+    "fields": {
+     "key": "k",
+     "app_id": "a"
+    }
+   }
+  },
+  {
+   "name": "notif_post_max_body",
+   "description": "Body exactly max_len (1024 bytes) with 3-byte characters",
+   "hex": "002020000102006b3202010061060004e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb87e1bb8761",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "NOTIF_POST",
+    "req_id": 32,
+    "fields": {
+     "key": "k2",
+     "app_id": "a",
+     "body": "ệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệa"
+    }
+   }
+  },
+  {
+   "name": "notif_post_unknown_enum",
+   "description": "Unknown category/priority values are accepted (receiver falls back)",
+   "hex": "002021000102006b3302010061080100c8090100090a0100ff",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "NOTIF_POST",
+    "req_id": 33,
+    "fields": {
+     "key": "k3",
+     "app_id": "a",
+     "category": 200,
+     "priority": 9,
+     "flags": 255
+    }
+   }
+  },
+  {
+   "name": "notif_post_rsp",
+   "description": "",
+   "hex": "00a01e00010100000204002a00000003010001",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "NOTIF_POST_RSP",
+    "req_id": 30,
+    "fields": {
+     "status": 0,
+     "notif_id": 42,
+     "shown": true
+    }
+   }
+  },
+  {
+   "name": "notif_post_rsp_filtered",
+   "description": "",
+   "hex": "00a01f00010100000204002b00000003010000",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "NOTIF_POST_RSP",
+    "req_id": 31,
+    "fields": {
+     "status": 0,
+     "notif_id": 43,
+     "shown": false
+    }
+   }
+  },
+  {
+   "name": "notif_remove",
+   "description": "",
+   "hex": "002122000101006b",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "NOTIF_REMOVE",
+    "req_id": 34,
+    "fields": {
+     "key": "k"
+    }
+   }
+  },
+  {
+   "name": "notif_remove_rsp_not_found",
+   "description": "",
+   "hex": "00a1220001010018",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "NOTIF_REMOVE_RSP",
+    "req_id": 34,
+    "fields": {
+     "status": 24
+    }
+   }
+  },
+  {
+   "name": "notif_clear",
+   "description": "",
+   "hex": "00222300",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "NOTIF_CLEAR",
+    "req_id": 35,
+    "fields": {}
+   }
+  },
+  {
+   "name": "notif_clear_rsp",
+   "description": "",
+   "hex": "00a2230001010000",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "NOTIF_CLEAR_RSP",
+    "req_id": 35,
+    "fields": {
+     "status": 0
+    }
+   }
+  },
+  {
+   "name": "xfer_begin_asset",
+   "description": "",
+   "hex": "0030280001010001020c0062672d6361745f30312e76320301000204040098130000050400cdab3412062000009f8fddb7967d72d4578b3ce7406e79fd5f2a99c702a2b7e7157ebfd8c49751070500312e302e30",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "XFER_BEGIN",
+    "req_id": 40,
+    "fields": {
+     "kind": 1,
+     "id": "bg-cat_01.v2",
+     "asset_type": 2,
+     "size": 5016,
+     "crc32": 305441741,
+     "sha256": "009f8fddb7967d72d4578b3ce7406e79fd5f2a99c702a2b7e7157ebfd8c49751",
+     "version": "1.0.0"
+    }
+   }
+  },
+  {
+   "name": "xfer_begin_app_icon",
+   "description": "App icon upload (asset-formats.md app_icon): id = app_icon_id(\"com.zing.zalo\"), 88-byte 24x24 mono1 file",
+   "hex": "003031000101000102200033666237633034363664343333333038383834653532363863666637363033360301000504040058000000050400205fb1f9062000b7a43ee06c9ba62b812d4e6a64b6b458de932c7eaa02d1344c1c3c16c235bd69",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "XFER_BEGIN",
+    "req_id": 49,
+    "fields": {
+     "kind": 1,
+     "id": "3fb7c0466d433308884e5268cff76036",
+     "asset_type": 5,
+     "size": 88,
+     "crc32": 4189151008,
+     "sha256": "b7a43ee06c9ba62b812d4e6a64b6b458de932c7eaa02d1344c1c3c16c235bd69"
+    }
+   }
+  },
+  {
+   "name": "xfer_begin_firmware_restart",
+   "description": "",
+   "hex": "00302900010100020208006669726d7761726504040060e31600050400efbeadde062000009f8fddb7967d72d4578b3ce7406e79fd5f2a99c702a2b7e7157ebfd8c49751070500302e322e3008010001",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "XFER_BEGIN",
+    "req_id": 41,
+    "fields": {
+     "kind": 2,
+     "id": "firmware",
+     "size": 1500000,
+     "crc32": 3735928559,
+     "sha256": "009f8fddb7967d72d4578b3ce7406e79fd5f2a99c702a2b7e7157ebfd8c49751",
+     "version": "0.2.0",
+     "restart": true
+    }
+   }
+  },
+  {
+   "name": "xfer_begin_rsp_resume",
+   "description": "",
+   "hex": "00b029000101000002010001030400000001000404000df0ad0b050200ef0106040000200000",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "XFER_BEGIN_RSP",
+    "req_id": 41,
+    "fields": {
+     "status": 0,
+     "handle": 1,
+     "offset": 65536,
+     "prefix_crc32": 195948557,
+     "max_chunk": 495,
+     "ack_window": 8192
+    }
+   }
+  },
+  {
+   "name": "xfer_begin_rsp_low_battery",
+   "description": "",
+   "hex": "00b02a0001010016",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "XFER_BEGIN_RSP",
+    "req_id": 42,
+    "fields": {
+     "status": 22
+    }
+   }
+  },
+  {
+   "name": "xfer_chunk_max",
+   "description": "1024 data bytes",
+   "hex": "003100000101000102040000000100030004000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "XFER_CHUNK",
+    "req_id": 0,
+    "fields": {
+     "handle": 1,
+     "offset": 65536,
+     "data": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff"
+    }
+   }
+  },
+  {
+   "name": "xfer_chunk_small",
+   "description": "",
+   "hex": "003100000101000102040000000000030100e9",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "XFER_CHUNK",
+    "req_id": 0,
+    "fields": {
+     "handle": 1,
+     "offset": 0,
+     "data": "e9"
+    }
+   }
+  },
+  {
+   "name": "xfer_status",
+   "description": "",
+   "hex": "00322b0001010001",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "XFER_STATUS",
+    "req_id": 43,
+    "fields": {
+     "handle": 1
+    }
+   }
+  },
+  {
+   "name": "xfer_status_rsp",
+   "description": "",
+   "hex": "00b22b0001010000020100010304000010000004040001000000",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "XFER_STATUS_RSP",
+    "req_id": 43,
+    "fields": {
+     "status": 0,
+     "state": 1,
+     "offset": 4096,
+     "prefix_crc32": 1
+    }
+   }
+  },
+  {
+   "name": "xfer_finish",
+   "description": "",
+   "hex": "00332c0001010001",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "XFER_FINISH",
+    "req_id": 44,
+    "fields": {
+     "handle": 1
+    }
+   }
+  },
+  {
+   "name": "xfer_finish_rsp_hash",
+   "description": "",
+   "hex": "00b32c0001010013",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "XFER_FINISH_RSP",
+    "req_id": 44,
+    "fields": {
+     "status": 19
+    }
+   }
+  },
+  {
+   "name": "xfer_abort",
+   "description": "",
+   "hex": "00342d0001010001",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "XFER_ABORT",
+    "req_id": 45,
+    "fields": {
+     "handle": 1
+    }
+   }
+  },
+  {
+   "name": "xfer_abort_rsp",
+   "description": "",
+   "hex": "00b42d0001010000",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "XFER_ABORT_RSP",
+    "req_id": 45,
+    "fields": {
+     "status": 0
+    }
+   }
+  },
+  {
+   "name": "storage_info",
+   "description": "",
+   "hex": "00382e00",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "STORAGE_INFO",
+    "req_id": 46,
+    "fields": {}
+   }
+  },
+  {
+   "name": "storage_info_rsp",
+   "description": "",
+   "hex": "00b82e000101000002040000001e0003040040420f000402000300",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "STORAGE_INFO_RSP",
+    "req_id": 46,
+    "fields": {
+     "status": 0,
+     "total": 1966080,
+     "free": 1000000,
+     "asset_count": 3
+    }
+   }
+  },
+  {
+   "name": "asset_list",
+   "description": "",
+   "hex": "00392f00010200020002010001",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "ASSET_LIST",
+    "req_id": 47,
+    "fields": {
+     "offset": 2,
+     "limit": 1
+    }
+   }
+  },
+  {
+   "name": "asset_list_rsp",
+   "description": "",
+   "hex": "00b92f0001010000020200030003220001010002020c0062672d6361745f30312e763203040098130000040500312e302e30",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "ASSET_LIST_RSP",
+    "req_id": 47,
+    "fields": {
+     "status": 0,
+     "total": 3,
+     "asset": [
+      {
+       "asset_type": 2,
+       "id": "bg-cat_01.v2",
+       "size": 5016,
+       "version": "1.0.0"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "asset_delete",
+   "description": "",
+   "hex": "003a300001010002020c0062672d6361745f30312e7632",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "ASSET_DELETE",
+    "req_id": 48,
+    "fields": {
+     "asset_type": 2,
+     "id": "bg-cat_01.v2"
+    }
+   }
+  },
+  {
+   "name": "asset_delete_rsp",
+   "description": "",
+   "hex": "00ba300001010000",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "ASSET_DELETE_RSP",
+    "req_id": 48,
+    "fields": {
+     "status": 0
+    }
+   }
+  },
+  {
+   "name": "event_config_changed",
+   "description": "",
+   "hex": "006000000104000800000002020001000202002100",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "CONFIG_CHANGED",
+    "req_id": 0,
+    "fields": {
+     "revision": 8,
+     "key": [
+      1,
+      33
+     ]
+    }
+   }
+  },
+  {
+   "name": "event_config_changed_policy_only",
+   "description": "Policy change: no keys",
+   "hex": "0060000001040009000000",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "CONFIG_CHANGED",
+    "req_id": 0,
+    "fields": {
+     "revision": 9
+    }
+   }
+  },
+  {
+   "name": "event_notif_dismissed_android",
+   "description": "Dismissed on the board (since 0.8.0): Android carries its key",
+   "hex": "006300000104002a00000002010002031f00307c636f6d2e7a696e672e7a616c6f7c313030317c6e756c6c7c3130313233",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "NOTIF_DISMISSED",
+    "req_id": 0,
+    "fields": {
+     "notif_id": 42,
+     "source": 2,
+     "key": "0|com.zing.zalo|1001|null|10123"
+    }
+   }
+  },
+  {
+   "name": "event_notif_dismissed_ancs",
+   "description": "ANCS: no key",
+   "hex": "006300000104000700000002010001",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "NOTIF_DISMISSED",
+    "req_id": 0,
+    "fields": {
+     "notif_id": 7,
+     "source": 1
+    }
+   }
+  },
+  {
+   "name": "event_xfer_ack",
+   "description": "",
+   "hex": "00610000010100010204000020010003010000",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "XFER_ACK",
+    "req_id": 0,
+    "fields": {
+     "handle": 1,
+     "offset": 73728,
+     "status": 0
+    }
+   }
+  },
+  {
+   "name": "event_xfer_ack_bad_offset",
+   "description": "",
+   "hex": "00610000010100010204000010000003010010",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "XFER_ACK",
+    "req_id": 0,
+    "fields": {
+     "handle": 1,
+     "offset": 4096,
+     "status": 16
+    }
+   }
+  },
+  {
+   "name": "event_app_seen",
+   "description": "",
+   "hex": "00620000012b00011300636f6d2e6170706c652e4d6f62696c65534d53020a0054696e206e68e1baaf6e0301000004010001",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "APP_SEEN",
+    "req_id": 0,
+    "fields": {
+     "app": {
+      "app_id": "com.apple.MobileSMS",
+      "name": "Tin nhắn",
+      "policy": 0,
+      "source": 1
+     }
+    }
+   }
+  },
+  {
+   "name": "event_device_status",
+   "description": "",
+   "hex": "007000000101005702010000030400100e00000402000400050100020601000007010003",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "DEVICE_STATUS",
+    "req_id": 0,
+    "fields": {
+     "battery_pct": 87,
+     "external_power": 0,
+     "uptime_s": 3600,
+     "notif_count": 4,
+     "bonded_count": 2,
+     "pairing_mode": false,
+     "ota_state": 3
+    }
+   }
+  },
+  {
+   "name": "event_device_status_no_battery",
+   "description": "",
+   "hex": "00700000010100ff02010002",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "DEVICE_STATUS",
+    "req_id": 0,
+    "fields": {
+     "battery_pct": 255,
+     "external_power": 2
+    }
+   }
+  },
+  {
+   "name": "event_device_status_wifi",
+   "description": "Wi-Fi and weather states (since 0.9.0)",
+   "hex": "007000000101004002010001030400201c0000040200000005010001060100000701000008010001090d005175c3a16e20436166652035470a010002",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "DEVICE_STATUS",
+    "req_id": 0,
+    "fields": {
+     "battery_pct": 64,
+     "external_power": 1,
+     "uptime_s": 7200,
+     "notif_count": 0,
+     "bonded_count": 1,
+     "pairing_mode": false,
+     "ota_state": 0,
+     "wifi_state": 1,
+     "wifi_ssid": "Quán Cafe 5G",
+     "weather_state": 2
+    }
+   }
+  },
+  {
+   "name": "event_device_status_wifi_unconfigured",
+   "description": "No network stored: no wifi_ssid",
+   "hex": "007000000101005a080100000a010001",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "DEVICE_STATUS",
+    "req_id": 0,
+    "fields": {
+     "battery_pct": 90,
+     "wifi_state": 0,
+     "weather_state": 1
+    }
+   }
+  },
+  {
+   "name": "error_unknown_message",
+   "description": "",
+   "hex": "00ff6300010100010201005e",
+   "expect": "OK",
+   "logical": {
+    "ver": 0,
+    "type": "ERROR",
+    "req_id": 99,
+    "fields": {
+     "status": 1,
+     "msg_type": 94
+    }
+   }
+  },
+  {
+   "name": "reverse_tag_order",
+   "description": "Fields in descending tag order decode the same",
+   "hex": "00130f00020200a401010400f72ccb6a",
+   "expect": "OK",
+   "decode_only": true,
+   "logical": {
+    "ver": 0,
+    "type": "TIME_SYNC",
+    "req_id": 15,
+    "fields": {
+     "utc_s": 1791700215,
+     "tz_offset_min": 420
+    }
+   }
+  },
+  {
+   "name": "unknown_tag_skipped",
+   "description": "Unknown top-level tag 0xEE skipped",
+   "hex": "00320500ee060066757475726501010003",
+   "expect": "OK",
+   "decode_only": true,
+   "logical": {
+    "ver": 0,
+    "type": "XFER_STATUS",
+    "req_id": 5,
+    "fields": {
+     "handle": 3
+    }
+   }
+  },
+  {
+   "name": "unknown_empty_tag_skipped",
+   "description": "Unknown tag with zero length",
+   "hex": "0032050001010003800000",
+   "expect": "OK",
+   "decode_only": true,
+   "logical": {
+    "ver": 0,
+    "type": "XFER_STATUS",
+    "req_id": 5,
+    "fields": {
+     "handle": 3
+    }
+   }
+  },
+  {
+   "name": "unknown_nested_tag_skipped",
+   "description": "Unknown tag inside a struct is skipped",
+   "hex": "00110600020e000102000100090200000102010001",
+   "expect": "OK",
+   "decode_only": true,
+   "logical": {
+    "ver": 0,
+    "type": "CONFIG_SET",
+    "req_id": 6,
+    "fields": {
+     "entry": [
+      {
+       "key": 1,
+       "value": "01"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "text_invalid_utf8_accepted",
+   "description": "text fields are not UTF-8 validated on the wire",
+   "hex": "002007000101006b020100610404006f6bfffe",
+   "expect": "OK",
+   "decode_only": true
+  },
+  {
+   "name": "unknown_status_code",
+   "description": "Unknown status values are carried as numbers",
+   "hex": "00930100010100c8",
+   "expect": "OK",
+   "decode_only": true,
+   "logical": {
+    "ver": 0,
+    "type": "TIME_SYNC_RSP",
+    "req_id": 1,
+    "fields": {
+     "status": 200
+    }
+   }
+  },
+  {
+   "name": "empty",
+   "description": "",
+   "hex": "",
+   "expect": "MALFORMED"
+  },
+  {
+   "name": "short_header",
+   "description": "3 bytes",
+   "hex": "000100",
+   "expect": "MALFORMED"
+  },
+  {
+   "name": "bad_version",
+   "description": "ver 1",
+   "hex": "01010100",
+   "expect": "UNSUPPORTED_VERSION"
+  },
+  {
+   "name": "bad_version_and_unknown_type",
+   "description": "version is checked before type",
+   "hex": "015e0100",
+   "expect": "UNSUPPORTED_VERSION"
+  },
+  {
+   "name": "unknown_type",
+   "description": "",
+   "hex": "005e0100",
+   "expect": "UNKNOWN_MESSAGE"
+  },
+  {
+   "name": "reserved_type_7f",
+   "description": "",
+   "hex": "007f0100",
+   "expect": "UNKNOWN_MESSAGE"
+  },
+  {
+   "name": "truncated_tlv_header",
+   "description": "2 bytes left",
+   "hex": "000101000100",
+   "expect": "MALFORMED"
+  },
+  {
+   "name": "value_past_end",
+   "description": "",
+   "hex": "00010100010500616263",
+   "expect": "MALFORMED"
+  },
+  {
+   "name": "tag_zero",
+   "description": "",
+   "hex": "00010100000000",
+   "expect": "MALFORMED"
+  },
+  {
+   "name": "tag_zero_after_unknown",
+   "description": "",
+   "hex": "0001010099000000010078",
+   "expect": "MALFORMED"
+  },
+  {
+   "name": "duplicate_field",
+   "description": "",
+   "hex": "000101000101006101010062",
+   "expect": "MALFORMED"
+  },
+  {
+   "name": "u8_wrong_width",
+   "description": "",
+   "hex": "003201000102000100",
+   "expect": "MALFORMED"
+  },
+  {
+   "name": "u32_wrong_width",
+   "description": "",
+   "hex": "001301000103000000000202000000",
+   "expect": "MALFORMED"
+  },
+  {
+   "name": "bool_value_2",
+   "description": "",
+   "hex": "0030010008010002",
+   "expect": "MALFORMED"
+  },
+  {
+   "name": "bool_empty",
+   "description": "",
+   "hex": "00a0010001010000030000",
+   "expect": "MALFORMED"
+  },
+  {
+   "name": "str_too_long",
+   "description": "key 65 bytes",
+   "hex": "00200100014100787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787802010061",
+   "expect": "TOO_LARGE"
+  },
+  {
+   "name": "text_too_long",
+   "description": "body 1025 bytes",
+   "hex": "002001000101006b020100610601047979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979797979",
+   "expect": "TOO_LARGE"
+  },
+  {
+   "name": "bytes_too_long",
+   "description": "payload 513 bytes",
+   "hex": "00010100010102000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+   "expect": "TOO_LARGE"
+  },
+  {
+   "name": "str_below_min_len",
+   "description": "empty key",
+   "hex": "0020010001000002010061",
+   "expect": "MALFORMED"
+  },
+  {
+   "name": "sha256_short",
+   "description": "31 bytes",
+   "hex": "00300100061f0000000000000000000000000000000000000000000000000000000000000000",
+   "expect": "MALFORMED"
+  },
+  {
+   "name": "sha256_long",
+   "description": "33 bytes",
+   "hex": "00300100062100000000000000000000000000000000000000000000000000000000000000000000",
+   "expect": "TOO_LARGE"
+  },
+  {
+   "name": "chunk_empty_data",
+   "description": "",
+   "hex": "003100000101000102040000000000030000",
+   "expect": "MALFORMED"
+  },
+  {
+   "name": "chunk_data_too_long",
+   "description": "",
+   "hex": "0031000001010001020400000000000301040000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+   "expect": "TOO_LARGE"
+  },
+  {
+   "name": "utf8_invalid_byte",
+   "description": "",
+   "hex": "002001000101006b020100ff",
+   "expect": "INVALID_UTF8"
+  },
+  {
+   "name": "utf8_overlong",
+   "description": "C0 AF",
+   "hex": "002001000101006b020200c0af",
+   "expect": "INVALID_UTF8"
+  },
+  {
+   "name": "utf8_overlong_3byte",
+   "description": "E0 80 AF",
+   "hex": "002001000101006b020300e080af",
+   "expect": "INVALID_UTF8"
+  },
+  {
+   "name": "utf8_surrogate",
+   "description": "ED A0 80",
+   "hex": "002001000101006b020300eda080",
+   "expect": "INVALID_UTF8"
+  },
+  {
+   "name": "utf8_above_max",
+   "description": "F4 90 80 80",
+   "hex": "002001000101006b020400f4908080",
+   "expect": "INVALID_UTF8"
+  },
+  {
+   "name": "utf8_truncated",
+   "description": "E2 82",
+   "hex": "002001000101006b02030061e282",
+   "expect": "INVALID_UTF8"
+  },
+  {
+   "name": "utf8_lone_continuation",
+   "description": "",
+   "hex": "002001000101008002010061",
+   "expect": "INVALID_UTF8"
+  },
+  {
+   "name": "utf8_f5",
+   "description": "F5 lead byte",
+   "hex": "002001000101006b020400f5808080",
+   "expect": "INVALID_UTF8"
+  },
+  {
+   "name": "id_uppercase",
+   "description": "",
+   "hex": "003a010001010002020400466f6e74",
+   "expect": "INVALID_ID"
+  },
+  {
+   "name": "id_leading_dot",
+   "description": "",
+   "hex": "003a0100010100020207002e68696464656e",
+   "expect": "INVALID_ID"
+  },
+  {
+   "name": "id_path_traversal",
+   "description": "",
+   "hex": "003a0100010100020204002e2e2f78",
+   "expect": "INVALID_ID"
+  },
+  {
+   "name": "id_non_ascii",
+   "description": "valid UTF-8 but not allowed in ids",
+   "hex": "003a0100010100020206007068c3b46e67",
+   "expect": "INVALID_ID"
+  },
+  {
+   "name": "id_invalid_utf8",
+   "description": "UTF-8 is checked before the id charset",
+   "hex": "003a01000101000202020061ff",
+   "expect": "INVALID_UTF8"
+  },
+  {
+   "name": "id_too_long",
+   "description": "33 bytes",
+   "hex": "003a010001010002022100616161616161616161616161616161616161616161616161616161616161616161",
+   "expect": "TOO_LARGE"
+  },
+  {
+   "name": "id_empty",
+   "description": "",
+   "hex": "003a010001010002020000",
+   "expect": "MALFORMED"
+  },
+  {
+   "name": "wifi_ssid_empty",
+   "description": "",
+   "hex": "00140100010000",
+   "expect": "MALFORMED"
+  },
+  {
+   "name": "wifi_ssid_33_bytes",
+   "description": "",
+   "hex": "00140100012100737373737373737373737373737373737373737373737373737373737373737373",
+   "expect": "TOO_LARGE"
+  },
+  {
+   "name": "wifi_password_64_bytes",
+   "description": "a 64-hex PSK is not accepted",
+   "hex": "001401000101007302400061616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161",
+   "expect": "TOO_LARGE"
+  },
+  {
+   "name": "wifi_ssid_invalid_utf8",
+   "description": "",
+   "hex": "00140100010100ff",
+   "expect": "INVALID_UTF8"
+  },
+  {
+   "name": "tz_above_max",
+   "description": "",
+   "hex": "00130100010400000000000202004903",
+   "expect": "OUT_OF_RANGE"
+  },
+  {
+   "name": "tz_below_min",
+   "description": "",
+   "hex": "00130100010400000000000202002ffd",
+   "expect": "OUT_OF_RANGE"
+  },
+  {
+   "name": "limit_zero",
+   "description": "",
+   "hex": "0018010002010000",
+   "expect": "OUT_OF_RANGE"
+  },
+  {
+   "name": "limit_17",
+   "description": "",
+   "hex": "0039010002010011",
+   "expect": "OUT_OF_RANGE"
+  },
+  {
+   "name": "xfer_size_zero",
+   "description": "",
+   "hex": "003001000101000104040000000000",
+   "expect": "OUT_OF_RANGE"
+  },
+  {
+   "name": "missing_required",
+   "description": "NOTIF_POST without app_id",
+   "hex": "002001000101006b",
+   "expect": "MISSING_FIELD"
+  },
+  {
+   "name": "missing_repeated_required",
+   "description": "CONFIG_SET without entries",
+   "hex": "0011010001040001000000",
+   "expect": "MISSING_FIELD"
+  },
+  {
+   "name": "missing_nested_required",
+   "description": "config entry without value",
+   "hex": "001101000205000102000100",
+   "expect": "MISSING_FIELD"
+  },
+  {
+   "name": "missing_all",
+   "description": "XFER_CHUNK with empty body",
+   "hex": "00310000",
+   "expect": "MISSING_FIELD"
+  },
+  {
+   "name": "missing_status_in_response",
+   "description": "",
+   "hex": "0091010002040001000000",
+   "expect": "MISSING_FIELD"
+  },
+  {
+   "name": "nested_malformed",
+   "description": "truncated TLV inside a struct",
+   "hex": "001101000202000102",
+   "expect": "MALFORMED"
+  },
+  {
+   "name": "nested_missing_before_outer_error",
+   "description": "nested struct is fully validated when reached",
+   "hex": "001101000204000201000101010000",
+   "expect": "MISSING_FIELD"
+  },
+  {
+   "name": "order_wire_first_error_wins",
+   "description": "OUT_OF_RANGE before a later truncated TLV",
+   "hex": "0013010002020084030104",
+   "expect": "OUT_OF_RANGE"
+  },
+  {
+   "name": "order_field_error_before_missing",
+   "description": "INVALID_UTF8 reported before the missing required field",
+   "hex": "00200100020100ff",
+   "expect": "INVALID_UTF8"
+  },
+  {
+   "name": "order_duplicate_before_value",
+   "description": "duplicate detected before validating the second value",
+   "hex": "0013010002020001000202008813",
+   "expect": "MALFORMED"
+  },
+  {
+   "name": "struct_in_struct_field_wrong_width",
+   "description": "u16 key encoded with 1 byte inside entry",
+   "hex": "009001000101000003070001010001020000",
+   "expect": "MALFORMED"
+  }
+ ]
+}

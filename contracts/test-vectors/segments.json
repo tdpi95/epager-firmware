@@ -1,0 +1,461 @@
+{
+ "contract_version": "0.13.0",
+ "description": "Segmentation (protocol.md 2.1). 'split': a sender with max_segment bytes per write must produce exactly 'segments'. 'reassemble': feeding 'segments' in order to a receiver with max_message must produce exactly 'events'.",
+ "scope": "app+board",
+ "split": [
+  {
+   "name": "fits_one",
+   "message": "00010100",
+   "max_segment": 20,
+   "segments": [
+    "c000010100"
+   ]
+  },
+  {
+   "name": "exact_fit",
+   "message": "000102030405060708090a0b0c0d0e0f101112",
+   "max_segment": 20,
+   "segments": [
+    "c0000102030405060708090a0b0c0d0e0f101112"
+   ]
+  },
+  {
+   "name": "two_segments",
+   "message": "000102030405060708090a0b0c0d0e0f10111213",
+   "max_segment": 20,
+   "segments": [
+    "80000102030405060708090a0b0c0d0e0f101112",
+    "4113"
+   ]
+  },
+  {
+   "name": "min_mtu_23",
+   "message": "007e0000010600302e31332e30020b006550616765722d31413242031a007761766573686172655f73335f6570617065725f3135345f763204010001050500302e312e3006160001010001020200c800030200c80004010001050100010704003f0c00000801000109040000001e000a0400e0fd1c000b0f000101000102010003030400000004000b0f000101000202010001030400981300000b0f000101000302010004030400001000000b1900010100050201000103040058000000040200180005020018000c020005020d0400030000000e010000",
+   "max_segment": 20,
+   "segments": [
+    "80007e0000010600302e31332e30020b00655061",
+    "016765722d31413242031a007761766573686172",
+    "02655f73335f6570617065725f3135345f763204",
+    "03010001050500302e312e300616000101000102",
+    "040200c800030200c80004010001050100010704",
+    "05003f0c00000801000109040000001e000a0400",
+    "06e0fd1c000b0f00010100010201000303040000",
+    "070004000b0f0001010002020100010304009813",
+    "0800000b0f000101000302010004030400001000",
+    "09000b1900010100050201000103040058000000",
+    "0a040200180005020018000c020005020d040003",
+    "4b0000000e010000"
+   ]
+  },
+  {
+   "name": "seq_wraps",
+   "message": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff000102030405060708090a0b0c0d0e0f10111213",
+   "max_segment": 20,
+   "segments": [
+    "80000102030405060708090a0b0c0d0e0f101112",
+    "01131415161718191a1b1c1d1e1f202122232425",
+    "02262728292a2b2c2d2e2f303132333435363738",
+    "03393a3b3c3d3e3f404142434445464748494a4b",
+    "044c4d4e4f505152535455565758595a5b5c5d5e",
+    "055f606162636465666768696a6b6c6d6e6f7071",
+    "0672737475767778797a7b7c7d7e7f8081828384",
+    "0785868788898a8b8c8d8e8f9091929394959697",
+    "0898999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aa",
+    "09abacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbd",
+    "0abebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0",
+    "0bd1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3",
+    "0ce4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6",
+    "0df7f8f9fafbfcfdfeff00010203040506070809",
+    "0e0a0b0c0d0e0f101112131415161718191a1b1c",
+    "0f1d1e1f202122232425262728292a2b2c2d2e2f",
+    "10303132333435363738393a3b3c3d3e3f404142",
+    "11434445464748494a4b4c4d4e4f505152535455",
+    "12565758595a5b5c5d5e5f606162636465666768",
+    "13696a6b6c6d6e6f707172737475767778797a7b",
+    "147c7d7e7f808182838485868788898a8b8c8d8e",
+    "158f909192939495969798999a9b9c9d9e9fa0a1",
+    "16a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4",
+    "17b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7",
+    "18c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9da",
+    "19dbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebeced",
+    "1aeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff00",
+    "1b0102030405060708090a0b0c0d0e0f10111213",
+    "1c1415161718191a1b1c1d1e1f20212223242526",
+    "1d2728292a2b2c2d2e2f30313233343536373839",
+    "1e3a3b3c3d3e3f404142434445464748494a4b4c",
+    "1f4d4e4f505152535455565758595a5b5c5d5e5f",
+    "20606162636465666768696a6b6c6d6e6f707172",
+    "21737475767778797a7b7c7d7e7f808182838485",
+    "22868788898a8b8c8d8e8f909192939495969798",
+    "23999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaab",
+    "24acadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbe",
+    "25bfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1",
+    "26d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4",
+    "27e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7",
+    "28f8f9fafbfcfdfeff000102030405060708090a",
+    "290b0c0d0e0f101112131415161718191a1b1c1d",
+    "2a1e1f202122232425262728292a2b2c2d2e2f30",
+    "2b3132333435363738393a3b3c3d3e3f40414243",
+    "2c4445464748494a4b4c4d4e4f50515253545556",
+    "2d5758595a5b5c5d5e5f60616263646566676869",
+    "2e6a6b6c6d6e6f707172737475767778797a7b7c",
+    "2f7d7e7f808182838485868788898a8b8c8d8e8f",
+    "30909192939495969798999a9b9c9d9e9fa0a1a2",
+    "31a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5",
+    "32b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8",
+    "33c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadb",
+    "34dcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedee",
+    "35eff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff0001",
+    "3602030405060708090a0b0c0d0e0f1011121314",
+    "3715161718191a1b1c1d1e1f2021222324252627",
+    "3828292a2b2c2d2e2f303132333435363738393a",
+    "393b3c3d3e3f404142434445464748494a4b4c4d",
+    "3a4e4f505152535455565758595a5b5c5d5e5f60",
+    "3b6162636465666768696a6b6c6d6e6f70717273",
+    "3c7475767778797a7b7c7d7e7f80818283848586",
+    "3d8788898a8b8c8d8e8f90919293949596979899",
+    "3e9a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabac",
+    "3fadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebf",
+    "00c0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2",
+    "01d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5",
+    "02e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8",
+    "03f9fafbfcfdfeff000102030405060708090a0b",
+    "440c0d0e0f10111213"
+   ]
+  }
+ ],
+ "reassemble": [
+  {
+   "name": "single",
+   "max_message": 64,
+   "segments": [
+    "c061626364"
+   ],
+   "events": [
+    {
+     "message": "61626364"
+    }
+   ]
+  },
+  {
+   "name": "three",
+   "max_message": 64,
+   "segments": [
+    "806162",
+    "016364",
+    "426566"
+   ],
+   "events": [
+    {
+     "message": "616263646566"
+    }
+   ]
+  },
+  {
+   "name": "empty_middle_segment",
+   "max_message": 64,
+   "segments": [
+    "806162",
+    "01",
+    "426364"
+   ],
+   "events": [
+    {
+     "message": "61626364"
+    }
+   ]
+  },
+  {
+   "name": "seq_wrap",
+   "max_message": 1024,
+   "segments": [
+    "80000102",
+    "01030405",
+    "02060708",
+    "03090a0b",
+    "040c0d0e",
+    "050f1011",
+    "06121314",
+    "07151617",
+    "0818191a",
+    "091b1c1d",
+    "0a1e1f20",
+    "0b212223",
+    "0c242526",
+    "0d272829",
+    "0e2a2b2c",
+    "0f2d2e2f",
+    "10303132",
+    "11333435",
+    "12363738",
+    "13393a3b",
+    "143c3d3e",
+    "153f4041",
+    "16424344",
+    "17454647",
+    "1848494a",
+    "194b4c4d",
+    "1a4e4f50",
+    "1b515253",
+    "1c545556",
+    "1d575859",
+    "1e5a5b5c",
+    "1f5d5e5f",
+    "20606162",
+    "21636465",
+    "22666768",
+    "23696a6b",
+    "246c6d6e",
+    "256f7071",
+    "26727374",
+    "27757677",
+    "2878797a",
+    "297b7c7d",
+    "2a7e7f80",
+    "2b818283",
+    "2c848586",
+    "2d878889",
+    "2e8a8b8c",
+    "2f8d8e8f",
+    "30909192",
+    "31939495",
+    "32969798",
+    "33999a9b",
+    "349c9d9e",
+    "359fa0a1",
+    "36a2a3a4",
+    "37a5a6a7",
+    "38a8a9aa",
+    "39abacad",
+    "3aaeafb0",
+    "3bb1b2b3",
+    "3cb4b5b6",
+    "3db7b8b9",
+    "3ebabbbc",
+    "3fbdbebf",
+    "40c0c1c2"
+   ],
+   "events": [
+    {
+     "message": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2"
+    }
+   ]
+  },
+  {
+   "name": "seq_gap",
+   "max_message": 64,
+   "segments": [
+    "806162",
+    "026364",
+    "436566",
+    "c06f6b"
+   ],
+   "events": [
+    {
+     "error": "SEGMENT_ERROR"
+    },
+    {
+     "message": "6f6b"
+    }
+   ]
+  },
+  {
+   "name": "continuation_when_idle",
+   "max_message": 64,
+   "segments": [
+    "017878",
+    "427979",
+    "c06f6b"
+   ],
+   "events": [
+    {
+     "error": "SEGMENT_ERROR"
+    },
+    {
+     "message": "6f6b"
+    }
+   ]
+  },
+  {
+   "name": "first_mid_message",
+   "max_message": 64,
+   "segments": [
+    "806162",
+    "806364",
+    "416566"
+   ],
+   "events": [
+    {
+     "error": "SEGMENT_ERROR"
+    },
+    {
+     "message": "63646566"
+    }
+   ]
+  },
+  {
+   "name": "first_with_nonzero_seq",
+   "max_message": 64,
+   "segments": [
+    "856162",
+    "466364",
+    "c06f6b"
+   ],
+   "events": [
+    {
+     "error": "SEGMENT_ERROR"
+    },
+    {
+     "message": "6f6b"
+    }
+   ]
+  },
+  {
+   "name": "first_last_nonzero_seq",
+   "max_message": 64,
+   "segments": [
+    "c16162"
+   ],
+   "events": [
+    {
+     "error": "SEGMENT_ERROR"
+    }
+   ]
+  },
+  {
+   "name": "too_large",
+   "max_message": 8,
+   "segments": [
+    "803132333435",
+    "0136373839",
+    "4230",
+    "c06f6b"
+   ],
+   "events": [
+    {
+     "error": "TOO_LARGE"
+    },
+    {
+     "message": "6f6b"
+    }
+   ]
+  },
+  {
+   "name": "exactly_max",
+   "max_message": 8,
+   "segments": [
+    "8031323334",
+    "4135363738"
+   ],
+   "events": [
+    {
+     "message": "3132333435363738"
+    }
+   ]
+  },
+  {
+   "name": "too_large_single",
+   "max_message": 3,
+   "segments": [
+    "c061626364",
+    "c0616263"
+   ],
+   "events": [
+    {
+     "error": "TOO_LARGE"
+    },
+    {
+     "message": "616263"
+    }
+   ]
+  },
+  {
+   "name": "empty_message",
+   "max_message": 64,
+   "segments": [
+    "c0"
+   ],
+   "events": [
+    {
+     "error": "SEGMENT_ERROR"
+    }
+   ]
+  },
+  {
+   "name": "zero_length_write",
+   "max_message": 64,
+   "segments": [
+    "",
+    "c06f6b"
+   ],
+   "events": [
+    {
+     "error": "SEGMENT_ERROR"
+    },
+    {
+     "message": "6f6b"
+    }
+   ]
+  },
+  {
+   "name": "zero_length_mid_message",
+   "max_message": 64,
+   "segments": [
+    "806162",
+    "",
+    "416364",
+    "c06f6b"
+   ],
+   "events": [
+    {
+     "error": "SEGMENT_ERROR"
+    },
+    {
+     "message": "6f6b"
+    }
+   ]
+  },
+  {
+   "name": "first_nonzero_seq_mid_message",
+   "max_message": 64,
+   "segments": [
+    "806162",
+    "836364",
+    "446566",
+    "c06f6b"
+   ],
+   "events": [
+    {
+     "error": "SEGMENT_ERROR"
+    },
+    {
+     "error": "SEGMENT_ERROR"
+    },
+    {
+     "message": "6f6b"
+    }
+   ]
+  },
+  {
+   "name": "zero_length_while_discarding",
+   "max_message": 64,
+   "segments": [
+    "017878",
+    "",
+    "427979",
+    "c06f6b"
+   ],
+   "events": [
+    {
+     "error": "SEGMENT_ERROR"
+    },
+    {
+     "error": "SEGMENT_ERROR"
+    },
+    {
+     "message": "6f6b"
+    }
+   ]
+  }
+ ]
+}

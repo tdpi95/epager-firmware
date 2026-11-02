@@ -1,0 +1,26 @@
+# ostb-xiaozhi-3st (ESP32-S3 with 8 MB octal PSRAM in the package, 16 MB Boya quad flash): chip, memory, console,
+# clock. Every line says why. Loaded after variants/sdkconfig.common and the variant's sdkconfig.defaults
+# (variants/common.cmake). The first P1a image kept to the safest settings (docs/ostb-xiaozhi-3st.md, PLAN D50:
+# USB is the only way to reflash).
+
+# --- memory (esptool flash_id and the stock boot log, PLAN §2b; the chip is in board.cmake)
+CONFIG_ESPTOOLPY_FLASHSIZE_16MB=y
+CONFIG_SPIRAM=y
+CONFIG_SPIRAM_MODE_OCT=y
+# QIO flash and 80 MHz PSRAM, as the stock firmware runs this board (its boot log). The first P1a
+# images used the defaults (DIO, 40 MHz) until our image had booted; checklist item 28.
+CONFIG_ESPTOOLPY_FLASHMODE_QIO=y
+CONFIG_SPIRAM_SPEED_80M=y
+
+# The USB-C connector is the S3's native USB: console over USB Serial/JTAG, which is also the only
+# way to reflash (no BOOT key). The firmware never touches GPIO19/20.
+CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=y
+# USB Serial/JTAG cannot work in light sleep and is the only way to reflash (no BOOT key): keep light sleep
+# off while a USB host is connected.
+CONFIG_USJ_NO_AUTO_LS_ON_CONNECTION=y
+
+# Light sleep with a BLE link needs a low-power clock. TODO(hw-verify): whether this board has a 32 kHz crystal
+# for the SoC (GPIO15/16 carry I2S, as on the Paper: assumed not); until then the main XTAL, kept powered in light
+# sleep. Idle current: checklist 14.
+CONFIG_BT_CTRL_LPCLK_SEL_MAIN_XTAL=y
+CONFIG_BT_CTRL_MAIN_XTAL_PU_DURING_LIGHT_SLEEP=y

@@ -1,0 +1,457 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epager.local/contracts/registry.schema.json",
+  "title": "ePager protocol registry",
+  "type": "object",
+  "required": [
+    "proto_major",
+    "limits",
+    "status_codes",
+    "enums",
+    "bitmasks",
+    "structs",
+    "messages",
+    "config_keys",
+    "text"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "proto_major": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 1
+      }
+    },
+    "status_codes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "description"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "name": {
+            "$ref": "#/$defs/const_name"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "enums": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "fallback",
+          "values"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "fallback": {
+            "type": "integer"
+          },
+          "values": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": [
+                "value",
+                "name"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "value": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "name": {
+                  "$ref": "#/$defs/snake"
+                },
+                "description": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "bitmasks": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "bit",
+            "name"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "bit": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 31
+            },
+            "name": {
+              "$ref": "#/$defs/snake"
+            }
+          }
+        }
+      }
+    },
+    "structs": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "fields"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "fields": {
+            "$ref": "#/$defs/fields"
+          }
+        }
+      }
+    },
+    "messages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "kind",
+          "channel",
+          "fields"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 255
+          },
+          "name": {
+            "$ref": "#/$defs/const_name"
+          },
+          "kind": {
+            "enum": [
+              "request",
+              "response",
+              "event",
+              "read",
+              "error"
+            ]
+          },
+          "channel": {
+            "enum": [
+              "any",
+              "capabilities",
+              "config",
+              "notification",
+              "transfer",
+              "status"
+            ]
+          },
+          "description": {
+            "type": "string"
+          },
+          "fields": {
+            "$ref": "#/$defs/fields"
+          }
+        }
+      }
+    },
+    "config_keys": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "type",
+          "default",
+          "since",
+          "description"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65535
+          },
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+$"
+          },
+          "type": {
+            "enum": [
+              "u8",
+              "u16",
+              "u32",
+              "i16",
+              "i32",
+              "bool",
+              "str"
+            ]
+          },
+          "enum": {
+            "type": "string"
+          },
+          "bitmask": {
+            "type": "string"
+          },
+          "min": {
+            "type": "integer"
+          },
+          "max": {
+            "type": "integer"
+          },
+          "max_len": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 64
+          },
+          "default": {
+            "type": [
+              "integer",
+              "boolean",
+              "string"
+            ]
+          },
+          "read_only": {
+            "type": "boolean"
+          },
+          "variants": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "since": {
+            "type": "string",
+            "pattern": "^\\d+\\.\\d+\\.\\d+$"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "text": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "placeholder",
+        "ellipsis",
+        "combining_range",
+        "max_combining_run",
+        "renderable_ranges",
+        "removed_ranges",
+        "compose_ranges",
+        "emoji_ranges",
+        "zwj",
+        "regional_indicator_range",
+        "flag_glyph"
+      ],
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "placeholder": {
+          "type": "string",
+          "pattern": "^0x[0-9A-F]{4,6}$"
+        },
+        "ellipsis": {
+          "type": "string",
+          "pattern": "^0x[0-9A-F]{4,6}$"
+        },
+        "combining_range": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^0x[0-9A-F]{4,6}$"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "max_combining_run": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16
+        },
+        "renderable_ranges": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^0x[0-9A-F]{4,6}$"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          }
+        },
+        "removed_ranges": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^0x[0-9A-F]{4,6}$"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          }
+        },
+        "compose_ranges": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^0x[0-9A-F]{4,6}$"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          }
+        },
+        "emoji_ranges": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^0x[0-9A-F]{4,6}$"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          }
+        },
+        "zwj": {
+          "type": "string",
+          "pattern": "^0x[0-9A-F]{4,6}$"
+        },
+        "flag_glyph": {
+          "type": "string",
+          "pattern": "^0x[0-9A-F]{4,6}$"
+        },
+        "regional_indicator_range": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^0x[0-9A-F]{4,6}$"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        }
+      }
+    }
+  },
+  "$defs": {
+    "const_name": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9_]*$"
+    },
+    "snake": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "fields": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "tag",
+          "name",
+          "type"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "tag": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 255
+          },
+          "name": {
+            "$ref": "#/$defs/snake"
+          },
+          "type": {
+            "enum": [
+              "u8",
+              "u16",
+              "u32",
+              "i16",
+              "i32",
+              "bool",
+              "str",
+              "id",
+              "text",
+              "bytes",
+              "struct"
+            ]
+          },
+          "struct": {
+            "type": "string"
+          },
+          "enum": {
+            "type": "string"
+          },
+          "bitmask": {
+            "type": "string"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "repeated": {
+            "type": "boolean"
+          },
+          "min_len": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "max_len": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65535
+          },
+          "min": {
+            "type": "integer"
+          },
+          "max": {
+            "type": "integer"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

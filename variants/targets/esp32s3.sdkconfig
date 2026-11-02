@@ -1,0 +1,15 @@
+# ESP32-S3: what depends on the chip and not on the board or the product. Loaded after variants/sdkconfig.common
+# (variants/common.cmake). A new chip adds its own file here; boards name their chip in board.cmake.
+# Every line says why.
+CONFIG_IDF_TARGET="esp32s3"
+
+# --- BLE: light sleep with a link needs modem sleep (the low-power clock choice is the board's)
+CONFIG_BT_CTRL_MODEM_SLEEP=y
+
+# --- PSRAM for the Wi-Fi/TLS stack (components/net, PLAN D60-D64, D78). Both S3 boards carry 8 MB of octal PSRAM
+# (the board's sdkconfig.board enables it). Internal RAM is short (BLE, LVGL's heap, DMA bands): Wi-Fi and lwIP
+# buffers, large static state (EXT_RAM_BSS_ATTR in components/app, net, ui_common) and TLS buffers (the handshake
+# needs ~30 KB) go to PSRAM.
+CONFIG_SPIRAM_TRY_ALLOCATE_WIFI_LWIP=y
+CONFIG_SPIRAM_ALLOW_BSS_SEG_EXTERNAL_MEMORY=y
+CONFIG_MBEDTLS_EXTERNAL_MEM_ALLOC=y

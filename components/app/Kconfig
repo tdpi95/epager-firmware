@@ -1,0 +1,82 @@
+menu "ePager app"
+
+    config EPAGER_DEBUG_CONSOLE
+        bool "Debug console on the USB serial port (DEBUG ONLY)"
+        default n
+        help
+            PLAN D57: commands to post and remove sample notifications, set the time and toggle pairing
+            mode over the USB console, so the UI can be checked on the board before BLE (M5). Typed text
+            becomes notification content on the screen. Never enable it in a release build.
+
+    config EPAGER_BOOT_SOUND
+        bool "Play a short chime at boot (boards with a speaker)"
+        default n
+        help
+            PLAN D89: after the first screen has been started, the board plays a three-note chime
+            (board_util.h) through its speaker: Paper only so far (ES8311 + NS4150B). Costs about 0.7 s
+            of the main task once per boot, no standing current: the codec and amplifier are powered off again.
+
+    config EPAGER_BOOT_SOUND_DAC_VOLUME
+        hex "ES8311 DAC volume register for the chime (0x00..0xFF)"
+        depends on EPAGER_BOOT_SOUND
+        range 0x00 0xFF
+        default 0xA0
+        help
+            Register 0x32, 0.5 dB per step from -95.5 dB at 0x00 (ES8311 datasheet; TODO(hw-verify) the
+            reference point, hw-checklist 71). 0xA0 is a quiet start: raise it if the chime is too soft.
+
+    config EPAGER_SOUND_TEST
+        bool "Speaker test after the chime (DEBUG ONLY)"
+        depends on EPAGER_BOOT_SOUND
+        default n
+        help
+            PLAN D89: 7 s of steady tones (200 Hz to 3.2 kHz), a sweep and a scale, once at boot after the
+            chime, to hear what the speaker reproduces. Blocks the main loop meanwhile. Never in a release build.
+
+    config EPAGER_SOUND_TEST_VOICE
+        bool "Speech sample after the chime (DEBUG ONLY)"
+        depends on EPAGER_BOOT_SOUND
+        default n
+        help
+            PLAN D89: 3.9 s of synthesized speech (components/app/assets/voice_test.pcm, made by
+            tools/assets/voice_test.sh with ffmpeg's flite voice; 123 KB in flash), once at boot after the
+            chime: does the speaker reproduce a voice. Blocks the main loop meanwhile. Never in a release build.
+
+    config EPAGER_EVENT_LOG
+        bool "Event ring in RTC memory (hardware checks)"
+        default n
+        help
+            PLAN D86: the last 96 events (boot and its reset reason, light sleep allowed or off, phone
+            connected, secure, disconnected with the reason) with their times, kept in RTC memory. It
+            survives a reset but not a power loss; the boot log prints it, so a test on battery can be read
+            at the next USB connection. No notification content.
+
+    config EPAGER_BATTERY_LOG
+        bool "Battery log on the assets partition (hardware checks)"
+        default n
+        help
+            hw-checklist 27: one line per period with the board's raw battery reading, smoothed value,
+            level and charge status in /assets/diag/batlog.csv, with the phone link, the Wi-Fi state, the
+            Wi-Fi join attempts, the light-sleep wake-ups and the lost phone links (the counts since boot),
+            printed at boot while a USB host is attached (and by the debug console's `batlog`). Lets the
+            level and what drained it be checked on battery alone, where there is no USB log. Needs a board
+            with battery_diag. No notification content.
+
+    config EPAGER_BATTERY_LOG_PERIOD_S
+        int "Seconds between battery log lines"
+        depends on EPAGER_BATTERY_LOG
+        range 10 3600
+        default 60
+        help
+            The core reads the battery once a minute; a shorter period repeats the last reading.
+
+    config EPAGER_BATTERY_LOG_MAX_KB
+        int "Battery log size before it rotates (KiB)"
+        depends on EPAGER_BATTERY_LOG
+        range 4 512
+        default 64
+        help
+            About 50 bytes a line: 64 KiB holds about 21 hours at one line a minute (4 days at one every
+            5 minutes); the previous file (batlog.old) is kept too and printed first.
+
+endmenu

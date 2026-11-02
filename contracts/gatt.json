@@ -1,0 +1,45 @@
+{
+  "description": "ePager GATT layout. UUID base a08aXXXX-0c0a-4214-8b47-6c1925da5fca (random, generated 2026-10-11). Frozen: never reuse or renumber.",
+  "service": {
+    "name": "epager",
+    "uuid": "a08a0001-0c0a-4214-8b47-6c1925da5fca",
+    "characteristics": [
+      {"name": "capabilities", "char_id": 1, "uuid": "a08a0002-0c0a-4214-8b47-6c1925da5fca",
+       "properties": ["read"], "security": "none", "framing": "message", "max_message_limit": "capabilities_max"},
+      {"name": "config", "char_id": 2, "uuid": "a08a0003-0c0a-4214-8b47-6c1925da5fca",
+       "properties": ["write", "notify"], "security": "encrypted_bonded", "framing": "segments", "max_message_limit": "max_message_config"},
+      {"name": "notification", "char_id": 3, "uuid": "a08a0004-0c0a-4214-8b47-6c1925da5fca",
+       "properties": ["write", "write_without_response", "notify"], "security": "encrypted_bonded", "framing": "segments", "max_message_limit": "max_message_notification"},
+      {"name": "transfer", "char_id": 4, "uuid": "a08a0005-0c0a-4214-8b47-6c1925da5fca",
+       "properties": ["write", "write_without_response", "notify"], "security": "encrypted_bonded", "framing": "segments", "max_message_limit": "max_message_transfer"},
+      {"name": "status", "char_id": 5, "uuid": "a08a0006-0c0a-4214-8b47-6c1925da5fca",
+       "properties": ["read", "notify"], "security": "encrypted_bonded", "framing": "segments_notify_message_read", "max_message_limit": "max_message_status"}
+    ]
+  },
+  "standard_services": [
+    {"name": "battery", "uuid16": "0x180F", "characteristics": [
+      {"name": "battery_level", "char_id": 6, "uuid16": "0x2A19", "properties": ["read", "notify"], "security": "encrypted_bonded"}]},
+    {"name": "device_information", "uuid16": "0x180A", "characteristics": [
+      {"name": "manufacturer_name", "uuid16": "0x2A29", "properties": ["read"], "security": "none"},
+      {"name": "model_number", "uuid16": "0x2A24", "properties": ["read"], "security": "none"},
+      {"name": "firmware_revision", "uuid16": "0x2A26", "properties": ["read"], "security": "none"}]}
+  ],
+  "advertising": {
+    "adv": ["flags", "service_solicitation_128:7905F431-B5CE-4E99-A40F-4B1E122D00D0", "shortened_name:ePager"],
+    "scan_response": ["complete_name:ePager-XXXX", "complete_service_uuids_128:a08a0001-0c0a-4214-8b47-6c1925da5fca"],
+    "name_prefix": "ePager-",
+    "name_suffix": "last 2 bytes of the BT MAC, upper-case hex"
+  },
+  "tcp": {
+    "description": "Development transport, fake board only (protocol.md section 10). Since contract 0.7.0.",
+    "default_port": 47800,
+    "max_value": 512,
+    "ops": {"read": 0, "write": 1, "write_without_response": 2, "notify": 3, "read_response": 4}
+  },
+  "ancs": {
+    "service": "7905F431-B5CE-4E99-A40F-4B1E122D00D0",
+    "notification_source": "9FBF120D-6301-42D9-8C58-25E699A21DBD",
+    "control_point": "69D1D8F3-45E1-49A8-9821-9BBDFDAAD9D9",
+    "data_source": "22EAC6E9-24D6-4BB5-BE44-B36ACE7C7BFB"
+  }
+}

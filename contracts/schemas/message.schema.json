@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epager.local/contracts/schemas/message.schema.json",
+  "title": "Any ePager message (logical form)",
+  "oneOf": [
+    {
+      "$ref": "apps.schema.json"
+    },
+    {
+      "$ref": "capabilities.schema.json"
+    },
+    {
+      "$ref": "config.schema.json"
+    },
+    {
+      "$ref": "notification.schema.json"
+    },
+    {
+      "$ref": "status.schema.json"
+    },
+    {
+      "$ref": "transfer.schema.json"
+    }
+  ]
+}

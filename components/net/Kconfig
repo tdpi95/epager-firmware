@@ -1,0 +1,21 @@
+menu "ePager Wi-Fi and weather"
+
+    config EPAGER_FEATURE_WIFI
+        bool "Wi-Fi station for the weather, SNTP and the setup hotspot (PLAN D60, D61)"
+        default n
+        help
+            The radio is on only while fetching (and while the setup hotspot is open). No protocol
+            traffic goes over Wi-Fi.
+
+    config EPAGER_FEATURE_WEATHER
+        bool "Weather on the idle screen (PLAN D62-D64)"
+        depends on EPAGER_FEATURE_WIFI
+        default y
+
+    config EPAGER_WIFI_SETUP_TIMEOUT_S
+        int "Close the setup hotspot after this many seconds without a page request"
+        depends on EPAGER_FEATURE_WIFI
+        range 60 1800
+        default 300
+
+endmenu

@@ -1,0 +1,141 @@
+# Host (PC) tests for the portable core. See AGENTS.md for the commands.
+cmake_minimum_required(VERSION 3.16)
+project(epager_host_tests C)
+
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_C_EXTENSIONS OFF)
+
+option(EPAGER_SANITIZE "Build with AddressSanitizer + UndefinedBehaviorSanitizer" ON)
+option(EPAGER_COVERAGE "Build with gcov instrumentation" OFF)
+option(EPAGER_WITH_UI "Build LVGL, ui_common, the simulated Paper board and their tests" ON)
+if(EPAGER_SANITIZE)
+    set(_shared_default OFF) # sanitized libraries cannot be loaded into Python with ctypes
+else()
+    set(_shared_default ON)
+endif()
+option(EPAGER_SHARED_LIBS "Build libepager_core.so / libepager_sim.so for tools/fake_board" ${_shared_default})
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+set(REPO_ROOT ${CMAKE_CURRENT_LIST_DIR}/../..)
+set(WARNINGS -Wall -Wextra -Werror -Wshadow -Wpedantic -Wstrict-prototypes)
+
+if(EPAGER_SANITIZE)
+    add_compile_options(-fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer)
+    add_link_options(-fsanitize=address,undefined)
+endif()
+if(EPAGER_COVERAGE)
+    add_compile_options(--coverage -O0)
+    add_link_options(--coverage)
+endif()
+
+# Portable components under test
+foreach(c protocol config_store notification_pipeline transfer core weather)
+    add_subdirectory(${REPO_ROOT}/components/${c} ${CMAKE_BINARY_DIR}/${c})
+    target_compile_options(epager_${c} PRIVATE ${WARNINGS})
+endforeach()
+
+add_subdirectory(${REPO_ROOT}/components/board_api ${CMAKE_BINARY_DIR}/board_api)
+add_subdirectory(${REPO_ROOT}/components/net ${CMAKE_BINARY_DIR}/net) # its portable part: epager_net_util
+target_compile_options(epager_net_util PRIVATE ${WARNINGS})
+add_subdirectory(${REPO_ROOT}/components/ancs_client ${CMAKE_BINARY_DIR}/ancs_client)
+target_compile_options(epager_ancs_client PRIVATE ${WARNINGS})
+add_subdirectory(${REPO_ROOT}/components/ble_core ${CMAKE_BINARY_DIR}/ble_core) # its portable part: epager_ble_util
+target_compile_options(epager_ble_util PRIVATE ${WARNINGS})
+
+# UI: LVGL (pinned), ui_common and the simulated board (host only)
+if(EPAGER_WITH_UI)
+    include(${CMAKE_CURRENT_LIST_DIR}/lvgl.cmake)
+    add_subdirectory(${REPO_ROOT}/components/ui_common ${CMAKE_BINARY_DIR}/ui_common)
+    add_subdirectory(${REPO_ROOT}/boards/sim_epaper_154 ${CMAKE_BINARY_DIR}/sim_epaper_154)
+    add_subdirectory(${REPO_ROOT}/boards/sim_lcd_296x240 ${CMAKE_BINARY_DIR}/sim_lcd_296x240)
+    target_compile_options(epager_ui_common PRIVATE ${WARNINGS})
+    target_compile_options(epager_board_sim PRIVATE ${WARNINGS})
+    target_compile_options(epager_board_sim_lcd PRIVATE ${WARNINGS})
+endif()
+
+# Third-party test helpers (not held to our warning flags)
+add_library(test_thirdparty STATIC third_party/unity/unity.c third_party/cjson/cJSON.c)
+target_include_directories(test_thirdparty PUBLIC third_party/unity third_party/cjson)
+
+add_library(test_support STATIC support/test_support.c support/xboard.c support/xcore.c)
+target_include_directories(test_support PUBLIC support)
+target_link_libraries(test_support PUBLIC epager_protocol epager_config_store epager_notification_pipeline epager_transfer
+                      epager_core test_thirdparty)
+target_compile_definitions(test_support PRIVATE VECTORS_DIR="${REPO_ROOT}/contracts/test-vectors")
+target_compile_options(test_support PRIVATE ${WARNINGS})
+
+enable_testing()
+foreach(t test_vectors test_unit test_fuzz test_config test_pipeline test_transfer test_core)
+    add_executable(${t} ${t}.c)
+    target_link_libraries(${t} PRIVATE test_support)
+    target_compile_options(${t} PRIVATE ${WARNINGS})
+    add_test(NAME ${t} COMMAND ${t})
+endforeach()
+
+add_executable(test_blob_fs test_blob_fs.c)
+target_link_libraries(test_blob_fs PRIVATE test_support)
+target_compile_options(test_blob_fs PRIVATE ${WARNINGS})
+target_link_options(test_blob_fs PRIVATE -Wl,--wrap=fstat -Wl,--wrap=stat) # see the comment in test_blob_fs.c
+add_test(NAME test_blob_fs COMMAND test_blob_fs)
+
+add_executable(test_net test_net.c)
+target_link_libraries(test_net PRIVATE epager_net_util test_thirdparty)
+target_compile_options(test_net PRIVATE ${WARNINGS})
+add_test(NAME test_net COMMAND test_net)
+
+add_executable(test_ble test_ble.c)
+target_link_libraries(test_ble PRIVATE epager_ble_util test_thirdparty)
+target_compile_definitions(test_ble PRIVATE GATT_JSON="${REPO_ROOT}/contracts/gatt.json")
+target_compile_options(test_ble PRIVATE ${WARNINGS})
+add_test(NAME test_ble COMMAND test_ble)
+
+add_executable(test_ancs test_ancs.c)
+target_link_libraries(test_ancs PRIVATE test_support epager_ancs_client)
+target_compile_options(test_ancs PRIVATE ${WARNINGS})
+add_test(NAME test_ancs COMMAND test_ancs)
+
+add_executable(test_weather test_weather.c)
+target_link_libraries(test_weather PRIVATE epager_weather test_thirdparty)
+target_compile_options(test_weather PRIVATE ${WARNINGS})
+add_test(NAME test_weather COMMAND test_weather)
+
+# board_api's header-only helpers (battery curve, key detector)
+add_executable(test_board_api test_board_api.c)
+target_link_libraries(test_board_api PRIVATE epager_board_api test_thirdparty m)
+target_compile_options(test_board_api PRIVATE ${WARNINGS})
+add_test(NAME test_board_api COMMAND test_board_api)
+
+if(EPAGER_WITH_UI)
+    add_executable(test_ui test_ui.c)
+    target_link_libraries(test_ui PRIVATE test_support epager_ui_common epager_board_sim)
+    target_include_directories(test_ui PRIVATE ${REPO_ROOT}/components/ui_common/src) # ui_icons.h: the built-in icon bitmaps
+    target_compile_options(test_ui PRIVATE ${WARNINGS})
+    add_test(NAME test_ui COMMAND test_ui)
+
+    add_executable(test_ui_lcd test_ui_lcd.c)
+    target_link_libraries(test_ui_lcd PRIVATE test_support epager_ui_common epager_board_sim_lcd)
+    target_compile_options(test_ui_lcd PRIVATE ${WARNINGS})
+    add_test(NAME test_ui_lcd COMMAND test_ui_lcd)
+endif()
+
+# Fake board libraries for tools/fake_board (ctypes)
+if(EPAGER_SHARED_LIBS)
+    set(FB_SRC ${REPO_ROOT}/tools/fake_board/native/fb.c)
+    add_library(epager_core_so SHARED ${FB_SRC})
+    set_target_properties(epager_core_so PROPERTIES OUTPUT_NAME epager_core LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+    target_link_libraries(epager_core_so PRIVATE epager_core)
+    target_compile_options(epager_core_so PRIVATE ${WARNINGS})
+    if(EPAGER_WITH_UI)
+        add_library(epager_sim_so SHARED ${FB_SRC})
+        set_target_properties(epager_sim_so PROPERTIES OUTPUT_NAME epager_sim LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+        target_compile_definitions(epager_sim_so PRIVATE FB_WITH_SIM)
+        target_link_libraries(epager_sim_so PRIVATE epager_core epager_ui_common epager_board_sim)
+        target_compile_options(epager_sim_so PRIVATE ${WARNINGS})
+        add_library(epager_sim_lcd_so SHARED ${FB_SRC})
+        set_target_properties(epager_sim_lcd_so PROPERTIES OUTPUT_NAME epager_sim_lcd LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+        target_compile_definitions(epager_sim_lcd_so PRIVATE FB_WITH_SIM FB_SIM_LCD)
+        target_link_libraries(epager_sim_lcd_so PRIVATE epager_core epager_ui_common epager_board_sim_lcd)
+        target_compile_options(epager_sim_lcd_so PRIVATE ${WARNINGS})
+    endif()
+endif()

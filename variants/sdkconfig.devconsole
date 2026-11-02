@@ -1,0 +1,11 @@
+# Debug console on the USB serial port (PLAN D57, DEBUG ONLY: typed text becomes notification content), for the A/B
+# drain tests of PLAN D106 (the console's `ab` command). Not part of any default build; add it with
+#   idf.py -C variants/paper -B build/paper-ab -DEPAGER_EXTRA_SDKCONFIG=$PWD/variants/sdkconfig.devconsole build
+# The REPL blocks on the USB driver (no polling), so it does not add wake-ups; a connected USB host keeps the chip awake
+# anyway (D50): set the switch, unplug, and let the board run on battery.
+CONFIG_EPAGER_DEBUG_CONSOLE=y
+# Power manager profiling (PLAN D107): the battery log gets a "# pm" line per period (the share of time in light sleep)
+# and, every sixth period, the table of which lock held the chip awake. The console `pm` prints the table.
+CONFIG_PM_PROFILING=y
+# Per-task run time (PLAN D108): the console `tasks` and, every 30 minutes, `# tasks:` lines in the battery log.
+CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS=y

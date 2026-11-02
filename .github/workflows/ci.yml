@@ -1,0 +1,56 @@
+name: CI
+
+# Host tests, contract check, Python tests and a warning-free firmware build of both variants (unsigned,
+# no key needed) on every push to main and every pull request. Releases are built by release.yml.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  host:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Packages
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends cmake ninja-build python3-venv python3-tk
+      - name: Python tools
+        run: |
+          python3 -m venv tools/.venv
+          tools/.venv/bin/pip install -r tools/requirements.txt
+      - name: Contract check
+        run: tools/.venv/bin/python tools/contract_check.py
+      - name: Host tests
+        run: |
+          cmake -S tests/host -B build/host -G Ninja
+          cmake --build build/host
+          ctest --test-dir build/host --output-on-failure
+      - name: Python tests
+        run: tools/.venv/bin/pytest -q tools
+
+  firmware:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [paper, lcd]
+    container: espressif/idf:v5.5.5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Allow git in the container
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: Build
+        run: |
+          . "$IDF_PATH/export.sh"
+          idf.py -C variants/${{ matrix.variant }} -B build/${{ matrix.variant }} build
+      - name: Size
+        run: |
+          . "$IDF_PATH/export.sh"
+          idf.py -C variants/${{ matrix.variant }} -B build/${{ matrix.variant }} size | tee "$GITHUB_STEP_SUMMARY"

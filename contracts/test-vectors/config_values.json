@@ -1,0 +1,605 @@
+{
+ "contract_version": "0.13.0",
+ "description": "Config value validation (protocol.md 5). A board of the given variant must return 'expect' for value_hex written to key. 'value' is the typed logical value.",
+ "scope": "app+board",
+ "cases": [
+  {
+   "name": "default_ui.language",
+   "key": 1,
+   "variant": "paper",
+   "value_hex": "00",
+   "value": 0,
+   "expect": "OK"
+  },
+  {
+   "name": "default_display.orientation",
+   "key": 2,
+   "variant": "paper",
+   "value_hex": "00",
+   "value": 0,
+   "expect": "OK"
+  },
+  {
+   "name": "default_display.full_refresh_every",
+   "key": 3,
+   "variant": "paper",
+   "value_hex": "1e",
+   "value": 30,
+   "expect": "OK"
+  },
+  {
+   "name": "default_display.show_body",
+   "key": 4,
+   "variant": "paper",
+   "value_hex": "01",
+   "value": true,
+   "expect": "OK"
+  },
+  {
+   "name": "default_ui.clock_24h",
+   "key": 5,
+   "variant": "paper",
+   "value_hex": "01",
+   "value": true,
+   "expect": "OK"
+  },
+  {
+   "name": "default_ui.temp_unit",
+   "key": 6,
+   "variant": "paper",
+   "value_hex": "00",
+   "value": 0,
+   "expect": "OK"
+  },
+  {
+   "name": "default_display.brightness",
+   "key": 7,
+   "variant": "lcd",
+   "value_hex": "46",
+   "value": 70,
+   "expect": "OK"
+  },
+  {
+   "name": "default_display.idle_dim_s",
+   "key": 8,
+   "variant": "lcd",
+   "value_hex": "1e00",
+   "value": 30,
+   "expect": "OK"
+  },
+  {
+   "name": "default_display.idle_off_s",
+   "key": 9,
+   "variant": "lcd",
+   "value_hex": "3c00",
+   "value": 60,
+   "expect": "OK"
+  },
+  {
+   "name": "default_display.mask_numbers",
+   "key": 10,
+   "variant": "paper",
+   "value_hex": "00",
+   "value": false,
+   "expect": "OK"
+  },
+  {
+   "name": "default_notif.default_app_policy",
+   "key": 16,
+   "variant": "paper",
+   "value_hex": "00",
+   "value": 0,
+   "expect": "OK"
+  },
+  {
+   "name": "default_notif.category_mask",
+   "key": 17,
+   "variant": "paper",
+   "value_hex": "ff0f",
+   "value": 4095,
+   "expect": "OK"
+  },
+  {
+   "name": "default_notif.min_priority",
+   "key": 18,
+   "variant": "paper",
+   "value_hex": "00",
+   "value": 0,
+   "expect": "OK"
+  },
+  {
+   "name": "default_notif.show_silent",
+   "key": 19,
+   "variant": "paper",
+   "value_hex": "01",
+   "value": true,
+   "expect": "OK"
+  },
+  {
+   "name": "default_quiet.enabled",
+   "key": 32,
+   "variant": "paper",
+   "value_hex": "00",
+   "value": false,
+   "expect": "OK"
+  },
+  {
+   "name": "default_quiet.start_min",
+   "key": 33,
+   "variant": "paper",
+   "value_hex": "2805",
+   "value": 1320,
+   "expect": "OK"
+  },
+  {
+   "name": "default_quiet.end_min",
+   "key": 34,
+   "variant": "paper",
+   "value_hex": "a401",
+   "value": 420,
+   "expect": "OK"
+  },
+  {
+   "name": "default_time.tz_offset_min",
+   "key": 48,
+   "variant": "paper",
+   "value_hex": "0000",
+   "value": 0,
+   "expect": "OK"
+  },
+  {
+   "name": "default_ui.theme_id",
+   "key": 64,
+   "variant": "paper",
+   "value_hex": "",
+   "value": "",
+   "expect": "OK"
+  },
+  {
+   "name": "default_ui.font_id",
+   "key": 65,
+   "variant": "paper",
+   "value_hex": "",
+   "value": "",
+   "expect": "OK"
+  },
+  {
+   "name": "default_ui.background_id",
+   "key": 66,
+   "variant": "paper",
+   "value_hex": "",
+   "value": "",
+   "expect": "OK"
+  },
+  {
+   "name": "default_weather.enabled",
+   "key": 80,
+   "variant": "lcd",
+   "value_hex": "01",
+   "value": true,
+   "expect": "OK"
+  },
+  {
+   "name": "default_weather.city",
+   "key": 81,
+   "variant": "lcd",
+   "value_hex": "",
+   "value": "",
+   "expect": "OK"
+  },
+  {
+   "name": "default_weather.interval_min",
+   "key": 82,
+   "variant": "lcd",
+   "value_hex": "3c00",
+   "value": 60,
+   "expect": "OK"
+  },
+  {
+   "name": "language_vi",
+   "key": 1,
+   "variant": "paper",
+   "value_hex": "01",
+   "expect": "OK",
+   "value": 1
+  },
+  {
+   "name": "language_unknown_enum",
+   "key": 1,
+   "variant": "paper",
+   "value_hex": "02",
+   "expect": "OUT_OF_RANGE"
+  },
+  {
+   "name": "orientation_max",
+   "key": 2,
+   "variant": "paper",
+   "value_hex": "03",
+   "expect": "OK",
+   "value": 3
+  },
+  {
+   "name": "orientation_above_max",
+   "key": 2,
+   "variant": "paper",
+   "value_hex": "04",
+   "expect": "OUT_OF_RANGE"
+  },
+  {
+   "name": "full_refresh_zero",
+   "key": 3,
+   "variant": "paper",
+   "value_hex": "00",
+   "expect": "OUT_OF_RANGE"
+  },
+  {
+   "name": "full_refresh_on_lcd",
+   "key": 3,
+   "variant": "lcd",
+   "value_hex": "0a",
+   "expect": "UNKNOWN_KEY"
+  },
+  {
+   "name": "show_body_false",
+   "key": 4,
+   "variant": "paper",
+   "value_hex": "00",
+   "expect": "OK",
+   "value": false
+  },
+  {
+   "name": "mask_numbers_on",
+   "key": 10,
+   "variant": "paper",
+   "value_hex": "01",
+   "expect": "OK",
+   "value": true
+  },
+  {
+   "name": "mask_numbers_value_2",
+   "key": 10,
+   "variant": "paper",
+   "value_hex": "02",
+   "expect": "OUT_OF_RANGE"
+  },
+  {
+   "name": "clock_12h",
+   "key": 5,
+   "variant": "paper",
+   "value_hex": "00",
+   "expect": "OK",
+   "value": false
+  },
+  {
+   "name": "clock_24h_value_2",
+   "key": 5,
+   "variant": "paper",
+   "value_hex": "02",
+   "expect": "OUT_OF_RANGE"
+  },
+  {
+   "name": "temp_unit_fahrenheit",
+   "key": 6,
+   "variant": "paper",
+   "value_hex": "01",
+   "expect": "OK",
+   "value": 1
+  },
+  {
+   "name": "temp_unit_unknown_enum",
+   "key": 6,
+   "variant": "paper",
+   "value_hex": "02",
+   "expect": "OUT_OF_RANGE"
+  },
+  {
+   "name": "temp_unit_on_lcd",
+   "key": 6,
+   "variant": "lcd",
+   "value_hex": "00",
+   "expect": "OK",
+   "value": 0
+  },
+  {
+   "name": "bool_value_2",
+   "key": 4,
+   "variant": "paper",
+   "value_hex": "02",
+   "expect": "OUT_OF_RANGE"
+  },
+  {
+   "name": "bool_two_bytes",
+   "key": 4,
+   "variant": "paper",
+   "value_hex": "0100",
+   "expect": "TYPE_MISMATCH"
+  },
+  {
+   "name": "category_mask_all_bits",
+   "key": 17,
+   "variant": "paper",
+   "value_hex": "ffff",
+   "expect": "OK",
+   "value": 65535
+  },
+  {
+   "name": "category_mask_one_byte",
+   "key": 17,
+   "variant": "paper",
+   "value_hex": "ff",
+   "expect": "TYPE_MISMATCH"
+  },
+  {
+   "name": "min_priority_urgent",
+   "key": 18,
+   "variant": "paper",
+   "value_hex": "03",
+   "expect": "OK",
+   "value": 3
+  },
+  {
+   "name": "min_priority_unknown",
+   "key": 18,
+   "variant": "paper",
+   "value_hex": "04",
+   "expect": "OUT_OF_RANGE"
+  },
+  {
+   "name": "quiet_start_max",
+   "key": 33,
+   "variant": "paper",
+   "value_hex": "9f05",
+   "expect": "OK",
+   "value": 1439
+  },
+  {
+   "name": "quiet_start_1440",
+   "key": 33,
+   "variant": "paper",
+   "value_hex": "a005",
+   "expect": "OUT_OF_RANGE"
+  },
+  {
+   "name": "tz_negative",
+   "key": 48,
+   "variant": "paper",
+   "value_hex": "d4fe",
+   "expect": "OK",
+   "value": -300
+  },
+  {
+   "name": "tz_below_min",
+   "key": 48,
+   "variant": "paper",
+   "value_hex": "2ffd",
+   "expect": "OUT_OF_RANGE"
+  },
+  {
+   "name": "tz_three_bytes",
+   "key": 48,
+   "variant": "paper",
+   "value_hex": "000000",
+   "expect": "TYPE_MISMATCH"
+  },
+  {
+   "name": "theme_id_set",
+   "key": 64,
+   "variant": "paper",
+   "value_hex": "6461726b2d636174",
+   "expect": "OK",
+   "value": "dark-cat"
+  },
+  {
+   "name": "theme_id_32_bytes",
+   "key": 64,
+   "variant": "paper",
+   "value_hex": "6161616161616161616161616161616161616161616161616161616161616161",
+   "expect": "OK",
+   "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  {
+   "name": "theme_id_33_bytes",
+   "key": 64,
+   "variant": "paper",
+   "value_hex": "616161616161616161616161616161616161616161616161616161616161616161",
+   "expect": "TOO_LARGE"
+  },
+  {
+   "name": "theme_id_invalid_utf8",
+   "key": 64,
+   "variant": "paper",
+   "value_hex": "c3",
+   "expect": "INVALID_UTF8"
+  },
+  {
+   "name": "background_id_set",
+   "key": 66,
+   "variant": "paper",
+   "value_hex": "70617065722d3031",
+   "expect": "OK",
+   "value": "paper-01"
+  },
+  {
+   "name": "background_id_33_bytes",
+   "key": 66,
+   "variant": "paper",
+   "value_hex": "616161616161616161616161616161616161616161616161616161616161616161",
+   "expect": "TOO_LARGE"
+  },
+  {
+   "name": "background_id_on_lcd",
+   "key": 66,
+   "variant": "lcd",
+   "value_hex": "",
+   "expect": "OK",
+   "value": ""
+  },
+  {
+   "name": "brightness_off",
+   "key": 7,
+   "variant": "lcd",
+   "value_hex": "00",
+   "expect": "OK",
+   "value": 0
+  },
+  {
+   "name": "brightness_max",
+   "key": 7,
+   "variant": "lcd",
+   "value_hex": "64",
+   "expect": "OK",
+   "value": 100
+  },
+  {
+   "name": "brightness_101",
+   "key": 7,
+   "variant": "lcd",
+   "value_hex": "65",
+   "expect": "OUT_OF_RANGE"
+  },
+  {
+   "name": "brightness_on_paper",
+   "key": 7,
+   "variant": "paper",
+   "value_hex": "46",
+   "expect": "UNKNOWN_KEY"
+  },
+  {
+   "name": "idle_dim_never",
+   "key": 8,
+   "variant": "lcd",
+   "value_hex": "0000",
+   "expect": "OK",
+   "value": 0
+  },
+  {
+   "name": "idle_dim_one_byte",
+   "key": 8,
+   "variant": "lcd",
+   "value_hex": "1e",
+   "expect": "TYPE_MISMATCH"
+  },
+  {
+   "name": "idle_off_max",
+   "key": 9,
+   "variant": "lcd",
+   "value_hex": "ffff",
+   "expect": "OK",
+   "value": 65535
+  },
+  {
+   "name": "idle_off_on_paper",
+   "key": 9,
+   "variant": "paper",
+   "value_hex": "2c01",
+   "expect": "UNKNOWN_KEY"
+  },
+  {
+   "name": "orientation_flipped_on_lcd",
+   "key": 2,
+   "variant": "lcd",
+   "value_hex": "02",
+   "expect": "OK",
+   "value": 2
+  },
+  {
+   "name": "weather_enabled_off",
+   "key": 80,
+   "variant": "lcd",
+   "value_hex": "00",
+   "expect": "OK",
+   "value": false
+  },
+  {
+   "name": "weather_enabled_on_paper",
+   "key": 80,
+   "variant": "paper",
+   "value_hex": "01",
+   "expect": "OK",
+   "value": true
+  },
+  {
+   "name": "weather_city_on_paper",
+   "key": 81,
+   "variant": "paper",
+   "value_hex": "48c3a0204ee1bb9969",
+   "expect": "OK",
+   "value": "Hà Nội"
+  },
+  {
+   "name": "weather_interval_on_paper",
+   "key": 82,
+   "variant": "paper",
+   "value_hex": "f000",
+   "expect": "OK",
+   "value": 240
+  },
+  {
+   "name": "weather_city_vietnamese",
+   "key": 81,
+   "variant": "lcd",
+   "value_hex": "48c3a0204ee1bb9969",
+   "expect": "OK",
+   "value": "Hà Nội"
+  },
+  {
+   "name": "weather_city_64_bytes",
+   "key": 81,
+   "variant": "lcd",
+   "value_hex": "63636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363",
+   "expect": "OK",
+   "value": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+  },
+  {
+   "name": "weather_city_65_bytes",
+   "key": 81,
+   "variant": "lcd",
+   "value_hex": "6363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363",
+   "expect": "TOO_LARGE"
+  },
+  {
+   "name": "weather_city_invalid_utf8",
+   "key": 81,
+   "variant": "lcd",
+   "value_hex": "4861cc",
+   "expect": "INVALID_UTF8"
+  },
+  {
+   "name": "weather_interval_min",
+   "key": 82,
+   "variant": "lcd",
+   "value_hex": "0f00",
+   "expect": "OK",
+   "value": 15
+  },
+  {
+   "name": "weather_interval_14",
+   "key": 82,
+   "variant": "lcd",
+   "value_hex": "0e00",
+   "expect": "OUT_OF_RANGE"
+  },
+  {
+   "name": "weather_interval_max",
+   "key": 82,
+   "variant": "lcd",
+   "value_hex": "f000",
+   "expect": "OK",
+   "value": 240
+  },
+  {
+   "name": "weather_interval_241",
+   "key": 82,
+   "variant": "lcd",
+   "value_hex": "f100",
+   "expect": "OUT_OF_RANGE"
+  },
+  {
+   "name": "unknown_key",
+   "key": 39321,
+   "variant": "paper",
+   "value_hex": "01",
+   "expect": "UNKNOWN_KEY"
+  }
+ ]
+}
