@@ -2,6 +2,13 @@
 
 Rules (protocol.md §9): while 0.x, breaking changes bump the minor version and are marked **BREAKING**; from 1.0.0, additive = minor and breaking = major. Every entry lists the vector files that changed. A contract change, its version bump, this changelog and the vectors land in one commit.
 
+## 0.13.0 (2026-10-19)
+
+Naming only: the public product, advertising and setup-hotspot name is now **`ePager` / `ePager-XXXX`** (was lower-case `epager-XXXX`). No new message, tag or key; UUIDs and identifiers are unchanged.
+
+- `gatt.json` `advertising.name_prefix` is `ePager-`. An app that falls back to the name prefix compares it case-insensitively, so boards from before 0.13.0 are still found (protocol.md §1).
+- Vectors: every vector file only carries the new version.
+
 ## 0.12.1 (2026-10-18)
 
 Behaviour only, to save battery (PLAN D103). No new message, tag or key; an app needs no change.
