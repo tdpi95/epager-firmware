@@ -19,6 +19,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+      # tools/codegen/gen.py writes the interpreter's Unicode version (3.12: 15.0.0) into proto_gen.[ch],
+      # so the Python must not follow the runner image.
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
       - name: Packages
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends cmake ninja-build python3-venv python3-tk
       - name: Python tools
