@@ -18,7 +18,7 @@ jobs:
   host:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Packages
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends cmake ninja-build python3-venv python3-tk
       - name: Python tools
@@ -43,7 +43,7 @@ jobs:
         variant: [paper, lcd]
     container: espressif/idf:v5.5.5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Allow git in the container
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: Build
