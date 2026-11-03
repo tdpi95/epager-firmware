@@ -91,7 +91,7 @@ between refreshes. The UI shown is a placeholder notification card (the real Pap
 later). The timings are emulated, not measured; real panel behaviour is a hardware check.
 
 Viewer keys: `b`/`B` BOOT short/long, `p`/`P` PWR short/long, `H` PWR hold (5 s), `s` snapshot, `q` quit.
-Paper keys (PLAN D96, D98): on the clock BOOT = the settings, PWR = the cards; on a card BOOT = older, PWR = newer; in
+Paper keys (PLAN D96, D98): on the clock BOOT = the cards, PWR = the settings; on a card BOOT = older, PWR = newer; in
 the settings BOOT / PWR = up / down, BOOT long = select, PWR long = back; PWR hold = power off/on; BOOT + PWR long
 = pairing mode (console `button bootpwr long`).
 

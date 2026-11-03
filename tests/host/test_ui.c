@@ -284,6 +284,12 @@ static void test_badge_and_clock_keys(void)
     run(400);
     TEST_ASSERT_EQUAL_INT(UI_ACTION_NONE, ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_SHORT)); /* nothing to show */
     TEST_ASSERT_EQUAL_INT(UI_ACTION_NONE, ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_LONG));  /* long BOOT: nothing */
+    ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT); /* short PWR on the clock: the settings, even with no cards */
+    run(400);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings"));
+    ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_LONG); /* back */
+    run(400);
+    TEST_ASSERT_NULL(strstr(text(), "Settings"));
     npipe_notif_t a = notif(1, "Zalo", "First", "a"), b = notif(2, "Mail", "Second", "b");
     ui_on_notification(&a);
     ui_on_notification(&b);
@@ -296,7 +302,7 @@ static void test_badge_and_clock_keys(void)
     run(2100);
     TEST_ASSERT_NULL(strstr(text(), "Second"));
     TEST_ASSERT_NOT_NULL(strstr(text(), "\n2\n")); /* the badge counts the two waiting notifications */
-    ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT); /* short PWR on the clock: the newest card */
+    ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_SHORT); /* short BOOT on the clock: the newest card */
     run(2100);
     TEST_ASSERT_NOT_NULL(strstr(text(), "Mail\n1/2"));
     /* a dismissal at the source empties the clock's badge */
@@ -550,8 +556,8 @@ static void test_cards_time_out_to_the_clock(void)
     run(10000); /* more than a minute */
     TEST_ASSERT_NULL(strstr(text(), "First"));
     TEST_ASSERT_NOT_NULL(strstr(text(), "\n2\n")); /* the clock, the badge counts the two waiting */
-    /* the notifications stayed: short PWR opens them at the newest card, a new one opens its card */
-    ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT);
+    /* the notifications stayed: short BOOT opens them at the newest card, a new one opens its card */
+    ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_SHORT);
     run(2100);
     TEST_ASSERT_NOT_NULL(strstr(text(), "Mail\n1/2"));
     run(61000);
@@ -657,7 +663,7 @@ static void test_keys_step_back_to_clock(void)
     run(2100);
     TEST_ASSERT_NULL(strstr(text(), "Second"));
     TEST_ASSERT_NULL(strstr(text(), "1/2"));
-    ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT); /* from the clock: the newest card */
+    ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_SHORT); /* from the clock: the newest card */
     run(2100);
     TEST_ASSERT_NOT_NULL(strstr(text(), "Mail\n1/2"));
     ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_SHORT);
@@ -667,7 +673,7 @@ static void test_keys_step_back_to_clock(void)
     run(2100);
     TEST_ASSERT_NULL(strstr(text(), "First"));
     TEST_ASSERT_NULL(strstr(text(), "2/2"));
-    ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_SHORT); /* from the clock short BOOT opens the settings (D98) */
+    ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT); /* from the clock short PWR opens the settings (D98) */
     run(2100);
     TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n1/9\n"));
     TEST_ASSERT_NULL(strstr(text(), "First"));
@@ -688,7 +694,7 @@ static void test_keys_step_back_to_clock(void)
     ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_SHORT);
     run(2100);
     TEST_ASSERT_NULL(strstr(text(), "Third"));
-    ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT); /* short PWR on the clock brings the card back */
+    ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_SHORT); /* short BOOT on the clock brings the card back */
     run(2100);
     TEST_ASSERT_NOT_NULL(strstr(text(), "Chat\n1/1"));
     ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT); /* short PWR leaves a single card too, to the clock */
@@ -891,7 +897,7 @@ static bool row_selected(unsigned row_on_screen) { return pixel_black(3, 25 + 25
 static void test_settings_navigation(void)
 {
     start_settings(true);
-    TEST_ASSERT_EQUAL_INT(UI_ACTION_NONE, ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_SHORT)); /* the clock: open the list */
+    TEST_ASSERT_EQUAL_INT(UI_ACTION_NONE, ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT)); /* the clock: open the list */
     run(2100);
     TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n1/12\nClock\n24h\nTemperature\n°C\nLanguage\nEnglish\n"));
     TEST_ASSERT_NOT_NULL(strstr(text(), "Message text\nOn\nHide numbers\nOff\nRotation\n0°\nWeather\nOn\n"));
@@ -927,7 +933,7 @@ static void test_settings_navigation(void)
 static void test_settings_select_changes_values(void)
 {
     start_settings(true);
-    ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_SHORT);
+    ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT);
     /* a choice reports its config key and the next value; the firmware stores it and hands the configuration back */
     TEST_ASSERT_EQUAL_INT(UI_ACTION_NONE, ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_LONG));
     TEST_ASSERT_EQUAL_INT(UI_ACTION_SETTING, seen_action);
@@ -967,7 +973,7 @@ static void test_settings_select_changes_values(void)
 static void test_settings_actions(void)
 {
     start_settings(true);
-    ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_SHORT);
+    ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT);
     for (int i = 0; i < 7; i++) {
         ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT);
     }
@@ -977,7 +983,7 @@ static void test_settings_actions(void)
     run(2100);
     TEST_ASSERT_NULL(strstr(text(), "Settings")); /* pairing is a screen of its own: the list is closed */
     /* the Wi-Fi setup opens over the list and any key leads back to it */
-    ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_SHORT);
+    ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT);
     for (int i = 0; i < 8; i++) {
         ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT);
     }
@@ -998,7 +1004,7 @@ static void test_settings_actions(void)
     TEST_ASSERT_NULL(strstr(text(), "Settings"));
     /* a board without Wi-Fi has neither the weather, the Wi-Fi row nor the networks page */
     start_settings(false);
-    ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_SHORT);
+    ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT);
     run(2100);
     TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n1/9\n"));
     ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_SHORT);
@@ -1025,7 +1031,7 @@ static void test_settings_pages(void)
     snprintf(info.device, sizeof(info.device), "%s", "ePager-1A2B");
     snprintf(info.board, sizeof(info.board), "%s", "waveshare_s3_epaper_154");
     ui_set_info(&info);
-    ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_SHORT);
+    ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT);
     for (int i = 0; i < 9; i++) {
         ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT);
     }
@@ -1103,7 +1109,7 @@ static void test_settings_pages(void)
 static void test_settings_power_off_timeout_and_notifications(void)
 {
     start_settings(true);
-    ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_SHORT);
+    ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT);
     run(2100);
     TEST_ASSERT_EQUAL_INT(UI_ACTION_POWER_TOGGLE, ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_HOLD)); /* from the list too */
     /* a minute without a key: back to the clock; a key in between starts the minute again */
@@ -1115,7 +1121,7 @@ static void test_settings_power_off_timeout_and_notifications(void)
     TEST_ASSERT_NULL(strstr(text(), "Settings"));
     TEST_ASSERT_NOT_NULL(strstr(text(), "14:27"));
     /* the next visit starts at the first row again */
-    ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_SHORT);
+    ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT);
     run(2100);
     TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n1/12\n"));
     /* a notification replaces the list */
@@ -1124,9 +1130,9 @@ static void test_settings_power_off_timeout_and_notifications(void)
     run(2100);
     TEST_ASSERT_NULL(strstr(text(), "Settings"));
     TEST_ASSERT_NOT_NULL(strstr(text(), "Zalo\n1/1"));
-    /* short PWR on a card steps to the clock, short BOOT opens the list */
+    /* short PWR on a card steps to the clock, short PWR on the clock opens the list */
     ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT);
-    ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_SHORT);
+    ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT);
     run(2100);
     TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n1/12\n"));
     /* the page in Vietnamese, with the language row naming both languages */

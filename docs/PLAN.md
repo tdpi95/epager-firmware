@@ -196,7 +196,7 @@ These describe the implemented code and defaults; hardware acceptance remains pe
 | LCD keys | Up/down short = previous/next card (from clock, first opens cards); long = brightness. Both released together = sleep now; both held three seconds = pairing. A key waking the screen does not also navigate. |
 | LCD touch | On cards: left/right = next/previous, down = dismiss, up = hide cards/show clock, tap = expand/collapse text; long text scrolls. On clock: down = cards, up = settings. Settings: tap selects, up/down pages, right goes back. |
 | LCD idle defaults | Brightness 70%; dim after 30 s to at most 20%; panel/backlight off after **60 s**. Stored settings survive default changes. |
-| Paper keys | On clock: short BOOT = settings, short PWR = cards. On cards: BOOT = older, PWR = newer, past the ends = clock. Settings: BOOT/PWR short = up/down, BOOT long = select, PWR long = back. PWR held 5 s powers off; BOOT+PWR held 1.5 s opens pairing. |
+| Paper keys | On clock: short BOOT = cards, short PWR = settings. On cards: BOOT = older, PWR = newer, past the ends = clock. Settings: BOOT/PWR short = up/down, BOOT long = select, PWR long = back. PWR held 5 s powers off; BOOT+PWR held 1.5 s opens pairing. |
 | Shared settings/screens | Clock format, units, language, message visibility, number masking, rotation, weather, pairing/Wi-Fi setup, saved phones/networks and About. Cards/settings return to clock after a minute of inactivity. |
 | Paper refresh policy | Default `display.full_refresh_every` = **30**. Clock partials count as one, other partials as a quarter. A due full refresh waits for a quiet moment, with a limit of twice the configured count. The earlier “every N partials” description is incomplete. |
 

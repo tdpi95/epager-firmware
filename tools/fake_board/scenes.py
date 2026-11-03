@@ -114,7 +114,7 @@ def scene_badge() -> Frames:
 
 
 def scene_settings() -> Frames:
-    """The Paper's settings (PLAN D96-D98): short BOOT on the clock opens the list, a choice changes in place, the
+    """The Paper's settings (PLAN D96-D98): short PWR on the clock opens the list, a choice changes in place, the
     list scrolls to About; the paired phones, the saved Wi-Fi networks and About pages."""
     b = board()
     loopback.time_sync(b, TS + 2 * 3600 + 27 * 60, 420)
@@ -123,7 +123,7 @@ def scene_settings() -> Frames:
         loopback.wifi_set(b, ssid, "secret-pass")
     b.advance(3500)  # the "Wi-Fi saved" message goes
     settle(b)
-    b.button(BTN_BOOT)  # the clock: open the settings
+    b.button(BTN_PWR)  # the clock: open the settings
     settle(b)
     out: Frames = [("settings_top", b.panel())]
     b.button(BTN_PWR)  # down to Temperature

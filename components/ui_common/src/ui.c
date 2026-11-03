@@ -653,13 +653,13 @@ ui_action_t ui_on_button(board_button_t btn, board_press_t press)
     if (press != BOARD_PRESS_SHORT) {
         return UI_ACTION_NONE;
     }
-    if (btn == BOARD_BTN_BOOT && !(ui.n_cards && ui.show_cards)) { /* short BOOT on the clock: the settings (D98) */
+    if (btn == BOARD_BTN_PWR && !(ui.n_cards && ui.show_cards)) { /* short PWR on the clock: the settings (D98) */
         ui_settings_enter();
         return UI_ACTION_NONE;
     }
     if (ui.n_cards) {
         /* BOOT = older card, PWR = newer (PLAN D74, D78). Stepping past the last or the first card shows the
-         * clock; from the clock short PWR opens the cards at the newest (D98: short BOOT opens the settings). */
+         * clock; from the clock short BOOT opens the cards at the newest (D98: short PWR opens the settings). */
         const bool older = btn == BOARD_BTN_BOOT;
         if (!ui.show_cards) {
             ui.show_cards = true;
