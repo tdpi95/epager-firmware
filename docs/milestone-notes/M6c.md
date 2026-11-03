@@ -38,6 +38,10 @@ The dev-console image (0.1.1, unsigned, NVS and assets kept) was flashed to the 
 
 Passed: `Range` resume on the real CDN after a forced drop, cancel, the prompt opening by itself with the 24 h snooze, a wrong-key image refused (`image valid, signature bad`, nothing restarted), the daily check on time with a 2-minute day, `update.auto_check` off and on, skip surviving a reset, a failed check counting a retry. **Finding: the release is signed with the same key as `keys/dev_signing_key.pem`**; the plan asked to confirm which key the boards trust for good: it is that one, so it must be backed up outside the repo and never replaced casually (PLAN section 9). Test hooks added for this: `update drop KIB`, `update auto 0|1`, and the remind time in `update status`.
 
+## First update from a genuine release (2026-11-03)
+
+After v0.2.0 was published, the Paper (console build 0.1.1) found it with `update check` and the prompt opened. `update install` downloaded the signed 1,576,960-byte image in 62.9 s (31.8 s reading the network), installed it in the other slot and restarted into `ePager Paper 0.2.0`; 35 s later `self-check passed: image marked valid`, and the OTA data showed both slots VALID with the new image as the boot image. The board now runs the release image (no debug console).
+
 ## Not verified
 
 - Open on a board: flash-write stalls with Wi-Fi and BLE up, heap during a TLS session next to BLE on the LCD, the daily timing, the battery cost. Checklist 84.

@@ -2,7 +2,7 @@
 
 | Firmware (variant) | Firmware version | Contract | App versions known to work | Verified on |
 |---|---|---|---|---|
-| paper | 0.2.0 | 0.14.0 | (no companion-app release tested yet) | host tests; on a Paper board: Wi-Fi updates (download, resume, cancel, signature refusal), checklist 84; BLE updates not run (checklist 83) |
+| paper | 0.2.0 | 0.14.0 | (no companion-app release tested yet) | host tests; on a Paper board: updated 0.1.1 -> 0.2.0 over Wi-Fi from the published release, resume, cancel, signature refusal (checklist 84); BLE updates not run (checklist 83) |
 | lcd | 0.2.0 | 0.14.0 | (no companion-app release tested yet) | host tests; Wi-Fi and BLE updates not run on the LCD board |
 | paper, lcd | 0.1.0, 0.1.1 | 0.13.0 | (no companion-app release tested yet) | no firmware update path: update over USB (the flashing page) |
 
