@@ -341,6 +341,7 @@ const proto_cfg_key_desc_t proto_cfg_keys[] = {
     { "weather.enabled", 80, PROTO_FT_BOOL, 0, 0, 0, 0, 0x6u, NULL, 0, 1, NULL, 0x000900u },
     { "weather.city", 81, PROTO_FT_STR, 0, 64, 0, 0, 0x6u, NULL, 0, 0, "", 0x000900u },
     { "weather.interval_min", 82, PROTO_FT_U16, PROTO_CFG_HAS_MIN | PROTO_CFG_HAS_MAX, 0, 15, 240, 0x6u, NULL, 0, 60, NULL, 0x000900u },
+    { "update.auto_check", 83, PROTO_FT_BOOL, 0, 0, 0, 0, 0x6u, NULL, 0, 1, NULL, 0x000e00u },
 };
 const size_t proto_cfg_keys_count = sizeof(proto_cfg_keys) / sizeof(proto_cfg_keys[0]);
 

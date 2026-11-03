@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-#define PROTO_CONTRACT_VERSION "0.13.0"
+#define PROTO_CONTRACT_VERSION "0.14.0"
 #define PROTO_MAJOR 0
 #define PROTO_UNICODE_VERSION "15.0.0"
 
@@ -412,10 +412,11 @@ typedef enum {
 #define PROTO_CFG_WEATHER_ENABLED 80
 #define PROTO_CFG_WEATHER_CITY 81
 #define PROTO_CFG_WEATHER_INTERVAL_MIN 82
-#define PROTO_CFG_KEY_COUNT 24u
+#define PROTO_CFG_UPDATE_AUTO_CHECK 83
+#define PROTO_CFG_KEY_COUNT 25u
 #define PROTO_CFG_STR_MAX_LEN 64u
 /* Contract versions packed as major << 16 | minor << 8 | patch (config key `since`) */
-#define PROTO_CONTRACT_VERSION_PACKED 0x000d00u
+#define PROTO_CONTRACT_VERSION_PACKED 0x000e00u
 
 /* GATT UUIDs, little-endian byte order (as BLE_UUID128_INIT expects) */
 #define PROTO_UUID_SERVICE_LE 0xca, 0x5f, 0xda, 0x25, 0x19, 0x6c, 0x47, 0x8b, 0x14, 0x42, 0x0a, 0x0c, 0x01, 0x00, 0x8a, 0xa0

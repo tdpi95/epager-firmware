@@ -652,6 +652,11 @@
           "maximum": 240,
           "default": 60,
           "description": "key 82 (0x0052), since 0.9.0, variants ['lcd', 'paper']. Minutes between weather fetches (each one joins Wi-Fi and runs a TLS handshake). Default 30 before 0.12.1."
+        },
+        "update.auto_check": {
+          "type": "boolean",
+          "default": true,
+          "description": "key 83 (0x0053), since 0.14.0, variants ['lcd', 'paper']. Check for a new firmware release once a day over Wi-Fi and offer it on the board; off = only when the user asks."
         }
       }
     }

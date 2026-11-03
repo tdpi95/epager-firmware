@@ -339,7 +339,8 @@ static void handle_begin(xfer_t *x, const proto_msg_t *req, proto_writer_t *w)
         st = t.kind == PROTO_TRANSFER_KIND_ASSET ? blob_to_status(x->p.blob->remove(x->p.blob->ctx, temp))
                                                  : x->p.fw->begin(x->p.fw->ctx, t.size);
         if (st != PROTO_OK) {
-            proto_w_response(w, req, PROTO_INTERNAL);
+            /* BUSY from the firmware sink: another update (over Wi-Fi) is writing the image */
+            proto_w_response(w, req, t.kind == PROTO_TRANSFER_KIND_FIRMWARE && st == PROTO_BUSY ? PROTO_BUSY : PROTO_INTERNAL);
             return;
         }
     }

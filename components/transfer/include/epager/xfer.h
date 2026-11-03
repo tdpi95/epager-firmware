@@ -111,6 +111,7 @@ typedef struct {
     uint8_t *buf;                  /* slot_size bytes; survives a simulated reboot like flash */
     uint32_t written;              /* high-water mark since begin(); resume() needs offset <= written */
     proto_status_t image_status;   /* what finish() returns (default OK) */
+    proto_status_t begin_status;   /* what begin() returns (default OK): BUSY = another update is writing */
     bool boot_set;                 /* finish() accepted the image */
     int32_t *power;                /* shared power budget (see kv_mem): each write consumes one unit */
 } fw_mem_t;

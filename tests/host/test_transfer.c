@@ -595,6 +595,22 @@ static void test_firmware_progress_and_reboot_events(void)
     xboard_free(b);
 }
 
+static void test_firmware_begin_busy_while_another_update_writes(void)
+{
+    xboard_t *b = xboard_from_vectors(NULL);
+    static uint8_t img[300];
+    b->fw.begin_status = PROTO_BUSY; /* the Wi-Fi update owns the sink */
+    begin_t r = begin(b, PROTO_TRANSFER_KIND_FIRMWARE, 0, "firmware", img, sizeof(img), "0.2.0", false);
+    TEST_ASSERT_EQUAL_INT(PROTO_BUSY, r.st);
+    b->fw.begin_status = PROTO_INTERNAL; /* any other refusal is still INTERNAL */
+    r = begin(b, PROTO_TRANSFER_KIND_FIRMWARE, 0, "firmware", img, sizeof(img), "0.2.0", false);
+    TEST_ASSERT_EQUAL_INT(PROTO_INTERNAL, r.st);
+    b->fw.begin_status = PROTO_OK;
+    r = begin(b, PROTO_TRANSFER_KIND_FIRMWARE, 0, "firmware", img, sizeof(img), "0.2.0", false);
+    TEST_ASSERT_EQUAL_INT(PROTO_OK, r.st);
+    xboard_free(b);
+}
+
 /* ---------------------------------------------------------------- OTA state machine */
 
 static kv_mem_t okv;
@@ -863,6 +879,7 @@ int main(void)
     RUN_TEST(test_board_without_assets_or_firmware);
     RUN_TEST(test_max_chunk_clamped);
     RUN_TEST(test_firmware_progress_and_reboot_events);
+    RUN_TEST(test_firmware_begin_busy_while_another_update_writes);
     RUN_TEST(test_ota_update_verified);
     RUN_TEST(test_ota_self_check_failure_rolls_back);
     RUN_TEST(test_ota_verify_timeout);

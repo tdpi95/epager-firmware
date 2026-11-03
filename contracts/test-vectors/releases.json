@@ -1,5 +1,5 @@
 {
- "contract_version": "0.13.0",
+ "contract_version": "0.14.0",
  "description": "Firmware release manifests (releases.md). 'manifests': 'problem' is null for a valid manifest, else 'schema' (fails release-manifest.schema.json), 'duplicate_board_id' or 'file_name'. 'select': with the board's Capabilities fields, the app's contract version and developer mode, the app must offer exactly 'expect' (an image file name, or the first refusal reason in releases.md order).",
  "scope": "app",
  "manifests": [

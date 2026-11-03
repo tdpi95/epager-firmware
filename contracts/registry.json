@@ -410,6 +410,7 @@
     {"id": 66, "name": "ui.background_id", "type": "str", "max_len": 32, "default": "", "since": "0.7.0", "description": "Installed background asset id; empty = none. Takes precedence over a theme's background."},
     {"id": 80, "name": "weather.enabled", "type": "bool", "default": true, "variants": ["lcd", "paper"], "since": "0.9.0", "description": "Fetch the weather over Wi-Fi and show it on the idle screen."},
     {"id": 81, "name": "weather.city", "type": "str", "max_len": 64, "default": "", "variants": ["lcd", "paper"], "since": "0.9.0", "description": "Place name the board looks up for the weather; empty = locate by the network's IP address."},
-    {"id": 82, "name": "weather.interval_min", "type": "u16", "min": 15, "max": 240, "default": 60, "variants": ["lcd", "paper"], "since": "0.9.0", "description": "Minutes between weather fetches (each one joins Wi-Fi and runs a TLS handshake). Default 30 before 0.12.1."}
+    {"id": 82, "name": "weather.interval_min", "type": "u16", "min": 15, "max": 240, "default": 60, "variants": ["lcd", "paper"], "since": "0.9.0", "description": "Minutes between weather fetches (each one joins Wi-Fi and runs a TLS handshake). Default 30 before 0.12.1."},
+    {"id": 83, "name": "update.auto_check", "type": "bool", "default": true, "variants": ["lcd", "paper"], "since": "0.14.0", "description": "Check for a new firmware release once a day over Wi-Fi and offer it on the board; off = only when the user asks."}
   ]
 }

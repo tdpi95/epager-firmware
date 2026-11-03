@@ -2,6 +2,14 @@
 
 Rules (protocol.md §9): while 0.x, breaking changes bump the minor version and are marked **BREAKING**; from 1.0.0, additive = minor and breaking = major. Every entry lists the vector files that changed. A contract change, its version bump, this changelog and the vectors land in one commit.
 
+## 0.14.0 (2026-11-03)
+
+Additive, both variants: the board can check for a new firmware release by itself once a day (docs/wifi-ota-plan.md; there is no iOS app to send an image over BLE). An app that does not know the key needs no change (an unknown key is skipped, §9).
+
+- New config key **`update.auto_check`** (83, bool, default true, `lcd` and `paper`): the daily check over Wi-Fi. Off = only when the person asks on the board. The board always asks the person before installing; nothing in the BLE transfer (§7) changes.
+- `protocol.md` §5 describes it; `releases.md` gains "Board behaviour" (what a board does with the manifest). §7.2 gains step 8: `XFER_BEGIN` for firmware answers `BUSY` while the board installs an image it fetched over Wi-Fi (before, a board that could not start the image answered `INTERNAL`); no new status code.
+- Vectors: `config_values.json` (new `update_auto_check_*` cases); every other vector file only carries the new version.
+
 ## 0.13.0 (2026-10-19)
 
 Naming only: the public product, advertising and setup-hotspot name is now **`ePager` / `ePager-XXXX`** (was lower-case `epager-XXXX`). No new message, tag or key; UUIDs and identifiers are unchanged.

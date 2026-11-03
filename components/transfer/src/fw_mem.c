@@ -7,6 +7,9 @@ static proto_status_t fw_begin(void *ctx, uint32_t size)
 {
     fw_mem_t *m = ctx;
     (void)size;
+    if (m->begin_status != PROTO_OK) {
+        return m->begin_status;
+    }
     m->written = 0;
     m->boot_set = false;
     return PROTO_OK;

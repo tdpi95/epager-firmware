@@ -1,5 +1,5 @@
 {
- "contract_version": "0.13.0",
+ "contract_version": "0.14.0",
  "description": "Transfer state-machine scenarios (protocol.md 7). Replay `steps` in order against a board configured with `board` (deep-merged with the scenario's `board` overrides; null removes a feature). `request` steps: send `hex` (decoded: `logical`); the board must send exactly the `expect` messages, in order (responses and XFER_ACK events). Other ops: `disconnect`, `reboot` (power cut: RAM lost, storage kept), `set_battery` (`battery` null = no battery reader; pct null = reading failed). Storage accounting of the reference board: free = storage_total - sum of stored file sizes, where an installed asset with a version also stores the version string (its length in bytes). Firmware `image_status` is what the board's image/signature check returns. The app can replay its side of each scenario: encode every request to `hex` and decode every expected message.",
  "scope": "app+board",
  "board": {

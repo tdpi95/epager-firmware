@@ -1,5 +1,5 @@
 {
- "contract_version": "0.13.0",
+ "contract_version": "0.14.0",
  "description": "App icons (asset-formats.md `app_icon`). `removal` (since 0.12.0, board only; the app ignores it): the board deletes an app's icon when the app leaves the seen list (protocol.md 6.4); see `removal.description`. `ids`: the asset id of an app's icon is app_icon_id(app_id) = lower-case hex of the first 16 bytes of SHA-256 over the app_id's UTF-8 bytes (`app_id_hex`), exactly as the board reports the app_id, without case folding. Both sides compute it. `icons`: `app_icon` + `mono1` files; `rows` are top to bottom, '#' = black (bit 0), '.' = white (bit 1); encoding them must give exactly `hex` (16-byte container header + payload). `rgb565a8_icons` (since 0.8.0): `app_icon` + `rgb565a8` files; `pixels` are rows top to bottom of 'rrggbbaa' (8-bit channels); RGB565 keeps the top 5/6/5 bits; encoding them must give exactly `hex`.",
  "scope": "app+board",
  "ids": [

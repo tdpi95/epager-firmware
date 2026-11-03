@@ -1,5 +1,5 @@
 {
- "contract_version": "0.13.0",
+ "contract_version": "0.14.0",
  "description": "Config value validation (protocol.md 5). A board of the given variant must return 'expect' for value_hex written to key. 'value' is the typed logical value.",
  "scope": "app+board",
  "cases": [
@@ -193,6 +193,14 @@
    "variant": "lcd",
    "value_hex": "3c00",
    "value": 60,
+   "expect": "OK"
+  },
+  {
+   "name": "default_update.auto_check",
+   "key": 83,
+   "variant": "lcd",
+   "value_hex": "01",
+   "value": true,
    "expect": "OK"
   },
   {
@@ -593,6 +601,29 @@
    "variant": "lcd",
    "value_hex": "f100",
    "expect": "OUT_OF_RANGE"
+  },
+  {
+   "name": "update_auto_check_off",
+   "key": 83,
+   "variant": "lcd",
+   "value_hex": "00",
+   "expect": "OK",
+   "value": false
+  },
+  {
+   "name": "update_auto_check_on_paper",
+   "key": 83,
+   "variant": "paper",
+   "value_hex": "01",
+   "expect": "OK",
+   "value": true
+  },
+  {
+   "name": "update_auto_check_two_bytes",
+   "key": 83,
+   "variant": "paper",
+   "value_hex": "0100",
+   "expect": "TYPE_MISMATCH"
   },
   {
    "name": "unknown_key",

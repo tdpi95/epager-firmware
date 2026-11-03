@@ -391,7 +391,7 @@ static void test_msg_config_get(void)
     const char *all = handle("{\"type\":\"CONFIG_GET\",\"req_id\":4}");
     TEST_ASSERT_NOT_NULL(strstr(all, "{\"key\":3,\"value\":\"1e\"}"));
     TEST_ASSERT_NOT_NULL(strstr(all, "{\"key\":65,\"value\":\"\"},{\"key\":66,\"value\":\"\"},{\"key\":80,\"value\":\"01\"},"
-                                     "{\"key\":81,\"value\":\"\"},{\"key\":82,\"value\":\"3c00\"}]"));
+                                     "{\"key\":81,\"value\":\"\"},{\"key\":82,\"value\":\"3c00\"},{\"key\":83,\"value\":\"01\"}]"));
     boot(PROTO_VARIANT_LCD);
     TEST_ASSERT_NULL(strstr(handle("{\"type\":\"CONFIG_GET\",\"req_id\":4}"), "{\"key\":3,"));
     TEST_ASSERT_EQUAL_STRING("{\"type\":\"CONFIG_GET_RSP\",\"req_id\":5,\"fields\":{\"status\":0,\"revision\":0}}",

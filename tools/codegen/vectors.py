@@ -577,6 +577,9 @@ def gen_config_values() -> dict:
     add("weather_interval_14", 82, u16(14), "OUT_OF_RANGE", variant="lcd")
     add("weather_interval_max", 82, u16(240), "OK", variant="lcd", value=240)
     add("weather_interval_241", 82, u16(241), "OUT_OF_RANGE", variant="lcd")
+    add("update_auto_check_off", 83, b"\x00", "OK", variant="lcd", value=False)
+    add("update_auto_check_on_paper", 83, b"\x01", "OK", value=True)
+    add("update_auto_check_two_bytes", 83, b"\x01\x00", "TYPE_MISMATCH")
     add("unknown_key", 0x9999, b"\x01", "UNKNOWN_KEY")
     assert K
     return {"description": "Config value validation (protocol.md 5). A board of the given variant must return "
