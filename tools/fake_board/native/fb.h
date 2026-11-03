@@ -108,6 +108,10 @@ FB_API void fb_weather(int present, int16_t temp_c10, int32_t wmo_code, int is_d
 /* An Open-Meteo forecast document through the board's parser, shown with `place` if it parses; returns
  * wx_result_t (simulator libraries; -1 otherwise). */
 FB_API int fb_weather_json(const char *json, size_t len, const char *place);
+/* The firmware update as the UI shows it (ui_update_state_t, ui_update_error_t; simulator libraries): the Software
+ * update page and the clock screen's mark. fb_update_prompt opens the prompt (1 if it opened). */
+FB_API void fb_set_update(uint8_t state, uint8_t error, const char *version, uint32_t size, int skipped);
+FB_API int fb_update_prompt(void);
 /* The Wi-Fi setup screen (ui_setup_state_t; simulator libraries). */
 FB_API void fb_wifi_setup(uint8_t state, const char *ap_ssid, const char *ap_password, const char *url,
                           const char *network);

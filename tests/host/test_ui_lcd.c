@@ -818,6 +818,115 @@ static void test_settings_with_wifi(void)
     TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n3/3\nWi-Fi setup\n"));
 }
 
+/* ---------------------------------------------------------------- firmware update (docs/wifi-ota-plan.md) */
+
+static void reinit_update(void)
+{
+    ui_deinit();
+    const board_profile_t *b = board_get();
+    ui_params_t p = {.display = b->display, .blob = &blob.iface, .now_ms = now_ms, .read_touch = b->read_touch,
+                     .on_action = on_action, .wifi_setup = true, .update = true, .cards_timeout_s = UI_CARDS_TIMEOUT_S};
+    TEST_ASSERT_TRUE(ui_init(&p));
+    ui_config_t c = cfg();
+    c.update_auto_check = true;
+    ui_set_config(&c);
+    last_action = UI_ACTION_NONE;
+    run(20);
+}
+
+static ui_update_t upd_available(void)
+{
+    ui_update_t u = {.state = UI_UPD_AVAILABLE, .size = 2822144, .mark = true};
+    snprintf(u.version, sizeof(u.version), "0.2.0");
+    return u;
+}
+
+static void test_update_page_and_rows(void)
+{
+    reinit_update();
+    SWIPE_UP(); /* opens the list */
+    SWIPE_UP();
+    SWIPE_UP();
+    SWIPE_UP();
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n4/4\nSoftware update\n>\nAbout\n>\n"));
+    SWIPE_BACK();
+    SWIPE_UP();
+    SWIPE_UP();
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n2/4\nHide numbers\nOff\nRotation\n0\xC2\xB0\nWeather\nOff\nCheck updates\nOn\n"));
+    TAP_ROW(3); /* Check updates: a config key like the others */
+    TEST_ASSERT_EQUAL_UINT32((uint32_t)PROTO_CFG_UPDATE_AUTO_CHECK << 8 | 0u, last_arg);
+    SWIPE_UP();
+    SWIPE_UP();
+    TAP_ROW(0); /* Software update */
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Software update\nNot checked\nCheck now\n"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Check now"));
+    TAP_ROW(1);
+    TEST_ASSERT_EQUAL_INT(UI_ACTION_UPDATE_CHECK, last_action);
+    ui_update_t u = upd_available();
+    ui_set_update(&u);
+    run(20);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "New version"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "2.8 MB"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Install"));
+    TAP_ROW(2); /* Install: the second row after the status and the size */
+    TEST_ASSERT_EQUAL_INT(UI_ACTION_UPDATE_INSTALL, last_action);
+}
+
+static void test_update_mark_and_prompt(void)
+{
+    reinit_update();
+    ui_update_t u = upd_available();
+    ui_set_update(&u);
+    run(20);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Update available")); /* the mark on the clock screen */
+    TEST_ASSERT_TRUE(ui_show_update_prompt());
+    run(20);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Software update\nUpdate available\n0.2.0\nInstall\nRemind later\nSkip this version\n"));
+    TAP_ROW(2); /* Remind later: reported, and the clock is back */
+    TEST_ASSERT_EQUAL_INT(UI_ACTION_UPDATE_LATER, last_action);
+    TEST_ASSERT_NULL(strstr(text(), "Software update"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Update available")); /* the mark stays */
+    TEST_ASSERT_TRUE(ui_show_update_prompt());
+    run(20);
+    last_action = UI_ACTION_NONE;
+    SWIPE_BACK(); /* backing out reports nothing and is "remind later" too */
+    TEST_ASSERT_EQUAL_INT(UI_ACTION_NONE, last_action);
+    TEST_ASSERT_NULL(strstr(text(), "Software update"));
+    /* never on top of a notification, and not with the screen off */
+    npipe_notif_t a = notif(1, PROTO_CATEGORY_SOCIAL, "Zalo", "Hello", "");
+    ui_on_notification(&a);
+    run(20);
+    TEST_ASSERT_FALSE(ui_show_update_prompt());
+    /* Skip this version, on the same page */
+    reinit_update();
+    ui_set_update(&u);
+    TEST_ASSERT_TRUE(ui_show_update_prompt());
+    run(20);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Skip this version")); /* the whole question is one page */
+    TAP_ROW(3);
+    TEST_ASSERT_EQUAL_INT(UI_ACTION_UPDATE_SKIP, last_action);
+    TEST_ASSERT_NULL(strstr(text(), "Software update"));
+}
+
+static void test_update_prompt_waits_for_an_awake_screen(void)
+{
+    reinit_update();
+    ui_config_t c = cfg();
+    c.update_auto_check = true;
+    c.idle_dim_s = 0;
+    c.idle_off_s = 60;
+    ui_set_config(&c);
+    ui_update_t u = upd_available();
+    ui_set_update(&u);
+    run(61000);
+    TEST_ASSERT_TRUE(state().asleep);
+    TEST_ASSERT_FALSE(ui_show_update_prompt()); /* it never wakes the screen */
+    TEST_ASSERT_TRUE(state().asleep);
+    ui_activity(); /* a key or a touch wakes it: now it may ask */
+    run(20);
+    TEST_ASSERT_TRUE(ui_show_update_prompt());
+}
+
 static void test_settings_close_by_idle(void)
 {
     ui_deinit();
@@ -1011,6 +1120,9 @@ int main(void)
     RUN_TEST(test_settings_pairing_and_pages);
     RUN_TEST(test_settings_closes);
     RUN_TEST(test_settings_with_wifi);
+    RUN_TEST(test_update_page_and_rows);
+    RUN_TEST(test_update_mark_and_prompt);
+    RUN_TEST(test_update_prompt_waits_for_an_awake_screen);
     RUN_TEST(test_settings_close_by_idle);
     RUN_TEST(test_settings_closed_when_the_screen_goes_off);
     RUN_TEST(test_sleep_now);

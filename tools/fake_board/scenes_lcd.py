@@ -188,6 +188,33 @@ def scene_wifi_setup() -> Frames:
     return out
 
 
+def scene_update() -> Frames:
+    """Firmware update (docs/wifi-ota-plan.md): the clock screen's mark, the prompt, the page in a few states."""
+    b = board()
+    loopback.time_sync(b, TS + 2 * 3600 + 27 * 60, 420)
+    loopback.wifi_set(b, "Home", "secret-pass")
+    b.advance(3500)
+    settle(b)
+    b.set_update("available", version="0.2.0", size=2822144)
+    settle(b)
+    out: Frames = [("update_mark", rgb(b))]
+    assert b.update_prompt()
+    settle(b)
+    out.append(("update_prompt", rgb(b)))
+    swipe(b, 60, 120, 220, 120)  # back: remind later, the clock again
+    for _ in range(4):  # open the settings, then the pages up to Software update
+        swipe(b, 148, 200, 148, 60)
+    tap(b, 148, 76)
+    out.append(("update_page", rgb(b)))
+    b.set_update("failed", error="net", version="0.2.0")
+    settle(b)
+    out.append(("update_failed", rgb(b)))
+    b.set_update("downloading", version="0.2.0", size=2822144)
+    settle(b)
+    out.append(("update_downloading", rgb(b)))
+    return out
+
+
 def scene_settings() -> Frames:
     """The settings (swipe up on the clock screen, PLAN D99): the first page, in Vietnamese, the second page with a
     value changed by a tap, then the pages of the paired phones and of the saved Wi-Fi networks and About."""
@@ -232,4 +259,5 @@ SCENES: dict[str, Callable[[], Frames]] = {
     "weather": scene_weather,
     "wifi_setup": scene_wifi_setup,
     "settings": scene_settings,
+    "update": scene_update,
 }

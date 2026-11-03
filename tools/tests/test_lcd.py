@@ -163,11 +163,12 @@ def test_settings_page_and_sleep_now(fb_libs) -> None:
     b = scenes_lcd.board()
     b.advance(100)
     scenes_lcd.swipe(b, 148, 200, 148, 60)  # swipe up on the clock screen: the settings (PLAN D99)
-    assert "Settings\n1/3\nClock\n24h\nTemperature\n" in b.screen_text()
+    assert "Settings\n1/4\nClock\n24h\nTemperature\n" in b.screen_text()
     scenes_lcd.tap(b, 148, 116)  # Temperature: Celsius -> Fahrenheit, stored like a CONFIG_SET
     assert "Temperature\n\u00b0F\n" in b.screen_text()
     scenes_lcd.swipe(b, 148, 200, 148, 60)  # the second page
-    scenes_lcd.tap(b, 148, 196)  # Pairing mode: the fourth row of the second page
+    scenes_lcd.swipe(b, 148, 200, 148, 60)  # the third page (the second ends with the firmware update's check switch)
+    scenes_lcd.tap(b, 148, 76)  # Pairing mode: the first row of the third page
     assert [e.a for e in b.events if e.type == EV_ACTION][-1] == 1  # UI_ACTION_PAIRING_TOGGLE
     assert "Settings" not in b.screen_text()
     assert "Open the ePager app" in b.screen_text()  # the firmware turned pairing mode on

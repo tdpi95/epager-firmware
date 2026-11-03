@@ -221,6 +221,15 @@ class FakeBoard:
         """The Wi-Fi setup screen as the firmware drives it (off, waiting, joining, done, failed)."""
         self._call(self.n.wifi_setup, state, ap_ssid, ap_password, url, network)
 
+    def set_update(self, state: str, error: str = "none", version: str = "", size: int = 0,
+                   skipped: bool = False) -> None:
+        """The firmware update as the UI shows it: the Software update page and the clock screen's mark."""
+        self._call(self.n.set_update, state, error, version, size, skipped)
+
+    def update_prompt(self) -> bool:
+        """Open the update prompt (only from the awake clock screen); False if it did not open."""
+        return bool(self._call(self.n.update_prompt))
+
     def set_storage_total(self, total: int) -> None:
         self._call(self.n.set_storage_total, total)
 

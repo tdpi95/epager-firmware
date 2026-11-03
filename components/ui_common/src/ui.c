@@ -49,7 +49,12 @@ static const ui_strings_t STRINGS[] = {
                            "Clock", "Temperature", "Language", "Message text", "Hide numbers", "Rotation", "Weather",
                            "Pairing mode", "Wi-Fi setup", "On", "Off",
                            "Paired phones", "Wi-Fi networks", "About", "Forget?", "No phones", "No networks", "Phone %u",
-                           "connected", "Firmware", "Device", "Board", "Battery", "Protocol"},
+                           "connected", "Firmware", "Device", "Board", "Battery", "Protocol",
+                           "Check updates", "Software update", "Update available",
+                           "Not checked", "Checking...", "Up to date", "New version", "Skipped", "Updating", "Needs newer app", "Size",
+                           "Install", "Check now", "Remind later", "Skip this version", "Cancel",
+                           {"", "No Wi-Fi saved", "No connection", "Clock not set", "Download failed", "Update rejected",
+                            "Phone update running", "Cancelled", "Battery below 30%", "Update failed"}},
     [PROTO_LANGUAGE_VI] = {"Chưa đặt giờ", "Chế độ ghép nối", "Đã tắt nguồn", "Đang cập nhật %d%%", "Nhiệt độ", "Độ ẩm",
                            {"Chủ nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"},
                            {0},
@@ -63,7 +68,12 @@ static const ui_strings_t STRINGS[] = {
                            "Đồng hồ", "Nhiệt độ", "Ngôn ngữ", "Nội dung tin", "Ẩn số", "Xoay màn hình", "Thời tiết",
                            "Ghép nối", "Cài đặt Wi-Fi", "Bật", "Tắt",
                            "Điện thoại", "Mạng Wi-Fi", "Thông tin", "Xóa?", "Chưa có điện thoại", "Chưa có mạng",
-                           "Điện thoại %u", "đang kết nối", "Phần mềm", "Thiết bị", "Bo mạch", "Pin", "Giao thức"},
+                           "Điện thoại %u", "đang kết nối", "Phần mềm", "Thiết bị", "Bo mạch", "Pin", "Giao thức",
+                           "Kiểm tra cập nhật", "Cập nhật", "Có bản cập nhật",
+                           "Chưa kiểm tra", "Đang kiểm tra...", "Đã là mới nhất", "Bản mới", "Đã bỏ qua", "Đang cập nhật", "Cần app mới hơn", "Dung lượng",
+                           "Cài đặt", "Kiểm tra ngay", "Nhắc lại sau", "Bỏ qua bản này", "Hủy",
+                           {"", "Chưa lưu Wi-Fi", "Không có kết nối", "Chưa đặt giờ", "Tải về lỗi", "Bản cập nhật bị từ chối",
+                            "Điện thoại đang cập nhật", "Đã hủy", "Pin dưới 30%", "Cập nhật lỗi"}},
 };
 
 ui_wifi_icon_t ui_wifi_icon_for(uint8_t wifi_state)
@@ -395,10 +405,45 @@ void ui_set_config(const ui_config_t *c)
     }
     if (c->language != ui.cfg.language || c->show_body != ui.cfg.show_body || c->mask_numbers != ui.cfg.mask_numbers ||
         c->tz_offset_min != ui.cfg.tz_offset_min || c->clock_24h != ui.cfg.clock_24h ||
-        c->temp_unit != ui.cfg.temp_unit || c->weather_enabled != ui.cfg.weather_enabled) {
+        c->temp_unit != ui.cfg.temp_unit || c->weather_enabled != ui.cfg.weather_enabled ||
+        c->update_auto_check != ui.cfg.update_auto_check) {
         ui.model_dirty = true;
     }
     ui.cfg = *c;
+}
+
+void ui_set_update(const ui_update_t *u)
+{
+    if (memcmp(u, &ui.upd, sizeof(*u)) == 0) {
+        return;
+    }
+    ui.upd = *u;
+    if (ui.upd_prompt && ui.settings && ui.set_page == UI_PAGE_UPDATE &&
+        (ui.upd.state != UI_UPD_AVAILABLE || ui.upd.skipped)) {
+        ui.upd_prompt = false; /* skipped or installed from somewhere else: the question is gone, the page stays */
+    }
+    if (ui.settings && ui.set_page == UI_PAGE_UPDATE) {
+        ui_settings_clamp(); /* the page's rows follow the state */
+    }
+    ui.model_dirty = true;
+}
+
+bool ui_show_update_prompt(void)
+{
+    if (!ui.powered || ui.settings || !ui.disp || ui.panel_off || !ui_clock_shown() || ui.upd.state != UI_UPD_AVAILABLE ||
+        ui.upd.skipped) {
+        return false;
+    }
+    ui.settings = true;
+    ui.set_page = UI_PAGE_UPDATE;
+    ui.set_cur = ui.set_top = ui.set_main_cur = 0;
+    ui.set_confirm = false;
+    ui.upd_prompt = true;
+    ui.set_cur = 1; /* Install: the row after the status */
+    ui_settings_clamp();
+    ui.last_activity_ms = ui_now_ms(); /* the settings time out from here, not from the last key */
+    ui.model_dirty = true;
+    return true;
 }
 
 void ui_set_status(const ui_status_t *s)

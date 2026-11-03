@@ -144,7 +144,8 @@ static void sync_ui_config(void)
                      .idle_dim_s = (uint16_t)cfg_get_int(&fb.core.cfg, PROTO_CFG_DISPLAY_IDLE_DIM_S),
                      .idle_off_s = (uint16_t)cfg_get_int(&fb.core.cfg, PROTO_CFG_DISPLAY_IDLE_OFF_S),
                      .orientation = (uint8_t)cfg_get_int(&fb.core.cfg, PROTO_CFG_DISPLAY_ORIENTATION),
-                     .weather_enabled = cfg_get_int(&fb.core.cfg, PROTO_CFG_WEATHER_ENABLED) != 0};
+                     .weather_enabled = cfg_get_int(&fb.core.cfg, PROTO_CFG_WEATHER_ENABLED) != 0,
+                     .update_auto_check = cfg_get_int(&fb.core.cfg, PROTO_CFG_UPDATE_AUTO_CHECK) != 0};
     ui_set_config(&c);
 }
 
@@ -380,7 +381,8 @@ static void boot(bool image_pending_verify)
                       .now_ms = cb_now_ms, .read_touch = b->read_touch, .touch_ctx = b->ctx,
                       .on_action = on_ui_action,
                       .cards_timeout_s = UI_CARDS_TIMEOUT_S,
-                      .wifi_setup = (fb.params.features & PROTO_FEATURES_WIFI) != 0};
+                      .wifi_setup = (fb.params.features & PROTO_FEATURES_WIFI) != 0,
+                     .update = (fb.params.features & PROTO_FEATURES_WIFI) != 0};
     ui_init(&up);
     if (b->set_button_handler) {
         b->set_button_handler(b->ctx, on_button, NULL);
@@ -775,7 +777,23 @@ void fb_wifi_setup(uint8_t state, const char *ap_ssid, const char *ap_password, 
 {
     set_setup((ui_setup_state_t)state, ap_ssid, ap_password, url, network);
 }
+
+void fb_set_update(uint8_t state, uint8_t error, const char *version, uint32_t size, int skipped)
+{
+    ui_update_t u = {.state = (ui_update_state_t)state, .error = (ui_update_error_t)error, .size = size,
+                     .skipped = skipped != 0};
+    snprintf(u.version, sizeof(u.version), "%s", version ? version : "");
+    u.mark = state == UI_UPD_AVAILABLE && !u.skipped;
+    ui_set_update(&u);
+}
+
+int fb_update_prompt(void) { return ui_show_update_prompt() ? 1 : 0; }
 #else
+void fb_set_update(uint8_t state, uint8_t error, const char *version, uint32_t size, int skipped)
+{
+    (void)state, (void)error, (void)version, (void)size, (void)skipped;
+}
+int fb_update_prompt(void) { return 0; }
 void fb_weather(int present, int16_t temp_c10, int32_t wmo_code, int is_day, int16_t high_c10, int16_t low_c10,
                 uint8_t precip_pct, const char *place)
 {

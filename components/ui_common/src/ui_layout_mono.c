@@ -852,6 +852,8 @@ static void apply(void)
 
     if (ui.st.ota_pct >= 0) {
         lv_label_set_text_fmt(m.foot_left, s->updating, ui.st.ota_pct);
+    } else if (idle && ui.upd.mark) {
+        lv_label_set_text(m.foot_left, s->upd_mark); /* a firmware update is waiting (the page opens from the settings) */
     } else if (idle || pairing || settings) {
         lv_label_set_text(m.foot_left, ""); /* the time is the big clock; the pairing screen has none */
     } else if (ui.utc) {

@@ -39,6 +39,8 @@ HELP = """commands:
   wifi                                 the network the app stored with WIFI_SET
   wifi-state STATE                     DEVICE_STATUS wifi_state (idle, connecting, connected, auth_failed, ...)
   setup waiting|joining|done|failed|off [NETWORK]   the Wi-Fi setup screen (Paper: short BOOT on the pairing screen opens it too)
+  update STATE [VERSION] [size=BYTES] [skipped] [error=NAME]   the firmware update the UI shows (none, checking, current,
+                                       available, downloading, failed, needs-app); update prompt opens the prompt
   storage BYTES                        asset storage size (simulate low storage)
   fail-storage N|off                   storage fails after N more writes (transfer failures)
   corrupt                              flip a byte of the incomplete transfer's data
@@ -144,6 +146,12 @@ def run_command(board: FakeBoard, line: str, out: Callable[[str], None] = print)
             board.set_wifi_state(pos[0])
         elif cmd == "setup":
             board.wifi_setup(pos[0], board.cfg.device_name, "fake-pass1", "192.168.4.1", pos[1] if len(pos) > 1 else "")
+        elif cmd == "update":
+            if pos[0] == "prompt":
+                out("prompt opened" if board.update_prompt() else "no prompt now (needs the awake clock screen and an available update)")
+            else:
+                board.set_update(pos[0], kv.get("error", "none"), pos[1] if len(pos) > 1 else "", int(kv.get("size", 0)),
+                                 "skipped" in pos)
         elif cmd == "storage":
             board.set_storage_total(int(pos[0]))
         elif cmd == "fail-storage":

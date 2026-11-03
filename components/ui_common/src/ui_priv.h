@@ -46,6 +46,11 @@ typedef struct {
     const char *set_phones, *set_networks, *set_about; /* a row of the list and the title of its page */
     const char *forget_ask, *none_phones, *none_networks, *phone_n, *phone_connected; /* phone_n: printf, the number */
     const char *about_firmware, *about_device, *about_board, *about_battery, *about_protocol;
+    /* firmware updates: two rows of the list, the clock screen's mark, the page's states and actions */
+    const char *set_autocheck, *set_update, *upd_mark;
+    const char *upd_none, *upd_checking, *upd_current, *upd_available, *upd_skipped, *upd_updating, *upd_needs_app, *upd_size;
+    const char *upd_install, *upd_check, *upd_later, *upd_skip, *upd_cancel;
+    const char *upd_err[UI_UPD_ERR_COUNT]; /* [UI_UPD_ERR_NONE] is unused */
 } ui_strings_t;
 
 /* Owns the LVGL display and its buffers; service pushes what LVGL rendered to the board. */
@@ -77,6 +82,8 @@ typedef struct {
     size_t set_main_cur;               /* the row of the main list that opened the page */
     bool set_confirm;                  /* the highlighted row asked "Forget?" and waits for a second select */
     ui_info_t lists;                   /* what the settings pages list (ui_set_info) */
+    ui_update_t upd;                   /* the firmware update (ui_set_update) */
+    bool upd_prompt;                   /* the Software update page was opened by the firmware as a prompt */
     bool show_cards;                   /* the cards are on screen; false = the clock screen with a badge (colour layout: swipe
                                         * up hides them, swipe down brings them back; the Paper always shows them) */
     ui_config_t cfg;
@@ -157,7 +164,7 @@ void ui_emit(ui_action_t action, uint32_t arg);
 #define UI_SETTINGS_ROWS 7u /* rows on screen at once on the Paper */
 #define UI_TOUCH_ROWS 4u    /* ... on a touch board (the LCD: tall enough to hit with a finger) */
 size_t ui_settings_rows_shown(void);
-typedef enum { UI_PAGE_MAIN = 0, UI_PAGE_PHONES, UI_PAGE_NETWORKS, UI_PAGE_ABOUT } ui_settings_page_t;
+typedef enum { UI_PAGE_MAIN = 0, UI_PAGE_PHONES, UI_PAGE_NETWORKS, UI_PAGE_ABOUT, UI_PAGE_UPDATE } ui_settings_page_t;
 size_t ui_settings_count(void);
 const char *ui_settings_title(void); /* the header of the list or of the page open */
 /* Row i: its label, and the value as shown in `value` (empty for an action). */

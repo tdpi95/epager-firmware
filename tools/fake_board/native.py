@@ -22,6 +22,9 @@ BTN_BOOT, BTN_PWR, BTN_UP, BTN_DOWN, BTN_UP_DOWN, BTN_BOOT_PWR = 0, 1, 2, 3, 4, 
 ACTIONS = {1: "pairing", 2: "power", 3: "dismiss", 4: "brightness_up", 5: "brightness_down", 6: "wifi_setup",
            7: "wifi_setup_close"}  # ui_action_t
 SETUP_STATES = ("off", "waiting", "joining", "done", "failed")  # ui_setup_state_t
+UPDATE_STATES = ("none", "checking", "current", "available", "downloading", "failed", "needs-app")  # ui_update_state_t
+UPDATE_ERRORS = ("none", "no-network", "net", "clock", "download", "rejected", "busy", "cancelled", "battery",
+                 "internal")  # ui_update_error_t
 WIFI_STATES = ("unconfigured", "idle", "connecting", "connected", "auth_failed", "not_found", "no_internet")
 WEATHER_STATES = ("off", "waiting", "ok", "stale", "locate_failed", "fetch_failed")
 WX_RESULTS = ("ok", "format", "not_found", "api")  # wx_result_t
@@ -116,6 +119,8 @@ _SIGS = {
     "fb_weather": ([C.c_int, C.c_int16, C.c_int32, C.c_int, C.c_int16, C.c_int16, C.c_uint8, C.c_char_p], None),
     "fb_weather_json": ([C.c_char_p, C.c_size_t, C.c_char_p], C.c_int),
     "fb_wifi_setup": ([C.c_uint8] + [C.c_char_p] * 4, None),
+    "fb_set_update": ([C.c_uint8, C.c_uint8, C.c_char_p, C.c_uint32, C.c_int], None),
+    "fb_update_prompt": ([], C.c_int),
 }
 
 TEMP_UNKNOWN, PCT_UNKNOWN = -32768, 255  # WX_TEMP_UNKNOWN, WX_PCT_UNKNOWN
@@ -209,6 +214,14 @@ class Native:
 
     def weather_json(self, doc: bytes, place: str = "") -> int:
         return self.lib.fb_weather_json(doc, len(doc), _enc(place))
+
+    def set_update(self, state: str, error: str = "none", version: str = "", size: int = 0,
+                   skipped: bool = False) -> None:
+        self.lib.fb_set_update(UPDATE_STATES.index(state), UPDATE_ERRORS.index(error), _enc(version), size,
+                               int(skipped))
+
+    def update_prompt(self) -> bool:
+        return bool(self.lib.fb_update_prompt())
 
     def wifi_setup(self, state: str, ap_ssid: str = "", ap_password: str = "", url: str = "",
                    network: str = "") -> None:

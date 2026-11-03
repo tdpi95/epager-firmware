@@ -930,6 +930,258 @@ static void test_settings_navigation(void)
     TEST_ASSERT_EQUAL_INT(0, seen_n);
 }
 
+
+/* ---------------------------------------------------------------- firmware update (docs/wifi-ota-plan.md) */
+
+static void start_update(void)
+{
+    ui_params_t p = {.display = board_get()->display, .blob = &blob.iface, .now_ms = now_ms, .wifi_setup = true,
+                     .update = true, .on_action = on_action, .cards_timeout_s = UI_CARDS_TIMEOUT_S};
+    ui_deinit();
+    TEST_ASSERT_TRUE(ui_init(&p));
+    ui_config_t c = cfg(10);
+    c.weather_enabled = true;
+    c.update_auto_check = true;
+    ui_set_config(&c);
+    ui_set_time(T_14_27_05);
+    seen_action = UI_ACTION_NONE;
+    seen_arg = seen_n = 0;
+    run(2100);
+}
+
+static ui_update_t upd_available(void)
+{
+    ui_update_t u = {.state = UI_UPD_AVAILABLE, .size = 1511424, .mark = true};
+    snprintf(u.version, sizeof(u.version), "0.2.0");
+    return u;
+}
+
+static void down(int n)
+{
+    for (int i = 0; i < n; i++) {
+        ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT);
+    }
+}
+
+static void open_update_page(void)
+{
+    ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT); /* the clock: open the list */
+    down(12);                                       /* Software update is the 13th row with Wi-Fi updates */
+    run(2100);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n13/14\n"));
+    ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_LONG);
+    run(2100);
+}
+
+static void test_update_rows_in_the_settings_list(void)
+{
+    start_update();
+    ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT);
+    run(2100);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n1/14\n"));
+    down(7); /* the row after Weather */
+    run(2100);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Check updates\nOn\n"));
+    ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_LONG); /* it is a config key like the others */
+    TEST_ASSERT_EQUAL_INT(UI_ACTION_SETTING, seen_action);
+    TEST_ASSERT_EQUAL_UINT32((uint32_t)PROTO_CFG_UPDATE_AUTO_CHECK << 8 | 0u, seen_arg);
+    /* a board without Wi-Fi updates has neither row (12 rows, as before) */
+    start_settings(true);
+    ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT);
+    run(2100);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n1/12\n"));
+}
+
+static void test_update_page_follows_the_state(void)
+{
+    start_update();
+    open_update_page();
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Software update\n1/2\nNot checked\n\nCheck now\n"));
+    TEST_ASSERT_EQUAL_INT(UI_ACTION_INFO_REFRESH, seen_action);
+    down(1);
+    ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_LONG);
+    TEST_ASSERT_EQUAL_INT(UI_ACTION_UPDATE_CHECK, seen_action);
+    ui_update_t u = {.state = UI_UPD_CHECKING};
+    ui_set_update(&u);
+    run(2100);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Software update\n1/1\nChecking...\n"));
+    u = (ui_update_t){.state = UI_UPD_UP_TO_DATE};
+    ui_set_update(&u);
+    run(2100);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Up to date\n\nCheck now\n"));
+    u = upd_available();
+    ui_set_update(&u);
+    run(2100);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "New version\n0.2.0\nSize\n1.5 MB\nInstall\n\nRemind later\n\nSkip this version\n\nCheck now\n"));
+    down(2); /* Install */
+    ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_LONG);
+    TEST_ASSERT_EQUAL_INT(UI_ACTION_UPDATE_INSTALL, seen_action);
+    ui_status_t st = {.battery_pct = 80, .ota_pct = 35};
+    ui_set_status(&st);
+    u = (ui_update_t){.state = UI_UPD_DOWNLOADING};
+    snprintf(u.version, sizeof(u.version), "0.2.0");
+    ui_set_update(&u);
+    run(2100);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Updating\n35%\nCancel\n"));
+    ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT);
+    ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_LONG);
+    TEST_ASSERT_EQUAL_INT(UI_ACTION_UPDATE_CANCEL, seen_action);
+    st.ota_pct = -1;
+    ui_set_status(&st);
+    u = (ui_update_t){.state = UI_UPD_FAILED, .error = UI_UPD_ERR_NET};
+    snprintf(u.version, sizeof(u.version), "0.2.0");
+    ui_set_update(&u);
+    run(2100);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "No connection\n\nInstall\n\nCheck now\n")); /* try again, or check */
+    u = (ui_update_t){.state = UI_UPD_FAILED, .error = UI_UPD_ERR_BATTERY};
+    ui_set_update(&u);
+    run(2100);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Battery below 30%\n\nCheck now\n"));
+    u = (ui_update_t){.state = UI_UPD_NEEDS_APP};
+    snprintf(u.version, sizeof(u.version), "1.0.0");
+    ui_set_update(&u);
+    run(2100);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Needs newer app\n1.0.0\nCheck now\n"));
+    u = upd_available();
+    u.skipped = true; /* a skipped version stays installable, and cannot be skipped again */
+    u.mark = false;
+    ui_set_update(&u);
+    run(2100);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Skipped\n0.2.0\nSize\n1.5 MB\nInstall\n\nRemind later\n\nCheck now\n"));
+    TEST_ASSERT_NULL(strstr(text(), "Skip this version"));
+    /* back leads to the list, on the row that opened the page */
+    ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_LONG);
+    run(2100);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n13/14\n"));
+}
+
+static void test_update_row_shows_the_version_when_one_is_waiting(void)
+{
+    start_update();
+    ui_update_t u = upd_available();
+    ui_set_update(&u);
+    ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT);
+    down(12);
+    run(2100);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Software update\n0.2.0\n"));
+}
+
+static void test_update_mark_on_the_clock_screen(void)
+{
+    start_update();
+    TEST_ASSERT_NULL(strstr(text(), "Update available"));
+    ui_update_t u = upd_available();
+    ui_set_update(&u);
+    run(2100);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Update available\n"));
+    u.mark = false; /* skipped */
+    u.skipped = true;
+    ui_set_update(&u);
+    run(2100);
+    TEST_ASSERT_NULL(strstr(text(), "Update available"));
+    u = upd_available();
+    ui_set_update(&u);
+    npipe_notif_t n = notif(1, "Zalo", "Hello", "World");
+    ui_on_notification(&n); /* a card is the screen now: no mark on it */
+    run(2100);
+    TEST_ASSERT_NULL(strstr(text(), "Update available"));
+}
+
+static void test_update_prompt(void)
+{
+    start_update();
+    ui_update_t u = {.state = UI_UPD_UP_TO_DATE};
+    ui_set_update(&u);
+    TEST_ASSERT_FALSE(ui_show_update_prompt()); /* nothing to ask */
+    u = upd_available();
+    u.skipped = true;
+    ui_set_update(&u);
+    TEST_ASSERT_FALSE(ui_show_update_prompt()); /* skipped */
+    u = upd_available();
+    ui_set_update(&u);
+    npipe_notif_t n = notif(1, "Zalo", "Hello", "World");
+    ui_on_notification(&n);
+    TEST_ASSERT_FALSE(ui_show_update_prompt()); /* a card is on screen: never on top of a notification */
+    ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_LONG); /* (a card goes away with its dismissal: remove it) */
+    n.kind = NPIPE_REMOVED;
+    ui_on_notification(&n);
+    run(2100);
+    TEST_ASSERT_TRUE(ui_show_update_prompt());
+    run(2100);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Software update\n2/4\nUpdate available\n0.2.0\nInstall\n\nRemind later\n\nSkip this version\n"));
+    TEST_ASSERT_NULL(strstr(text(), "Check now")); /* a prompt asks one thing */
+    TEST_ASSERT_FALSE(ui_show_update_prompt());    /* open already */
+}
+
+static void open_prompt(void)
+{
+    start_update();
+    ui_update_t u = upd_available();
+    ui_set_update(&u);
+    TEST_ASSERT_TRUE(ui_show_update_prompt());
+    run(2100);
+}
+
+static void test_update_prompt_choices(void)
+{
+    open_prompt(); /* rows: status, Install (highlighted), Remind later, Skip this version */
+    down(1);
+    ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_LONG);
+    TEST_ASSERT_EQUAL_INT(UI_ACTION_UPDATE_LATER, seen_action);
+    run(2100);
+    TEST_ASSERT_NULL(strstr(text(), "Software update")); /* Remind later: back to the clock */
+    TEST_ASSERT_NOT_NULL(strstr(text(), "14:27"));
+    open_prompt();
+    down(2);
+    ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_LONG);
+    TEST_ASSERT_EQUAL_INT(UI_ACTION_UPDATE_SKIP, seen_action);
+    run(2100);
+    TEST_ASSERT_NULL(strstr(text(), "Software update"));
+    open_prompt();
+    ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_LONG); /* the cursor starts on Install */
+    TEST_ASSERT_EQUAL_INT(UI_ACTION_UPDATE_INSTALL, seen_action);
+    run(2100);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Software update")); /* Install: the page stays, it shows the progress */
+    open_prompt();
+    seen_n = 0;
+    ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_LONG); /* backing out is "remind later": no action, nothing to report */
+    run(2100);
+    TEST_ASSERT_EQUAL_INT(0, seen_n);
+    TEST_ASSERT_NULL(strstr(text(), "Software update"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "14:27"));
+    /* the firmware drops the question (skipped from another place): the page stays, with its own rows */
+    open_prompt();
+    ui_update_t u = upd_available();
+    u.skipped = true;
+    u.mark = false;
+    ui_set_update(&u);
+    run(2100);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Skipped\n0.2.0\n"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Check now"));
+}
+
+static void test_update_prompt_times_out_and_vietnamese(void)
+{
+    open_prompt();
+    run(61000); /* nobody answers: the settings time out like any page */
+    TEST_ASSERT_NULL(strstr(text(), "Software update"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Update available")); /* the mark stays */
+    start_update();
+    ui_config_t c = cfg(10);
+    c.language = PROTO_LANGUAGE_VI;
+    c.weather_enabled = true;
+    c.update_auto_check = true;
+    ui_set_config(&c);
+    ui_update_t u = upd_available();
+    ui_set_update(&u);
+    run(2100);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Có bản cập nhật")); /* Có bản cập nhật */
+    TEST_ASSERT_TRUE(ui_show_update_prompt());
+    run(2100);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Cập nhật\n2/4")); /* Cập nhật phần mềm */
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Nhắc lại sau")); /* Nhắc lại sau */
+}
+
 static void test_settings_select_changes_values(void)
 {
     start_settings(true);
@@ -1599,6 +1851,13 @@ int main(void)
     RUN_TEST(test_cards_and_buttons);
     RUN_TEST(test_keys_step_back_to_clock);
     RUN_TEST(test_settings_navigation);
+    RUN_TEST(test_update_rows_in_the_settings_list);
+    RUN_TEST(test_update_page_follows_the_state);
+    RUN_TEST(test_update_row_shows_the_version_when_one_is_waiting);
+    RUN_TEST(test_update_mark_on_the_clock_screen);
+    RUN_TEST(test_update_prompt);
+    RUN_TEST(test_update_prompt_choices);
+    RUN_TEST(test_update_prompt_times_out_and_vietnamese);
     RUN_TEST(test_settings_select_changes_values);
     RUN_TEST(test_settings_actions);
     RUN_TEST(test_settings_pages);

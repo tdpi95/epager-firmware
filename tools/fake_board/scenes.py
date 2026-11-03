@@ -297,6 +297,39 @@ def scene_status() -> Frames:
     return out
 
 
+def scene_update() -> Frames:
+    """Firmware update (docs/wifi-ota-plan.md): the clock screen's mark, the prompt (Install, Remind later, Skip), and
+    the Software update page from the settings list in a few states."""
+    b = board()
+    loopback.time_sync(b, TS + 2 * 3600 + 27 * 60, 420)
+    loopback.wifi_set(b, "Home", "secret-pass")
+    b.advance(3500)
+    settle(b)
+    b.set_update("available", version="0.2.0", size=1511424)
+    settle(b)
+    out: Frames = [("update_mark", b.panel())]
+    assert b.update_prompt()
+    settle(b)
+    out.append(("update_prompt", b.panel()))
+    b.button(BTN_PWR, long_press=True)  # back: remind later, the clock again
+    settle(b)
+    b.button(BTN_PWR)  # the clock: open the settings
+    for _ in range(12):  # down to Software update
+        b.button(BTN_PWR)
+    settle(b)
+    out.append(("update_row", b.panel()))
+    b.button(BTN_BOOT, long_press=True)
+    settle(b)
+    out.append(("update_page", b.panel()))
+    b.set_update("failed", error="net", version="0.2.0")
+    settle(b)
+    out.append(("update_failed", b.panel()))
+    b.set_update("current")
+    settle(b)
+    out.append(("update_current", b.panel()))
+    return out
+
+
 SCENES: dict[str, Callable[[], Frames]] = {
     "idle": scene_idle,
     "clock": scene_clock,
@@ -306,6 +339,7 @@ SCENES: dict[str, Callable[[], Frames]] = {
     "cards": scene_cards,
     "badge": scene_badge,
     "settings": scene_settings,
+    "update": scene_update,
     "weather": scene_weather,
     "notice": scene_notice,
     "wifi_setup": scene_wifi_setup,

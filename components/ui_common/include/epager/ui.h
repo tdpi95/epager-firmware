@@ -48,7 +48,47 @@ typedef enum {
                                   * ui_set_info (through on_action, PLAN D97) */
     UI_ACTION_FORGET_PHONE,      /* arg = the index of the row in ui_info_t.phone_*: forget that bonded phone */
     UI_ACTION_FORGET_NETWORK,    /* arg = the index in ui_info_t.networks: forget that saved Wi-Fi network */
+    /* Firmware updates over Wi-Fi (the Software update page and its prompt; docs/wifi-ota-plan.md) */
+    UI_ACTION_UPDATE_CHECK,      /* "Check now" */
+    UI_ACTION_UPDATE_INSTALL,    /* "Install" */
+    UI_ACTION_UPDATE_LATER,      /* "Remind later" */
+    UI_ACTION_UPDATE_SKIP,       /* "Skip this version" */
+    UI_ACTION_UPDATE_CANCEL,     /* "Cancel" while the image downloads */
 } ui_action_t;
+
+/* The firmware update, as the firmware reports it (ui_set_update). */
+typedef enum {
+    UI_UPD_NONE = 0,             /* nothing checked yet */
+    UI_UPD_CHECKING,
+    UI_UPD_UP_TO_DATE,
+    UI_UPD_AVAILABLE,            /* `version` is newer; `skipped` says the person skipped it */
+    UI_UPD_DOWNLOADING,          /* the percentage is ui_status_t.ota_pct */
+    UI_UPD_FAILED,               /* `error` says why */
+    UI_UPD_NEEDS_APP,            /* the newest release needs a newer companion app */
+} ui_update_state_t;
+
+typedef enum {
+    UI_UPD_ERR_NONE = 0,
+    UI_UPD_ERR_NO_NETWORK,       /* no Wi-Fi network saved */
+    UI_UPD_ERR_NET,              /* could not join, or the release host did not answer */
+    UI_UPD_ERR_CLOCK,
+    UI_UPD_ERR_DOWNLOAD,
+    UI_UPD_ERR_REJECTED,         /* the image check failed */
+    UI_UPD_ERR_BUSY,             /* an update from the phone is running */
+    UI_UPD_ERR_CANCELLED,
+    UI_UPD_ERR_BATTERY,          /* below the update battery limit, not charging */
+    UI_UPD_ERR_INTERNAL,
+    UI_UPD_ERR_COUNT
+} ui_update_error_t;
+
+typedef struct {
+    ui_update_state_t state;
+    ui_update_error_t error;     /* FAILED */
+    char version[33];            /* the newest release found ("" = none) */
+    uint32_t size;               /* its image, bytes (0 = unknown) */
+    bool skipped;                /* AVAILABLE: the person skipped this version */
+    bool mark;                   /* the clock screen says an update is available (AVAILABLE and not skipped) */
+} ui_update_t;
 
 /* The Wi-Fi setup hotspot (PLAN D61), as the firmware reports it. */
 typedef enum {
@@ -113,6 +153,7 @@ typedef struct {
      * (the notifications stay, the badge counts them). 0 = a card stays until it is dismissed. */
     uint16_t cards_timeout_s;
     bool wifi_setup;                /* the pairing screen offers "Wi-Fi setup" (boards with Wi-Fi: a button, or short BOOT) */
+    bool update;                    /* the settings list has the firmware update rows (boards with Wi-Fi updates) */
 } ui_params_t;
 
 typedef struct {
@@ -129,6 +170,7 @@ typedef struct {
     uint16_t idle_dim_s, idle_off_s;
     uint8_t orientation;         /* display.orientation (quarter turns), for displays with set_rotation */
     bool weather_enabled;        /* weather.enabled (the Paper's settings list shows it) */
+    bool update_auto_check;      /* update.auto_check */
 } ui_config_t;
 
 /* What the Paper's settings pages list (PLAN D97): the bonded phones, the saved Wi-Fi networks, the About page. */
@@ -176,6 +218,13 @@ void ui_set_climate(const board_climate_t *c);
 void ui_set_weather(const wx_reading_t *r);
 /* The lists and strings of the settings pages; call when asked (UI_ACTION_INFO_REFRESH) and whenever they change. */
 void ui_set_info(const ui_info_t *info);
+/* The firmware update state for the Software update page and the clock screen's mark. Cheap to call often: only
+ * a change redraws. */
+void ui_set_update(const ui_update_t *u);
+/* Open the Software update page as a prompt (Install, Remind later, Skip this version) if the clock screen is
+ * showing and the screen is on; false otherwise (the firmware tries again later). Backing out, or leaving it
+ * alone until the settings time out, is "remind later". */
+bool ui_show_update_prompt(void);
 /* The setup hotspot's state; its screen is shown while state != UI_SETUP_OFF. */
 void ui_set_wifi_setup(const ui_wifi_setup_t *s);
 /* Show `n` for UI_NOTICE_MS (a newer one replaces it). Layouts without room for it ignore it (LCD). */

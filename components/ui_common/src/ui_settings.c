@@ -3,7 +3,9 @@
  * next value and is reported as UI_ACTION_SETTING (config key and value), which the firmware stores like a
  * CONFIG_SET, so the phone sees it too and the UI redraws from the new configuration. Three rows open a page:
  * the bonded phones and the saved Wi-Fi networks (selecting an entry asks "Forget?", a second select does it) and
- * About. Paper keys: short BOOT = up, short PWR = down, long BOOT = select, long PWR = back (ui_on_button).
+ * About, and (boards with Wi-Fi updates) the Software update page: a status row and the actions that fit the state
+ * (Install, Check now, Remind later, Skip this version, Cancel). The firmware opens that page by itself as the
+ * update prompt (ui_show_update_prompt). Paper keys: short BOOT = up, short PWR = down, long BOOT = select, long PWR = back (ui_on_button).
  * Touch boards (the LCD, D99): a tap selects the row it hits, a swipe up or down turns the page of
  * UI_TOUCH_ROWS rows, a swipe right goes back (the colour layout draws it and calls ui_settings_tap/_scroll).
  */
@@ -21,10 +23,12 @@ typedef enum {
     ROW_MASK,
     ROW_ROTATION,
     ROW_WEATHER,
+    ROW_AUTOCHECK,
     ROW_PAIRING,
     ROW_WIFI,
     ROW_PHONES,
     ROW_NETWORKS,
+    ROW_UPDATE,
     ROW_ABOUT,
 } row_t;
 
@@ -33,21 +37,24 @@ typedef struct {
     uint16_t key;     /* config key of a choice, 0 for an action or a page */
     uint8_t values;   /* how many values the choice cycles through */
     bool needs_wifi;
+    bool needs_update; /* only on boards with Wi-Fi updates (ui_params_t.update) */
 } item_t;
 
 static const item_t ITEMS[] = {
-    {ROW_CLOCK, PROTO_CFG_UI_CLOCK_24H, 2, false},
-    {ROW_TEMP, PROTO_CFG_UI_TEMP_UNIT, 2, false},
-    {ROW_LANGUAGE, PROTO_CFG_UI_LANGUAGE, 2, false},
-    {ROW_BODY, PROTO_CFG_DISPLAY_SHOW_BODY, 2, false},
-    {ROW_MASK, PROTO_CFG_DISPLAY_MASK_NUMBERS, 2, false},
-    {ROW_ROTATION, PROTO_CFG_DISPLAY_ORIENTATION, 4, false},
-    {ROW_WEATHER, PROTO_CFG_WEATHER_ENABLED, 2, true},
-    {ROW_PAIRING, 0, 0, false},
-    {ROW_WIFI, 0, 0, true},
-    {ROW_PHONES, 0, 0, false},
-    {ROW_NETWORKS, 0, 0, true},
-    {ROW_ABOUT, 0, 0, false},
+    {ROW_CLOCK, PROTO_CFG_UI_CLOCK_24H, 2, false, false},
+    {ROW_TEMP, PROTO_CFG_UI_TEMP_UNIT, 2, false, false},
+    {ROW_LANGUAGE, PROTO_CFG_UI_LANGUAGE, 2, false, false},
+    {ROW_BODY, PROTO_CFG_DISPLAY_SHOW_BODY, 2, false, false},
+    {ROW_MASK, PROTO_CFG_DISPLAY_MASK_NUMBERS, 2, false, false},
+    {ROW_ROTATION, PROTO_CFG_DISPLAY_ORIENTATION, 4, false, false},
+    {ROW_WEATHER, PROTO_CFG_WEATHER_ENABLED, 2, true, false},
+    {ROW_AUTOCHECK, PROTO_CFG_UPDATE_AUTO_CHECK, 2, true, true},
+    {ROW_PAIRING, 0, 0, false, false},
+    {ROW_WIFI, 0, 0, true, false},
+    {ROW_PHONES, 0, 0, false, false},
+    {ROW_NETWORKS, 0, 0, true, false},
+    {ROW_UPDATE, 0, 0, true, true},
+    {ROW_ABOUT, 0, 0, false, false},
 };
 
 #define ABOUT_ROWS 5u
@@ -61,7 +68,7 @@ size_t ui_settings_rows_shown(void) { return touch_list() ? UI_TOUCH_ROWS : UI_S
 static const item_t *item_at(size_t i)
 {
     for (size_t k = 0; k < sizeof(ITEMS) / sizeof(ITEMS[0]); k++) {
-        if (ITEMS[k].needs_wifi && !ui.p.wifi_setup) {
+        if ((ITEMS[k].needs_wifi && !ui.p.wifi_setup) || (ITEMS[k].needs_update && !ui.p.update)) {
             continue;
         }
         if (i-- == 0) {
@@ -80,6 +87,125 @@ static size_t main_count(void)
     return n;
 }
 
+/* ---------------------------------------------------------------- the Software update page */
+
+typedef enum { UR_STATUS, UR_SIZE, UR_INSTALL, UR_CHECK, UR_LATER, UR_SKIP, UR_CANCEL } upd_row_t;
+#define UPD_ROWS_MAX 7u
+
+/* The rows for the state: a status row, then what the person can do now. */
+static size_t upd_rows(upd_row_t out[UPD_ROWS_MAX])
+{
+    size_t n = 0;
+    out[n++] = UR_STATUS;
+    switch (ui.upd.state) {
+    case UI_UPD_AVAILABLE:
+        if (ui.upd.size && !ui.upd_prompt) { /* a prompt is four rows: the whole question on one page of the LCD */
+            out[n++] = UR_SIZE;
+        }
+        out[n++] = UR_INSTALL;
+        out[n++] = UR_LATER;
+        if (!ui.upd.skipped) {
+            out[n++] = UR_SKIP;
+        }
+        if (!ui.upd_prompt) {
+            out[n++] = UR_CHECK;
+        }
+        break;
+    case UI_UPD_DOWNLOADING:
+        out[n++] = UR_CANCEL;
+        break;
+    case UI_UPD_CHECKING:
+        break;
+    case UI_UPD_FAILED:
+        if (ui.upd.version[0]) {
+            out[n++] = UR_INSTALL; /* try again */
+        }
+        out[n++] = UR_CHECK;
+        break;
+    default:
+        out[n++] = UR_CHECK;
+        break;
+    }
+    return n;
+}
+
+static size_t upd_count(void)
+{
+    upd_row_t rows[UPD_ROWS_MAX];
+    return upd_rows(rows);
+}
+
+static void upd_row(size_t i, const char **name, char *value, size_t cap)
+{
+    const ui_strings_t *s = ui_strings();
+    upd_row_t rows[UPD_ROWS_MAX];
+    const size_t n = upd_rows(rows);
+    switch (i < n ? rows[i] : UR_STATUS) {
+    case UR_STATUS:
+        switch (ui.upd.state) {
+        case UI_UPD_CHECKING: *name = s->upd_checking; break;
+        case UI_UPD_UP_TO_DATE: *name = s->upd_current; break;
+        case UI_UPD_AVAILABLE:
+            *name = ui.upd_prompt ? s->upd_mark : ui.upd.skipped ? s->upd_skipped : s->upd_available;
+            snprintf(value, cap, "%s", ui.upd.version);
+            break;
+        case UI_UPD_DOWNLOADING:
+            *name = s->upd_updating;
+            if (ui.st.ota_pct >= 0) {
+                snprintf(value, cap, "%d%%", ui.st.ota_pct);
+            }
+            break;
+        case UI_UPD_FAILED: *name = s->upd_err[ui.upd.error < UI_UPD_ERR_COUNT ? ui.upd.error : UI_UPD_ERR_INTERNAL]; break;
+        case UI_UPD_NEEDS_APP:
+            *name = s->upd_needs_app;
+            snprintf(value, cap, "%s", ui.upd.version);
+            break;
+        default: *name = s->upd_none; break;
+        }
+        break;
+    case UR_SIZE:
+        *name = s->upd_size;
+        snprintf(value, cap, "%lu.%lu MB", (unsigned long)(ui.upd.size / 1000000u), (unsigned long)(ui.upd.size / 100000u % 10u));
+        break;
+    case UR_INSTALL: *name = s->upd_install; break;
+    case UR_CHECK: *name = s->upd_check; break;
+    case UR_LATER: *name = s->upd_later; break;
+    case UR_SKIP: *name = s->upd_skip; break;
+    case UR_CANCEL: *name = s->upd_cancel; break;
+    }
+}
+
+/* Selecting a row of the page. Remind later and Skip end a prompt: back to the clock. */
+static ui_action_t upd_select(void)
+{
+    upd_row_t rows[UPD_ROWS_MAX];
+    const size_t n = upd_rows(rows);
+    if (ui.set_cur >= n) {
+        return UI_ACTION_NONE;
+    }
+    ui_action_t a = UI_ACTION_NONE;
+    switch (rows[ui.set_cur]) {
+    case UR_INSTALL: a = UI_ACTION_UPDATE_INSTALL; ui.upd_prompt = false; break;
+    case UR_CHECK: a = UI_ACTION_UPDATE_CHECK; break;
+    case UR_CANCEL: a = UI_ACTION_UPDATE_CANCEL; break;
+    case UR_LATER: a = UI_ACTION_UPDATE_LATER; break;
+    case UR_SKIP: a = UI_ACTION_UPDATE_SKIP; break;
+    default: break; /* the status and size rows only say something */
+    }
+    if (a == UI_ACTION_UPDATE_LATER || a == UI_ACTION_UPDATE_SKIP) {
+        ui_emit(a, 0);
+        ui_settings_back(); /* a prompt closes to the clock, the page to the list */
+        return UI_ACTION_NONE;
+    }
+    if (a != UI_ACTION_NONE) {
+        ui.set_cur = 0; /* the rows change with the state the firmware reports next */
+        ui.set_top = 0;
+        ui.model_dirty = true;
+        ui_emit(a, 0);
+    }
+    return UI_ACTION_NONE;
+}
+
 /* An empty list still has one row that says so. */
 static size_t list_count(uint8_t n) { return n ? n : 1u; }
 
@@ -89,6 +215,7 @@ size_t ui_settings_count(void)
     case UI_PAGE_PHONES: return list_count(ui.lists.n_phones);
     case UI_PAGE_NETWORKS: return list_count(ui.lists.n_networks);
     case UI_PAGE_ABOUT: return ABOUT_ROWS;
+    case UI_PAGE_UPDATE: return upd_count();
     default: return main_count();
     }
 }
@@ -100,6 +227,7 @@ const char *ui_settings_title(void)
     case UI_PAGE_PHONES: return s->set_phones;
     case UI_PAGE_NETWORKS: return s->set_networks;
     case UI_PAGE_ABOUT: return s->set_about;
+    case UI_PAGE_UPDATE: return s->set_update;
     default: return s->settings;
     }
 }
@@ -115,6 +243,7 @@ static uint8_t current(const item_t *it)
     case ROW_ROTATION: /* the LCD driver turns the panel by 0 or 180 degrees only (the nearest of the four) */
         return touch_list() ? ((ui.cfg.orientation & 3u) >= 2u ? 2u : 0u) : (ui.cfg.orientation & 3u);
     case ROW_WEATHER: return ui.cfg.weather_enabled;
+    case ROW_AUTOCHECK: return ui.cfg.update_auto_check;
     default: return 0;
     }
 }
@@ -141,10 +270,12 @@ static void main_row(size_t i, const char **name, char *value, size_t cap)
         text = turn;
         break;
     case ROW_WEATHER: *name = s->set_weather; text = v ? s->on : s->off_value; break;
+    case ROW_AUTOCHECK: *name = s->set_autocheck; text = v ? s->on : s->off_value; break;
     case ROW_PAIRING: *name = s->set_pairing; break;
     case ROW_WIFI: *name = s->set_wifi; break;
     case ROW_PHONES: *name = s->set_phones; text = ">"; break;
     case ROW_NETWORKS: *name = s->set_networks; text = ">"; break;
+    case ROW_UPDATE: *name = s->set_update; text = ui.upd.mark ? ui.upd.version : ">"; break; /* the version says there is one */
     case ROW_ABOUT: *name = s->set_about; text = ">"; break;
     }
     snprintf(value, cap, "%s", text);
@@ -200,6 +331,9 @@ void ui_settings_row(size_t i, const char **name, char *value, size_t cap)
         }
         break;
     }
+    case UI_PAGE_UPDATE:
+        upd_row(i, name, value, cap);
+        break;
     default:
         main_row(i, name, value, cap);
         break;
@@ -239,6 +373,7 @@ void ui_settings_enter(void)
     ui.set_page = UI_PAGE_MAIN;
     ui.set_cur = ui.set_top = 0;
     ui.set_confirm = false;
+    ui.upd_prompt = false;
     ui.model_dirty = true;
 }
 
@@ -246,8 +381,9 @@ void ui_settings_back(void)
 {
     ui.set_confirm = false;
     ui.model_dirty = true;
-    if (ui.set_page == UI_PAGE_MAIN) {
-        ui.settings = false;
+    if (ui.set_page == UI_PAGE_MAIN || (ui.set_page == UI_PAGE_UPDATE && ui.upd_prompt)) {
+        ui.settings = false; /* the list, or the update prompt that the firmware opened: back to the clock */
+        ui.upd_prompt = false;
         return;
     }
     ui.set_page = UI_PAGE_MAIN;
@@ -308,6 +444,9 @@ ui_action_t ui_settings_select(void)
     if (ui.set_page == UI_PAGE_ABOUT) {
         return UI_ACTION_NONE;
     }
+    if (ui.set_page == UI_PAGE_UPDATE) {
+        return upd_select();
+    }
     const item_t *it = item_at(ui.set_cur);
     if (it == NULL) {
         return UI_ACTION_NONE;
@@ -326,6 +465,10 @@ ui_action_t ui_settings_select(void)
     case ROW_PHONES: open_page(UI_PAGE_PHONES); return UI_ACTION_NONE;
     case ROW_NETWORKS: open_page(UI_PAGE_NETWORKS); return UI_ACTION_NONE;
     case ROW_ABOUT: open_page(UI_PAGE_ABOUT); return UI_ACTION_NONE;
+    case ROW_UPDATE:
+        ui.upd_prompt = false;
+        open_page(UI_PAGE_UPDATE);
+        return UI_ACTION_NONE;
     default: return UI_ACTION_WIFI_SETUP; /* the list stays under the setup screen */
     }
 }

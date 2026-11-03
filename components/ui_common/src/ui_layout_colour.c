@@ -570,6 +570,8 @@ static void apply_status(bool idle)
     } else if (ui.st.ota_pct >= 0) {
         snprintf(buf, sizeof(buf), s->updating, ui.st.ota_pct);
         ui_set_text(c.bar_left, buf);
+    } else if (idle && ui.upd.mark) {
+        ui_set_text(c.bar_left, s->upd_mark); /* a firmware update is waiting */
     } else if (idle || !ui.utc) {
         ui_set_text(c.bar_left, idle ? "" : "--:--"); /* the idle screen shows the big clock */
     } else {
