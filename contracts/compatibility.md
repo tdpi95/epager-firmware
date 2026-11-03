@@ -2,8 +2,9 @@
 
 | Firmware (variant) | Firmware version | Contract | App versions known to work | Verified on |
 |---|---|---|---|---|
-| paper | (none released) | 0.10.0 | (none yet) | host tests only |
-| lcd | (none released) | 0.10.0 | (none yet) | host tests only (P1b in progress) |
+| paper | 0.2.0 | 0.14.0 | (no companion-app release tested yet) | host tests; on a Paper board: Wi-Fi updates (download, resume, cancel, signature refusal), checklist 84; BLE updates not run (checklist 83) |
+| lcd | 0.2.0 | 0.14.0 | (no companion-app release tested yet) | host tests; Wi-Fi and BLE updates not run on the LCD board |
+| paper, lcd | 0.1.0, 0.1.1 | 0.13.0 | (no companion-app release tested yet) | no firmware update path: update over USB (the flashing page) |
 
 Policy:
 - The app reads `CAPABILITIES.contract_version`. Same major → talk normally and ignore unknown fields,
