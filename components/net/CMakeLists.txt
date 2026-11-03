@@ -6,10 +6,13 @@ if(ESP_PLATFORM)
     set(NET_SRCS src/net_util.c)
     if(CONFIG_EPAGER_FEATURE_WIFI)
         list(APPEND NET_SRCS src/net.c src/net_setup.c)
+        if(CONFIG_EPAGER_FEATURE_WIFI_OTA)
+            list(APPEND NET_SRCS src/net_update.c)
+        endif()
     endif()
     idf_component_register(SRCS ${NET_SRCS} INCLUDE_DIRS include
-                           REQUIRES protocol weather
-                           PRIV_REQUIRES board_api power esp_wifi esp_netif esp_event esp_http_client esp_http_server
+                           REQUIRES protocol weather transfer
+                           PRIV_REQUIRES board_api power ota esp_wifi esp_netif esp_event esp_http_client esp_http_server
                                          mbedtls lwip esp_timer nvs_flash)
     epager_component_warnings()
 else()

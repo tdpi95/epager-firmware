@@ -10,6 +10,14 @@ menu "ePager"
         bool "Touch input"
         default n
 
+    config EPAGER_FEATURE_OTA
+        bool "Firmware updates over BLE"
+        default n
+        help
+            Writes a firmware image sent by the phone into the inactive OTA slot (components/ota), keeps it only
+            after a self-check and rolls back otherwise. Needs two OTA slots in the partition table and
+            CONFIG_BOOTLOADER_APP_ROLLBACK_ENABLE.
+
     config EPAGER_LOG_CONTENT
         bool "Log notification content (DEBUG ONLY)"
         default n

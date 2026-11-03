@@ -14,7 +14,7 @@ idf_component_register(SRCS src/app.c src/app_console.c src/app_batlog.c src/app
                        INCLUDE_DIRS include
                        EMBED_FILES ${voice_files}
                        REQUIRES board_api
-                       PRIV_REQUIRES core ble_core ancs_client config_store notification_pipeline protocol transfer ui_common power net weather
+                       PRIV_REQUIRES core ble_core ancs_client config_store notification_pipeline protocol transfer ui_common power net weather ota
                                      bt nvs_flash joltwallet__littlefs console esp_driver_usb_serial_jtag esp_timer esp_app_format esp_pm heap log
                                      freertos)
 epager_component_warnings()

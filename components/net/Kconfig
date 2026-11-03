@@ -12,6 +12,22 @@ menu "ePager Wi-Fi and weather"
         depends on EPAGER_FEATURE_WIFI
         default y
 
+    config EPAGER_FEATURE_WIFI_OTA
+        bool "Firmware updates from GitHub Releases over Wi-Fi (docs/wifi-ota-plan.md)"
+        depends on EPAGER_FEATURE_WIFI && EPAGER_FEATURE_OTA
+        default n
+        help
+            Checks the release manifest once a day (config key update.auto_check) and offers the update on the
+            board; installs only when the person chooses. The image is verified like one sent over BLE.
+
+    config EPAGER_UPDATE_URL
+        string "Release manifest URL"
+        depends on EPAGER_FEATURE_WIFI_OTA
+        default "https://github.com/tdpi95/epager-firmware/releases/latest/download/manifest.json"
+        help
+            Must be https on github.com. The "latest" URL follows the newest release that is not a pre-release;
+            a forked repository changes this and its own signing key.
+
     config EPAGER_WIFI_SETUP_TIMEOUT_S
         int "Close the setup hotspot after this many seconds without a page request"
         depends on EPAGER_FEATURE_WIFI

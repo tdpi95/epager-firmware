@@ -9,9 +9,9 @@ OUT="${1:-$REPO/build/xtensa}"
 CC=xtensa-esp32s3-elf-gcc
 command -v "$CC" >/dev/null || { echo "$CC not found: run . ~/esp/esp-idf/export.sh" >&2; exit 1; }
 
-COMPONENTS=(protocol config_store notification_pipeline transfer core weather ble_core ancs_client)
+COMPONENTS=(protocol config_store notification_pipeline transfer core weather ble_core ancs_client ota)
 # components with ESP-IDF glue next to their portable part: only that part is built here (M5)
-declare -A ONLY=([ble_core]=ble_util.c [ancs_client]=ancs_sm.c)
+declare -A ONLY=([ble_core]=ble_util.c [ancs_client]=ancs_sm.c [ota]="ota_sink.c upd_manifest.c upd_policy.c upd_download.c")
 FLAGS=(-std=c11 -Os -ffunction-sections -fdata-sections -mlongcalls -fstack-usage
        -Wall -Wextra -Werror -Wpedantic -Wshadow -Wstrict-prototypes)
 INCLUDES=()
@@ -21,7 +21,13 @@ mkdir -p "$OUT"
 "$CC" --version | head -1
 for c in "${COMPONENTS[@]}"; do
     objs=()
-    for src in "$REPO/components/$c/src/"${ONLY[$c]:-*.c}; do
+    srcs=()
+    if [ -n "${ONLY[$c]:-}" ]; then
+        for f in ${ONLY[$c]}; do srcs+=("$REPO/components/$c/src/$f"); done
+    else
+        srcs=("$REPO/components/$c/src/"*.c)
+    fi
+    for src in "${srcs[@]}"; do
         obj="$OUT/$c-$(basename "${src%.c}").o"
         "$CC" "${FLAGS[@]}" "${INCLUDES[@]}" -c "$src" -o "$obj"
         objs+=("$obj")

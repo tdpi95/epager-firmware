@@ -38,6 +38,8 @@ endforeach()
 add_subdirectory(${REPO_ROOT}/components/board_api ${CMAKE_BINARY_DIR}/board_api)
 add_subdirectory(${REPO_ROOT}/components/net ${CMAKE_BINARY_DIR}/net) # its portable part: epager_net_util
 target_compile_options(epager_net_util PRIVATE ${WARNINGS})
+add_subdirectory(${REPO_ROOT}/components/ota ${CMAKE_BINARY_DIR}/ota) # its portable part: epager_ota
+target_compile_options(epager_ota PRIVATE ${WARNINGS})
 add_subdirectory(${REPO_ROOT}/components/ancs_client ${CMAKE_BINARY_DIR}/ancs_client)
 target_compile_options(epager_ancs_client PRIVATE ${WARNINGS})
 add_subdirectory(${REPO_ROOT}/components/ble_core ${CMAKE_BINARY_DIR}/ble_core) # its portable part: epager_ble_util
@@ -94,6 +96,14 @@ add_executable(test_ancs test_ancs.c)
 target_link_libraries(test_ancs PRIVATE test_support epager_ancs_client)
 target_compile_options(test_ancs PRIVATE ${WARNINGS})
 add_test(NAME test_ancs COMMAND test_ancs)
+
+foreach(t test_ota test_upd)
+    add_executable(${t} ${t}.c)
+    target_link_libraries(${t} PRIVATE epager_ota test_support)
+    target_compile_definitions(${t} PRIVATE VECTORS_DIR="${REPO_ROOT}/contracts/test-vectors")
+    target_compile_options(${t} PRIVATE ${WARNINGS})
+    add_test(NAME ${t} COMMAND ${t})
+endforeach()
 
 add_executable(test_weather test_weather.c)
 target_link_libraries(test_weather PRIVATE epager_weather test_thirdparty)

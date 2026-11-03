@@ -45,6 +45,14 @@ bool net_join_named(const char *ssid, uint32_t timeout_ms, uint8_t *wifi_state);
 bool net_post_save(const char *ssid, const char *pw, const char *city);
 void net_weather_kick(void);
 
+/* net_update.c, on the Wi-Fi task, with the radio up and an address (CONFIG_EPAGER_FEATURE_WIFI_OTA). */
+void net_update_run_check(void);
+void net_update_run_install(const char *version);
+void net_update_fail(uint8_t error); /* NET_UPD_ERR_*: the cycle could not get as far as the release host */
+void net_update_set_url_internal(const char *url);
+void net_update_cancel_internal(void);
+bool net_update_clock_ok(void);
+
 /* net_setup.c, on the Wi-Fi task */
 bool net_setup_start(void);
 void net_setup_stop(void);

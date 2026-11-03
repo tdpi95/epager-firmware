@@ -62,6 +62,9 @@ CONFIG_LV_CONF_SKIP=n
 CONFIG_LV_BUILD_EXAMPLES=n
 CONFIG_LV_BUILD_DEMOS=n
 
+# --- firmware updates over BLE (components/ota, M6): both variants ship them
+CONFIG_EPAGER_FEATURE_OTA=y
+
 # --- Wi-Fi for the weather, the time and the setup hotspot (components/net, PLAN D60-D64, D78). The radio is on only
 # while fetching or while the hotspot is open; it never touches GPIO19/20 or the USB PHY (D50). Wi-Fi and lwIP
 # buffers go to PSRAM (internal RAM is shared with BLE and LVGL); the common CA bundle covers Open-Meteo and
@@ -69,6 +72,8 @@ CONFIG_LV_BUILD_DEMOS=n
 # Where the buffers live (PSRAM or internal RAM) depends on the chip: variants/targets/<chip>.sdkconfig.
 CONFIG_EPAGER_FEATURE_WIFI=y
 CONFIG_EPAGER_FEATURE_WEATHER=y
+# Firmware updates from GitHub Releases over Wi-Fi (docs/wifi-ota-plan.md, M6c)
+CONFIG_EPAGER_FEATURE_WIFI_OTA=y
 # Wi-Fi keeps few internal RX buffers: a weather fetch is a few KB. With the IDF defaults (16 static RX buffers,
 # TLS in internal RAM) the Wi-Fi driver did not start on the LCD board (ESP_ERR_NO_MEM, 2026-10-14).
 CONFIG_ESP_WIFI_STATIC_RX_BUFFER_NUM=6

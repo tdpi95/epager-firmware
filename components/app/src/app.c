@@ -10,7 +10,9 @@
  * hw-checklist 27) and, with CONFIG_EPAGER_FEATURE_WIFI, the
  * Wi-Fi task for the weather, SNTP and the setup hotspot (components/net, D60-D63).
  * Assets: app icons are stored on the LittleFS partition through blob_fs and shown by the UI (M6, asset half).
- * What is a stand-in until its milestone: no firmware sink (M6, OTA half). Core, UI and the BLE
+ * Firmware OTA (CONFIG_EPAGER_FEATURE_OTA, M6): the transfer layer writes into the inactive slot (components/ota),
+ * a new image runs a self-check before it is marked valid (OTA_CHECK_*), and a failed or timed-out check rolls back.
+ * Core, UI and the BLE
  * event handling share this task; the NimBLE host task only queues events for it (PLAN D67), and
  * everything wakes it with a task notification.
  */
@@ -48,6 +50,13 @@
 #if CONFIG_EPAGER_FEATURE_WIFI
 #include "epager/net.h"
 #endif
+#if CONFIG_EPAGER_FEATURE_OTA
+#include "epager/ota.h"
+#endif
+#if CONFIG_EPAGER_FEATURE_WIFI_OTA
+#include "epager/net_update.h"
+#include "epager/upd.h"
+#endif
 #if CONFIG_EPAGER_FEATURE_WEATHER
 #define WEATHER_ON 1
 #else
@@ -65,6 +74,18 @@
 #define REARM_MS 300          /* idle: after a key woke the chip, how long until it may sleep again */
 #define EV_WAKE ((board_button_t)0xFF) /* queue entry from the key wake-up interrupt, not a key press */
 #define PHONE_TIME_MS (24u * 3600u * 1000u) /* a phone's TIME_SYNC wins over SNTP and the weather's zone (D63) */
+
+/* A new firmware image is valid once all of these hold (xfer_ota, PLAN D11). Wi-Fi and the weather are not
+ * part of it: a phone that cannot reach a network must still be able to keep the update. */
+#define OTA_CHECK_UI 0x1u      /* storage, core and UI came up */
+#define OTA_CHECK_BLE 0x2u     /* the BLE host is advertising: the next update can still arrive */
+#define OTA_CHECK_RUNNING 0x4u /* the main loop has run for OTA_RUNNING_MS without a reset */
+#define OTA_REQUIRED (OTA_CHECK_UI | OTA_CHECK_BLE | OTA_CHECK_RUNNING)
+#define OTA_RUNNING_MS 30000u
+#define OTA_VERIFY_TIMEOUT_MS 120000u /* not valid by then: roll back */
+#define OTA_REBOOT_DELAY_MS 1000u     /* the XFER_FINISH answer leaves first */
+#define OTA_PROGRESS_STEP 5           /* the screen shows whole steps: a panel refresh per percent is too many */
+#define OTA_PROGRESS_STALE_MS 15000u  /* no chunk for this long: the transfer is over */
 
 typedef struct {
     board_button_t btn;
@@ -87,6 +108,24 @@ static TaskHandle_t main_task;   /* the BLE host task, keys and the wake-up inte
 static blec_event_t ble_ev;
 static bool ble_ok, ble_secure, has_passkey;
 static uint32_t passkey;
+#if CONFIG_EPAGER_FEATURE_WIFI_OTA
+static upd_policy_t upd;           /* the daily check and what the person chose (components/ota, upd_policy) */
+static const kv_storage_t *upd_kv; /* where its record lives (the core's store) */
+static bool upd_ready;
+static bool upd_check_inflight;    /* a check went to the Wi-Fi task and its answer is not in yet */
+static bool upd_installed_seen;
+static ui_update_error_t upd_local_err; /* a refusal that never reached the Wi-Fi task: the battery, the version */
+static uint32_t upd_seq_seen;
+static uint8_t upd_net_state_seen;
+static bool ota_wifi;              /* the image comes over Wi-Fi: its progress does not depend on the phone link */
+#endif
+#if CONFIG_EPAGER_FEATURE_OTA
+static ota_sink_t ota_sink;
+static int16_t ota_pct = -1;  /* firmware bytes received so far, -1 = no update running */
+static uint32_t ota_pct_ms;
+static uint32_t boot_ms;      /* when the main loop started, for OTA_CHECK_RUNNING */
+static bool ota_running_checked;
+#endif
 /* Sleep (PLAN D17, D82): busy = both PM locks held (nothing scales or sleeps); idle and the keys armed as
  * wake-up sources = released, so the idle task light-sleeps until a key, the 1 s tick, a radio event or a
  * notification. Idle is the screen being off on boards with a backlight, a quiet UI on the Paper. */
@@ -204,12 +243,31 @@ static void refresh_read_values_tick(uint32_t t)
     }
 }
 
+/* The percentage the status bar shows: whole steps, and gone once the phone has left or stopped sending. */
+static int16_t ota_ui_pct(uint32_t t)
+{
+#if CONFIG_EPAGER_FEATURE_OTA
+#if CONFIG_EPAGER_FEATURE_WIFI_OTA
+    if (ota_wifi) { /* the Wi-Fi task reports until it ends: no phone link, no staleness */
+        return ota_pct < 0 ? -1 : (int16_t)(ota_pct / OTA_PROGRESS_STEP * OTA_PROGRESS_STEP);
+    }
+#endif
+    if (ota_pct >= 0 && (!ble_secure || t - ota_pct_ms > OTA_PROGRESS_STALE_MS)) {
+        ota_pct = -1;
+    }
+    return ota_pct < 0 ? -1 : (int16_t)(ota_pct / OTA_PROGRESS_STEP * OTA_PROGRESS_STEP);
+#else
+    (void)t;
+    return -1;
+#endif
+}
+
 static void sync_ui_status(void)
 {
     ui_status_t s = {.battery_pct = core_battery_pct(&core), .wifi_state = core.status.wifi_state,
                      .external_power = core.status.external_power == PROTO_EXTERNAL_POWER_YES,
                      .connected = ble_secure, .pairing_mode = core.status.pairing_mode,
-                     .has_passkey = has_passkey, .passkey = passkey, .ota_pct = -1};
+                     .has_passkey = has_passkey, .passkey = passkey, .ota_pct = ota_ui_pct(now_ms(NULL))};
     ui_set_status(&s);
     if (ble_ok) {
         blec_set_battery(s.battery_pct);
@@ -262,6 +320,42 @@ static void on_asset(void *ctx, uint8_t asset_type)
     ui_assets_changed(asset_type); /* a card on screen picks up an icon installed or removed now */
 }
 
+#if CONFIG_EPAGER_FEATURE_OTA
+/* What the OTA state machine asks the platform for (xfer_ota.h). Runs on the main task. */
+static void on_ota(void *ctx, const xfer_ota_event_t *ev)
+{
+    (void)ctx;
+    switch (ev->kind) {
+    case XFER_OTA_EV_PROGRESS:
+        ota_pct = ev->pct;
+        ota_pct_ms = now_ms(NULL);
+        ui_activity(); /* the screen stays on while the image comes in */
+        break;
+    case XFER_OTA_EV_REBOOT:
+        ota_pct = -1;
+        npipe_apps_flush(&core.np); /* the seen-apps list is written once a minute: do not lose it to the restart */
+        ota_esp_reboot_in(OTA_REBOOT_DELAY_MS);
+        break;
+    case XFER_OTA_EV_MARK_VALID:
+        ota_esp_mark_valid();
+        break;
+    case XFER_OTA_EV_ROLLBACK:
+        ota_esp_rollback();
+        break;
+    case XFER_OTA_EV_STATE: /* DEVICE_STATUS.ota_state: the core already reports it */
+        break;
+    }
+}
+
+/* A self-check that must hold before the image is kept; no effect unless this image is on probation. */
+static void ota_check_passed(uint32_t bits)
+{
+    if (params.fw != NULL) {
+        xfer_ota_check_passed(&core.ota, bits);
+    }
+}
+#endif
+
 static void on_dismissed(void *ctx, const npipe_dismissed_t *d)
 {
     (void)ctx;
@@ -311,6 +405,9 @@ static void ble_event(const blec_event_t *ev)
         app_ev(APP_EV_BLE_DISCONNECTED, ev->mtu);
         app_batlog_note_ble(0);
         core_disconnect(&core);
+#if CONFIG_EPAGER_FEATURE_OTA
+        ota_sink_ble_gone(&ota_sink); /* an update from the phone that was cut off no longer holds the sink */
+#endif
         ble_secure = has_passkey = false;
         ancs_sm_session_end(&ancs);
         refresh_info();
@@ -393,7 +490,8 @@ static void sync_ui_config(void)
                      .idle_dim_s = (uint16_t)cfg_get_int(c, PROTO_CFG_DISPLAY_IDLE_DIM_S),
                      .idle_off_s = (uint16_t)cfg_get_int(c, PROTO_CFG_DISPLAY_IDLE_OFF_S),
                      .orientation = (uint8_t)cfg_get_int(c, PROTO_CFG_DISPLAY_ORIENTATION),
-                     .weather_enabled = cfg_get_int(c, PROTO_CFG_WEATHER_ENABLED) != 0};
+                     .weather_enabled = cfg_get_int(c, PROTO_CFG_WEATHER_ENABLED) != 0,
+                     .update_auto_check = cfg_get_int(c, PROTO_CFG_UPDATE_AUTO_CHECK) != 0};
     ui_set_config(&u);
 }
 
@@ -419,6 +517,218 @@ static void sync_net_config(void)
                                                 city, n, (uint8_t)cfg_get_int(&core.cfg, PROTO_CFG_UI_LANGUAGE));
 }
 
+#if CONFIG_EPAGER_FEATURE_WIFI_OTA
+/* ---------------------------------------------------------------- firmware updates over Wi-Fi (M6c) */
+
+static void update_start(const char *user_agent)
+{
+    if (!net_ok || params.fw == NULL || upd_kv == NULL) {
+        return;
+    }
+    const net_update_cfg_t nc = {.board_id = board->board_id, .variant = app->variant, .running_version = firmware_version,
+                                 .contract_version = PROTO_CONTRACT_VERSION, .sink = &ota_sink.wifi,
+                                 .slot_size = ota_sink.flash->slot_size, .user_agent = user_agent};
+    net_update_start(&nc);
+    uint32_t jitter = 0; /* boards do not call the release host at the same second */
+    for (const char *p = blec_device_name(); *p != '\0'; p++) {
+        jitter = jitter * 31u + (uint8_t)*p;
+    }
+    const upd_policy_params_t pp = {.kv = upd_kv, .running_version = firmware_version, .jitter_s = jitter % 1800u,
+                                    .period_s = 24u * 3600u, .retry_s = 3600u, .max_tries = 6, .first_delay_s = 3600u,
+                                    .snooze_s = 24u * 3600u};
+    upd_policy_init(&upd, &pp, cfg_get_int(&core.cfg, PROTO_CFG_UPDATE_AUTO_CHECK) != 0);
+    upd_ready = true;
+}
+
+/* The person asked (the settings page, the console): check now. */
+static bool update_check_now(void)
+{
+    upd_local_err = UI_UPD_ERR_NONE;
+    if (!upd_ready || upd_check_inflight || !net_update_check(true)) {
+        return false;
+    }
+    upd_check_inflight = true;
+    return true;
+}
+
+/* Install the newest version found. The battery and version rules are the BLE update's (xfer_ota). */
+static bool update_install(void)
+{
+    const char *v = upd_ready ? upd_policy_available(&upd) : "";
+    upd_local_err = UI_UPD_ERR_NONE;
+    if (v[0] == '\0') {
+        return false;
+    }
+    const proto_status_t gate = xfer_ota_check_begin(&core.ota, v, strlen(v), true);
+    if (gate != PROTO_OK) {
+        ESP_LOGW(TAG, "update refused: %s", gate == PROTO_LOW_BATTERY ? "battery" : "version");
+        upd_local_err = gate == PROTO_LOW_BATTERY ? UI_UPD_ERR_BATTERY : UI_UPD_ERR_INTERNAL;
+        return false;
+    }
+    if (!net_update_install(v)) {
+        upd_local_err = UI_UPD_ERR_INTERNAL; /* the Wi-Fi task could not take it now */
+        return false;
+    }
+    return true;
+}
+
+static ui_update_error_t ui_error_for(uint8_t net_error)
+{
+    switch (net_error) {
+    case NET_UPD_ERR_NO_NETWORK: return UI_UPD_ERR_NO_NETWORK;
+    case NET_UPD_ERR_NET: return UI_UPD_ERR_NET;
+    case NET_UPD_ERR_CLOCK: return UI_UPD_ERR_CLOCK;
+    case NET_UPD_ERR_DOWNLOAD: return UI_UPD_ERR_DOWNLOAD;
+    case NET_UPD_ERR_REJECTED: return UI_UPD_ERR_REJECTED;
+    case NET_UPD_ERR_BUSY: return UI_UPD_ERR_BUSY;
+    case NET_UPD_ERR_CANCELLED: return UI_UPD_ERR_CANCELLED;
+    default: return UI_UPD_ERR_INTERNAL;
+    }
+}
+
+/* What the Software update page and the clock screen's mark show: the policy's record and the Wi-Fi task's state. */
+static void update_sync_ui(void)
+{
+    if (!upd_ready) {
+        return;
+    }
+    ui_update_t u;
+    memset(&u, 0, sizeof(u));
+    const char *avail = upd_policy_available(&upd);
+    const bool skipped = upd_policy_skipped(&upd);
+    strlcpy(u.version, avail, sizeof(u.version));
+    u.skipped = skipped;
+    u.mark = avail[0] != '\0' && !skipped;
+    if (upd_local_err != UI_UPD_ERR_NONE) {
+        u.state = UI_UPD_FAILED;
+        u.error = upd_local_err;
+    } else if (net_st.upd_state == NET_UPD_DOWNLOADING || net_st.upd_state == NET_UPD_INSTALLED) {
+        u.state = UI_UPD_DOWNLOADING;
+    } else if (net_st.upd_state == NET_UPD_CHECKING || upd_check_inflight) {
+        u.state = UI_UPD_CHECKING;
+    } else if (net_st.upd_state == NET_UPD_FAILED) {
+        u.state = UI_UPD_FAILED;
+        u.error = ui_error_for(net_st.upd_error);
+    } else if (avail[0] != '\0') {
+        u.state = UI_UPD_AVAILABLE;
+        if (strcmp(net_st.upd_version, avail) == 0) {
+            u.size = net_st.upd_size;
+        }
+    } else if (upd.last_verdict == UPD_CONTRACT_MAJOR) {
+        u.state = UI_UPD_NEEDS_APP;
+        strlcpy(u.version, net_st.upd_version, sizeof(u.version));
+    } else {
+        u.state = upd.r.last_check_utc != 0 ? UI_UPD_UP_TO_DATE : UI_UPD_NONE;
+    }
+    ui_set_update(&u);
+}
+
+/* Once a second: a check is due, and the prompt may be due (it waits for an awake, idle clock screen). */
+static void update_tick(uint32_t t)
+{
+    if (!upd_ready) {
+        return;
+    }
+    const uint32_t utc = core_now_utc(&core);
+    if (!upd_check_inflight && upd_policy_check_due(&upd, utc, t / 1000u) && net_update_check(false)) {
+        upd_check_inflight = true;
+    }
+    update_sync_ui();
+    if (upd_policy_prompt_due(&upd, utc) && ui_show_update_prompt()) {
+        upd_policy_prompt_shown(&upd, utc); /* unanswered counts as "remind later" */
+        ESP_LOGI(TAG, "update: prompt shown for %s", upd_policy_available(&upd));
+    }
+}
+
+/* The Software update page and its prompt. */
+static void update_action(ui_action_t a)
+{
+    if (!upd_ready) {
+        return;
+    }
+    switch (a) {
+    case UI_ACTION_UPDATE_CHECK: (void)update_check_now(); break;
+    case UI_ACTION_UPDATE_INSTALL: (void)update_install(); break;
+    case UI_ACTION_UPDATE_LATER: upd_policy_remind_later(&upd, core_now_utc(&core)); break;
+    case UI_ACTION_UPDATE_SKIP: upd_policy_skip(&upd); break;
+    case UI_ACTION_UPDATE_CANCEL: net_update_cancel(); break;
+    default: break;
+    }
+    update_sync_ui();
+}
+
+/* The Wi-Fi task's news about an update. */
+static void update_apply_net(const net_status_t *s)
+{
+    if (!upd_ready) {
+        return;
+    }
+    const uint32_t utc = core_now_utc(&core);
+    if (s->upd_check_seq != upd_seq_seen) {
+        upd_seq_seen = s->upd_check_seq;
+        if (s->upd_check_ok) {
+            upd_policy_checked(&upd, utc, (upd_verdict_t)s->upd_verdict, s->upd_version);
+        } else if (upd_check_inflight) {
+            upd_policy_check_failed(&upd, utc);
+        }
+        upd_check_inflight = false;
+    }
+    if (s->upd_state != upd_net_state_seen) {
+        upd_net_state_seen = s->upd_state;
+        upd_local_err = UI_UPD_ERR_NONE; /* the Wi-Fi task has news: it supersedes an earlier local refusal */
+    }
+    ota_wifi = s->upd_state == NET_UPD_DOWNLOADING;
+    if (ota_wifi) {
+        xfer_ota_progress(&core.ota, s->upd_pct, 100); /* the progress event shows it and keeps the screen on */
+    } else if (ota_pct >= 0 && s->upd_state != NET_UPD_INSTALLED) {
+        ota_pct = -1;
+    }
+    if (s->upd_state == NET_UPD_INSTALLED && !upd_installed_seen) {
+        upd_installed_seen = true;
+        upd_policy_installed(&upd);
+        xfer_ota_installed(&core.ota, s->upd_version, strlen(s->upd_version)); /* the record, then the restart */
+    }
+    update_sync_ui();
+}
+
+/* The debug console's `update` command (main loop). */
+static void update_command(const char *word, const char *arg, uint16_t number)
+{
+    if (!upd_ready) {
+        ESP_LOGI(TAG, "update: not available (no Wi-Fi, no second OTA slot, or the task did not start)");
+        return;
+    }
+    if (strcmp(word, "check") == 0) {
+        ESP_LOGI(TAG, "update: check %s", update_check_now() ? "queued" : "not queued");
+    } else if (strcmp(word, "install") == 0) {
+        ESP_LOGI(TAG, "update: install %s", update_install() ? "queued" : "refused");
+    } else if (strcmp(word, "cancel") == 0) {
+        net_update_cancel();
+    } else if (strcmp(word, "later") == 0) {
+        upd_policy_remind_later(&upd, core_now_utc(&core));
+    } else if (strcmp(word, "skip") == 0) {
+        upd_policy_skip(&upd);
+    } else if (strcmp(word, "due") == 0) { /* the daily check now, as if a day had passed */
+        ESP_LOGI(TAG, "update: daily check %s", !upd_check_inflight && net_update_check(false) ? "queued" : "not queued");
+        upd_check_inflight = true;
+    } else if (strcmp(word, "url") == 0) {
+        net_update_set_url(arg);
+    } else if (strcmp(word, "auto") == 0) { /* update.auto_check, as the app or the settings row sets it */
+        core_config_set_u8(&core, PROTO_CFG_UPDATE_AUTO_CHECK, number != 0);
+    } else if (strcmp(word, "drop") == 0) { /* the next download loses its connection once after N KiB */
+        net_update_debug_drop((uint32_t)number * 1024u);
+    } else if (strcmp(word, "interval") == 0 && number > 0) { /* a short "day" for tests */
+        upd.p.period_s = number * 60u;
+        upd.p.jitter_s = 0;
+        upd.p.first_delay_s = 0;
+    }
+    ESP_LOGI(TAG, "update: auto %d, available '%s'%s, last check %lu, retries %u, period %lu s, remind until %lu, now %lu",
+             (int)upd.auto_check, upd_policy_available(&upd), upd_policy_skipped(&upd) ? " (skipped)" : "",
+             (unsigned long)upd.r.last_check_utc, (unsigned)upd.r.retries, (unsigned long)upd.p.period_s,
+             (unsigned long)upd.r.remind_until_utc, (unsigned long)core_now_utc(&core));
+}
+#endif
+
 /* What the Wi-Fi task reported: DEVICE_STATUS, the weather row, the setup screen, the time (SNTP or a
  * Date header; unless a
  * phone set it within a day), the weather location's time zone (same rule) and a city from the setup page.
@@ -433,6 +743,9 @@ static void apply_net(void)
     if (!net_poll(s)) {
         return;
     }
+#if CONFIG_EPAGER_FEATURE_WIFI_OTA
+    update_apply_net(s);
+#endif
     ui_info.n_networks = s->n_networks > UI_NETWORKS_MAX ? UI_NETWORKS_MAX : s->n_networks;
     memcpy(ui_info.networks, s->networks, sizeof(ui_info.networks));
     refresh_info();
@@ -478,6 +791,13 @@ static void on_config(void *ctx, const uint16_t *changed, size_t n_keys)
 {
     (void)ctx;
     sync_ui_config();
+#if CONFIG_EPAGER_FEATURE_WIFI_OTA
+    for (size_t i = 0; i < n_keys; i++) {
+        if (changed[i] == PROTO_CFG_UPDATE_AUTO_CHECK && upd_ready) {
+            upd_policy_set_auto_check(&upd, cfg_get_int(&core.cfg, PROTO_CFG_UPDATE_AUTO_CHECK) != 0);
+        }
+    }
+#endif
 #if CONFIG_EPAGER_FEATURE_WIFI
     for (size_t i = 0; i < n_keys; i++) {
         if (changed[i] == PROTO_CFG_UI_LANGUAGE || (changed[i] >= PROTO_CFG_WEATHER_ENABLED &&
@@ -608,6 +928,15 @@ static void on_ui_action(void *ctx, ui_action_t a, uint32_t arg)
     case UI_ACTION_POWER_TOGGLE:
         start_power_off();
         break;
+#if CONFIG_EPAGER_FEATURE_WIFI_OTA
+    case UI_ACTION_UPDATE_CHECK:
+    case UI_ACTION_UPDATE_INSTALL:
+    case UI_ACTION_UPDATE_LATER:
+    case UI_ACTION_UPDATE_SKIP:
+    case UI_ACTION_UPDATE_CANCEL:
+        update_action(a);
+        break;
+#endif
     default:
         break;
     }
@@ -752,8 +1081,30 @@ static bool init_core_and_ui(bool kv_nvs_ok, bool assets_ok)
     } else {
         ESP_LOGW(TAG, "no asset storage: cards show the built-in icons");
     }
+#if CONFIG_EPAGER_FEATURE_OTA
+    const ota_flash_t *ota_flash = ota_esp_flash();
+    if (ota_flash != NULL) {
+        ota_sink_init(&ota_sink, ota_flash);
+        params.fw = &ota_sink.iface;
+        params.features |= PROTO_FEATURES_OTA;
+        params.ota_required_checks = OTA_REQUIRED;
+        params.ota_verify_timeout_ms = OTA_VERIFY_TIMEOUT_MS;
+        params.on_ota = on_ota;
+    }
+#endif
     core_init(&core, &params);
+#if CONFIG_EPAGER_FEATURE_WIFI_OTA
+    upd_kv = kv;
+#endif
+#if CONFIG_EPAGER_FEATURE_OTA
+    const bool probation = ota_esp_pending_verify();
+    if (probation) {
+        ESP_LOGW(TAG, "new firmware on probation: self-check within %u s", (unsigned)(OTA_VERIFY_TIMEOUT_MS / 1000u));
+    }
+    core_boot(&core, probation);
+#else
     core_boot(&core, false);
+#endif
     ancs_sm_init(&ancs, &(ancs_sm_params_t){.np = &core.np, .write_cp = ancs_write});
 
     ui_params_t up = {.display = board->display, .blob = params.blob, .climate = board->read_climate != NULL, .now_ms = now_ms,
@@ -761,6 +1112,9 @@ static bool init_core_and_ui(bool kv_nvs_ok, bool assets_ok)
     up.cards_timeout_s = UI_CARDS_TIMEOUT_S; /* a minute without a key, a touch or a notification: the clock (D80) */
 #if CONFIG_EPAGER_FEATURE_WIFI
     up.wifi_setup = true; /* the pairing screen offers it: a button on touch screens, short BOOT on the Paper */
+#endif
+#if CONFIG_EPAGER_FEATURE_WIFI_OTA
+    up.update = params.fw != NULL; /* the Software update rows need a second OTA slot */
 #endif
     if (!ui_init(&up)) {
         return false;
@@ -886,6 +1240,13 @@ void app_console_apply(const app_console_cmd_t *cmd)
     case APP_CMD_SETUP:
         net_setup(cmd->on);
         break;
+    case APP_CMD_UPDATE:
+#if CONFIG_EPAGER_FEATURE_WIFI_OTA
+        update_command(cmd->title, cmd->body, cmd->value);
+#else
+        ESP_LOGI(TAG, "console: no Wi-Fi updates in this build");
+#endif
+        break;
 #else
     case APP_CMD_WIFI:
     case APP_CMD_WIFI_FORGET:
@@ -893,6 +1254,7 @@ void app_console_apply(const app_console_cmd_t *cmd)
     case APP_CMD_CITY:
     case APP_CMD_FETCH:
     case APP_CMD_SETUP:
+    case APP_CMD_UPDATE:
         ESP_LOGI(TAG, "console: no Wi-Fi in this build");
         break;
 #endif
@@ -954,21 +1316,34 @@ void app_run(const app_config_t *cfg)
         refresh_read_values(); /* before the first phone can read them */
         blec_start();
     }
+#if CONFIG_EPAGER_FEATURE_OTA
+    if (ui_ok) {
+        ota_check_passed(OTA_CHECK_UI | (ble_ok ? OTA_CHECK_BLE : 0u));
+    }
+#endif
     app_batlog_start(board, firmware_version, fs_ok);
     ESP_LOGI(TAG, "boot: nvs %s, assets %s, ble %s, ui %s", nvs_ok ? "ok" : "FAIL", fs_ok ? "ok" : "FAIL",
              ble_ok ? "ok" : "FAIL", ui_ok ? "ok" : "FAIL");
 #if CONFIG_EPAGER_FEATURE_WIFI
     if (ui_ok && nvs_ok) { /* the Wi-Fi driver keeps the network in NVS */
-        char ua[48];
+        static char ua[48]; /* the update task keeps the pointer */
         snprintf(ua, sizeof(ua), "ePager/%s (%s)", firmware_version, board->board_id);
         net_ok = net_start(ua, now_ms_void);
         sync_net_config();
+#if CONFIG_EPAGER_FEATURE_WIFI_OTA
+        update_start(ua);
+#endif
     }
     ESP_LOGI(TAG, "wifi %s", net_ok ? "ok" : "FAIL");
 #endif
     ESP_LOGI(TAG, "heap: %u bytes internal free, %u bytes PSRAM free",
              (unsigned)heap_caps_get_free_size(MALLOC_CAP_INTERNAL), (unsigned)heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
     if (!ui_ok) {
+#if CONFIG_EPAGER_FEATURE_OTA
+        if (ota_esp_pending_verify()) { /* no loop will tick the verify timeout: go back now */
+            ota_esp_rollback();
+        }
+#endif
         for (;;) {
             vTaskDelay(portMAX_DELAY); /* nothing to show or serve; the watchdog and rollback handle a bad image in M6 */
         }
@@ -979,6 +1354,9 @@ void app_run(const app_config_t *cfg)
      * sensor for the idle screen, and the UI service. */
     uint32_t last_tick = now_ms(NULL), last_climate = last_tick;
     bool stack_logged = false;
+#if CONFIG_EPAGER_FEATURE_OTA
+    boot_ms = last_tick;
+#endif
 #if CONFIG_EPAGER_BOOT_SOUND
     bool boot_sound_done = false;
 #endif
@@ -1034,7 +1412,16 @@ void app_run(const app_config_t *cfg)
         LP_SEC(pol_us);
         if (t - last_tick >= CORE_TICK_MS) {
             last_tick = t;
+#if CONFIG_EPAGER_FEATURE_OTA
+            if (!ota_running_checked && t - boot_ms >= OTA_RUNNING_MS) {
+                ota_running_checked = true;
+                ota_check_passed(OTA_CHECK_RUNNING);
+            }
+#endif
             core_tick(&core);
+#if CONFIG_EPAGER_FEATURE_WIFI_OTA
+            update_tick(t);
+#endif
             pairing_timeout(t);
             refresh_read_values_tick(t);
             LP_SEC(core_us);

@@ -21,6 +21,7 @@
 #include "nvs.h"
 
 #include "epager/net_util.h"
+#include "sdkconfig.h"
 #include "epager/power.h"
 #include "epager/proto_gen.h"
 #include "net_priv.h"
@@ -37,11 +38,11 @@
 #define PROFILE_MAGIC 0x45535733u /* "ESW3" */
 #define PROFILE_KEY "wifi.profiles"
 
-typedef enum { CMD_CONFIG, CMD_WIFI_SET, CMD_SETUP, CMD_SAVE, CMD_KICK } cmd_kind_t;
+typedef enum { CMD_CONFIG, CMD_WIFI_SET, CMD_SETUP, CMD_SAVE, CMD_KICK, CMD_UPD_CHECK, CMD_UPD_INSTALL } cmd_kind_t;
 
 typedef struct {
     cmd_kind_t kind;
-    bool flag;                   /* CONFIG: enabled; WIFI_SET: forget; SETUP: open */
+    bool flag;                   /* CONFIG: enabled; WIFI_SET: forget; SETUP: open; UPD_CHECK: manual */
     uint16_t interval_min;
     uint8_t language;
     char ssid[33], pw[64], city[WX_CITY_MAX + 1];
@@ -55,6 +56,9 @@ static wx_t wx;
 static char user_agent[48];
 static EXT_RAM_BSS_ATTR char body[BODY_MAX]; /* PSRAM where the image allows it */
 static char url[WX_URL_MAX];
+#if CONFIG_EPAGER_FEATURE_WIFI_OTA
+static volatile uint8_t upd_pending; /* a check was asked for and no cycle has done it yet (0 none, 1 daily, 2 manual) */
+#endif
 static bool sntp_done;
 static uint32_t sntp_last_ms;
 static bool date_seen;               /* this cycle's newest Date header: */
@@ -544,6 +548,16 @@ static void fetch_cycle_locked(void)
         ESP_LOGI(NET_TAG, "%s -> %d (%u bytes)", REQ_NAME[r], status, (unsigned)n);
         wx_response(&wx, net.now_ms(), status, body, n);
     }
+#if CONFIG_EPAGER_FEATURE_WIFI_OTA
+    if (upd_pending != 0) { /* the radio is up anyway: the update check rides on this cycle */
+        upd_pending = 0;
+        if (net_update_clock_ok()) {
+            net_update_run_check();
+        } else {
+            net_update_fail(NET_UPD_ERR_CLOCK);
+        }
+    }
+#endif
     esp_wifi_disconnect();
     esp_wifi_stop();
     if (!sntp_done && date_seen) { /* no SNTP within a day: the servers' clock, to the second */
@@ -552,6 +566,41 @@ static void fetch_cycle_locked(void)
     }
     set_wifi_state(asked && !answered ? PROTO_WIFI_STATE_NO_INTERNET : PROTO_WIFI_STATE_IDLE);
 }
+
+#if CONFIG_EPAGER_FEATURE_WIFI_OTA
+/* An update check or install of its own: join, set the time, do the step, switch the radio off. */
+static void update_cycle(const char *install_version)
+{
+    if (!profiles_any()) {
+        net_update_fail(NET_UPD_ERR_NO_NETWORK);
+        return;
+    }
+    power_hold(POWER_LOCK_CPU_MAX);
+    power_hold(POWER_LOCK_NO_SLEEP);
+    set_wifi_state(PROTO_WIFI_STATE_CONNECTING);
+    uint8_t state = PROTO_WIFI_STATE_NOT_FOUND;
+    if (esp_wifi_start() != ESP_OK || !net_join(NET_JOIN_TIMEOUT_MS, &state)) {
+        esp_wifi_stop();
+        set_wifi_state(state);
+        net_update_fail(NET_UPD_ERR_NET);
+    } else {
+        set_wifi_state(PROTO_WIFI_STATE_CONNECTED);
+        sntp_sync();
+        if (!net_update_clock_ok()) {
+            net_update_fail(NET_UPD_ERR_CLOCK);
+        } else if (install_version != NULL) {
+            net_update_run_install(install_version);
+        } else {
+            net_update_run_check();
+        }
+        esp_wifi_disconnect();
+        esp_wifi_stop();
+        set_wifi_state(PROTO_WIFI_STATE_IDLE);
+    }
+    power_release(POWER_LOCK_NO_SLEEP);
+    power_release(POWER_LOCK_CPU_MAX);
+}
+#endif
 
 /* ---------------------------------------------------------------- task */
 
@@ -584,6 +633,29 @@ static void handle(cmd_t *c)
     case CMD_KICK:
         wx_kick(&wx, net.now_ms());
         break;
+#if CONFIG_EPAGER_FEATURE_WIFI_OTA
+    case CMD_UPD_CHECK:
+        if (upd_pending != 0) { /* else a weather cycle has done it already */
+            upd_pending = 0;
+            if (net_setup_active()) {
+                net_update_fail(NET_UPD_ERR_NET);
+            } else {
+                update_cycle(NULL);
+            }
+        }
+        break;
+    case CMD_UPD_INSTALL:
+        if (net_setup_active()) {
+            net_update_fail(NET_UPD_ERR_NET);
+        } else {
+            update_cycle(c->ssid);
+        }
+        break;
+#else
+    case CMD_UPD_CHECK:
+    case CMD_UPD_INSTALL:
+        break;
+#endif
     }
     memset(c->pw, 0, sizeof(c->pw));
 }
@@ -713,6 +785,36 @@ void net_kick(void)
     cmd_t c = {.kind = CMD_KICK};
     (void)post(&c);
 }
+
+#if CONFIG_EPAGER_FEATURE_WIFI_OTA
+bool net_update_check(bool manual)
+{
+    if (cmds == NULL) {
+        return false;
+    }
+    cmd_t c = {.kind = CMD_UPD_CHECK, .flag = manual};
+    upd_pending = manual ? 2 : (upd_pending != 0 ? upd_pending : 1);
+    if (!post(&c)) {
+        upd_pending = 0;
+        return false;
+    }
+    return true;
+}
+
+bool net_update_install(const char *version)
+{
+    cmd_t c = {.kind = CMD_UPD_INSTALL};
+    if (strlen(version) >= sizeof(c.ssid)) {
+        return false;
+    }
+    strcpy(c.ssid, version);
+    return post(&c);
+}
+
+void net_update_cancel(void) { net_update_cancel_internal(); }
+
+void net_update_set_url(const char *manifest_url) { net_update_set_url_internal(manifest_url); }
+#endif
 
 bool net_post_save(const char *ssid, const char *pw, const char *city)
 {

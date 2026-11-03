@@ -16,7 +16,7 @@
 typedef enum {
     APP_CMD_POST, APP_CMD_REMOVE, APP_CMD_CLEAR, APP_CMD_TIME, APP_CMD_PAIRING, APP_CMD_CONFIG,
     APP_CMD_WIFI, APP_CMD_WIFI_FORGET, APP_CMD_STATUS, APP_CMD_CITY, APP_CMD_FETCH, APP_CMD_SETUP, APP_CMD_BATLOG, APP_CMD_UNBOND,
-    APP_CMD_AB,
+    APP_CMD_AB, APP_CMD_UPDATE,
 } app_cmd_kind_t;
 
 /* APP_CMD_AB (app_ab.c): which A/B drain-test switch */
@@ -32,7 +32,7 @@ typedef struct {
     uint16_t key;      /* APP_CMD_CONFIG: a u8 or u16 key, its wire size and value */
     uint8_t size;
     uint16_t value;
-    char ssid[33], pw[64], city[65]; /* APP_CMD_WIFI, APP_CMD_CITY */
+    char ssid[33], pw[64], city[65]; /* APP_CMD_WIFI, APP_CMD_CITY; APP_CMD_UPDATE: title = the word, body = its argument, value = a number */
     app_ab_what_t ab;  /* APP_CMD_AB: the switch and its numbers (-1 = the default) */
     int32_t ab_n[4];
 } app_console_cmd_t;

@@ -14,6 +14,7 @@
  *   setup on|off                   the Wi-Fi setup hotspot (as the pairing screen's button)
  *   batlog [clear]                 print the battery log | delete it (CONFIG_EPAGER_BATTERY_LOG)
  *   ab ...                         switches for A/B drain tests (app_ab.c, PLAN D106)
+ *   update [status|check|install|cancel|later|skip|due|url URL|interval MIN|drop KIB|auto 0|1]   firmware updates over Wi-Fi (M6c)
  *   tasks                          the busiest tasks since boot (CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS)
  *   pm                             the power manager's lock and mode table (CONFIG_PM_PROFILING; over USB the chip never sleeps)
  * The password typed for `wifi` is echoed by the console: development only, like the rest.
@@ -132,6 +133,17 @@ static int cmd_wifi(int argc, char **argv)
     const int r = send(&c);
     memset(c.pw, 0, sizeof(c.pw));
     return r;
+}
+
+static int cmd_update(int argc, char **argv)
+{
+    app_console_cmd_t c = {.kind = APP_CMD_UPDATE};
+    strlcpy(c.title, argc > 1 ? argv[1] : "status", sizeof(c.title));
+    if (argc > 2) {
+        strlcpy(c.body, argv[2], sizeof(c.body));
+        c.value = (uint16_t)strtoul(argv[2], NULL, 10);
+    }
+    return send(&c);
 }
 
 static int cmd_weather(int argc, char **argv)
@@ -256,6 +268,7 @@ void app_console_start(void)
         {.command = "wifi", .help = "wifi [SSID [PASSWORD] | forget]: store the network; no argument: state",
          .func = cmd_wifi},
         {.command = "weather", .help = "weather CITY... | ip | on | off | now", .func = cmd_weather},
+        {.command = "update", .help = "update [status|check|install|cancel|later|skip|due|url URL|interval MIN|drop KIB|auto 0|1]: firmware updates over Wi-Fi", .func = cmd_update},
         {.command = "setup", .help = "setup on|off: the Wi-Fi setup hotspot", .func = cmd_setup},
         {.command = "batlog", .help = "batlog [clear]: print the battery log | delete it", .func = cmd_batlog},
         {.command = "loop", .help = "loop: the main loop passes and where their time goes, since the last 5-minute report", .func = cmd_loop},
