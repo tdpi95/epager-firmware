@@ -17,7 +17,7 @@ The v1 **phone link is BLE only**. Both products use Wi-Fi for weather, time and
 
 The iPhone/iPad route uses the board as an ANCS client without an iOS app. Android uses the Flutter companion app in `epager-app` through the custom GATT service. This repository owns the [app/firmware contract](../contracts/protocol.md).
 
-App-icon transfer is implemented; **the ESP-IDF firmware OTA sink and its device-side validation/rollback integration are still planned**. A portable OTA model and host tests exist.
+App-icon transfer is implemented. **The firmware OTA sink, self-check and rollback are implemented (M6b, builds, host-tested) but not yet run on a board**; signed-image rejection, rollback and power-loss behaviour are open (hw-checklist 83).
 
 ## 2. Platform and Paper board facts
 
@@ -92,8 +92,7 @@ Stock firmware was “Xiaozhi ESP32 Mod” 2.4.2.1, with two 5376 KiB app slots 
      + portable weather parsers and scheduler
      -> queued status/readings applied by the app task
 
- Planned: ESP-IDF firmware OTA sink and validation/rollback integration
-          (portable transfer/OTA model already host-tested)
+ + components/ota: esp_ota_* sink (ota_sink.c portable), self-check, mark-valid / rollback (M6b, D111)
 ```
 
 - **Portable C11:** protocol, notification pipeline, config store, transfer, core and weather, plus portable helpers in net, BLE and ANCS. No ESP-IDF/FreeRTOS includes in these parts; platform needs use storage, firmware-sink and clock/battery interfaces. Caller-owned buffers and explicit lengths keep parser and notification hot paths bounded.
@@ -119,7 +118,7 @@ The current [board API](../components/board_api/include/epager/board_api.h) prov
 | BLE and ANCS (M5) | Firmware glue and portable state machine implemented and host-tested. Android pairing/reconnect/encrypted communication and iPad pairing/service discovery have partial hardware evidence; complete interoperability remains open (§9). |
 | LCD product UI (P1b) | Implemented UI, simulator, settings and weather; milestone remains in progress pending its remaining acceptance checks and review. |
 | Assets (M6 asset half) | LittleFS app-icon storage and UI integration implemented. LCD upload/drawing verified after the open-file-size fix on 2026-10-17. Other device cases remain open. |
-| Firmware OTA (M6 remaining) | Portable model exists; real firmware sink, signature rejection, install/boot validation, rollback and power-loss tests still required. |
+| Firmware OTA (M6b) | `components/ota` sink on the inactive slot, self-check (UI, BLE, 30 s running; 120 s timeout), mark-valid and rollback wired in `app.c`; builds, host-tested on a fake flash ([notes](milestone-notes/M6b.md)). Signature rejection, rollback, resume after power loss and bonds/assets surviving an update still need a board (checklist 83). |
 | Hardware completion (M7) | Remaining checklist work includes throughput, power/current measurements, full phone interoperability and device update tests. |
 
 Continue one approved milestone at a time. A documentation refresh does not close an acceptance criterion, approve a flash or start a new milestone.
@@ -164,7 +163,7 @@ The 1.4× rule permits an image of about **2.86 MiB**. Assets total 8,257,536 by
 - `contracts/` contains the specification, registry, GATT layout, generated schemas/reference, flat `test-vectors/*.json` files, contract version/changelog, compatibility and release-manifest specifications. Generators live in `tools/codegen/`; `tools/contract_check.py` checks drift and portability. Firmware and Dart must pass shared vectors; this review does not establish the companion app's latest vector result.
 - `tests/host/` builds the portable components and simulated UI with Unity, ASan/UBSan by default; `tools/tests/` covers Python tooling, TCP flows and golden screens. See [AGENTS.md](../AGENTS.md) for verified commands and [tools/README.md](../tools/README.md) for the simulator and BLE client. The laptop client/BlueZ agent still needs its documented real-board checks.
 - `tools/assets/` generates fonts and built-in icons. LVGL and source-font downloads are pinned under `.deps/`. ESP-IDF dependency locks are kept with the variants.
-- `components/power/` wraps ESP power management and locks; the app/board implement the sleep policy. There is no separate firmware `components/ota/` or `tools/sign/` implementation. Signing uses ESP-IDF/`espsecure.py` and `variants/sdkconfig.signed`; keys stay in git-ignored `keys/`.
+- `components/power/` wraps ESP power management and locks; the app/board implement the sleep policy. `components/ota/` holds the firmware OTA sink and boot-side calls (M6b); there is no `tools/sign/` wrapper. Signing uses ESP-IDF/`espsecure.py` and `variants/sdkconfig.signed`; keys stay in git-ignored `keys/`.
 - CI, release and Pages workflow files exist under `.github/workflows/`. `tools/release/make_release.py` assembles app release files; `tools/web/make_site.py` builds the [browser flashing page](flashing-page.md). Their presence and local tests do not establish a successful GitHub deployment or browser flash on hardware.
 
 ## 7. Confirmed requirements and open questions
@@ -176,7 +175,7 @@ The 1.4× rule permits an image of about **2.86 MiB**. Assets total 8,257,536 by
 | Persistence and privacy | Notification history in RAM only; config, bonds and seen apps in NVS; app icons and diagnostics in LittleFS. Notification content is excluded from firmware logs by default. |
 | UI languages | English and Vietnamese, with generated fonts and emoji support. |
 | Assets | App icons only are advertised by firmware: Paper 24 × 24 `mono1` (max 88 B), LCD 32 × 32 `rgb565a8` (max 3088 B). Forgetting/evicting an app removes its icon. Backgrounds/themes/fonts are not advertised as supported uploads. |
-| OTA direction | Signed application updates without hardware Secure Boot; downgrade refusal and a 30% low-battery threshold are intended. Portable policies exist; device-side integration remains M6 work. |
+| OTA direction | **Updates over Wi-Fi from the public GitHub Releases are required (user, 2026-11-03: there is no iOS app); implemented and run on the Paper: [wifi-ota-plan.md](wifi-ota-plan.md), [M6c](milestone-notes/M6c.md).** BLE OTA stays for the Android app. Signed application updates without hardware Secure Boot; downgrade refusal and a 30% low-battery threshold are intended. Portable policies and the device-side integration (M6b, D111) exist; both are unverified on a board. |
 
 ### 7b. LCD recovery and power constraints
 
@@ -220,7 +219,7 @@ Wi-Fi credentials can be set by the app or a local setup hotspot opened from pai
 | E-paper controller uncertainty and ghosting | Datasheet confirmation and long runs on the panel remain necessary; weighted full-refresh policy limits flashing but still needs visual/current acceptance. |
 | LCD USB-only recovery | Preserve USB pins/PHY and host-connected sleep guard; no deep sleep, no assumed BOOT key, no flash without the current session's go-ahead. |
 | LCD init/80 MHz stability and touch idle | Image, backlight, touch calibration and 20-reset tests passed. Keep stock-command provenance; check extended heat/runs and touch after a long idle. |
-| Signing keys, rollback and power loss | Back up private keys outside the repo; finish firmware sink/boot integration and negative tests before claiming OTA support. No irreversible security changes without approval. |
+| Signing keys, rollback and power loss | **The GitHub release is signed with the same key as `keys/dev_signing_key.pem` (found 2026-11-03: a dev-key build accepted the release image, a build with another key refused it): that one key is what every board trusts, and it cannot change without a USB reflash of each board.** Back up private keys outside the repo; run the negative tests of checklist 83 on a board before claiming OTA support. No irreversible security changes without approval. |
 | Unencrypted Wi-Fi credentials or notification leakage | Backups/logs stay private; content logging off in release, notifications RAM-only. Hardware log review remains a checklist item. Flash/NVS encryption is not silently enabled. |
 | Contract drift or unavailable build dependencies | Shared vectors/codegen/contract checks; commit dependency locks and use pinned downloads. Confirm companion-app vector results separately. |
 

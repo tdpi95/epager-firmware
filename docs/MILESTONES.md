@@ -15,8 +15,9 @@ Work on one approved milestone at a time. Each completed milestone has notes rec
 | M4 | Paper ESP-IDF project, partitions, size report | done (host-verified), awaiting review; Paper subsequently ran on hardware, with individual checks still open | [Notes](milestone-notes/M4.md), checklist 7–14 and later Paper results |
 | M4b | Paper idle clock, temperature and humidity (0.6.0) | done (host-verified), awaiting review; I2C/RTC have partial hardware results, sensor accuracy/retention remain open | [Notes](milestone-notes/M4b.md), checklist 16–20, 74 |
 | M5 | BLE custom service + ANCS client | done (host-verified); partial radio verification; full phone acceptance remains open | [Notes](milestone-notes/M5.md), checklist 39–53, 71 |
-| M6 | Transfer + firmware OTA, signing, rollback, battery checks | in progress: M6a delivered; firmware OTA integration and failure-path acceptance planned | [M6a notes](milestone-notes/M6a.md), §M6 below |
+| M6 | Transfer + firmware OTA, signing, rollback, battery checks | in progress: M6a delivered; M6b (firmware sink, self-check, rollback) built and host-tested; hardware failure-path acceptance open | [M6a notes](milestone-notes/M6a.md), [M6b notes](milestone-notes/M6b.md), §M6 below |
 | M6a | LittleFS asset sink + app icons | done (host-verified); LCD upload/drawing observed 2026-10-17; remaining device cases open | [Notes and updates](milestone-notes/M6a.md), checklist 76 |
+| M6c | Firmware update over Wi-Fi from GitHub Releases (no iOS app): daily check, Install / Remind later / Skip | **done on the Paper 2026-11-03 (contract 0.14.0, portable logic, Wi-Fi task, screens, hardware acceptance); LCD board and the visual check of the e-paper open** | [Plan](wifi-ota-plan.md), [M6c notes](milestone-notes/M6c.md) |
 | M7 | Complete hardware verification | planned for completion; bring-up and later sessions have already recorded partial evidence | [Checklist](hw-checklist.md) |
 | P1a | LCD board bring-up | done (hw-verified) 2026-10-13, awaiting review; battery characterization and long-idle touch carried forward | [Notes](milestone-notes/P1a.md), checklist 21–28 |
 | P1b | LCD colour UI, simulator, controls, weather and settings (0.8.0/0.9.0) | in progress; approved 2026-10-14; implemented features still need remaining hardware acceptance and closing notes | §P1b below, checklist 14, 27, 29–38, 54–55 |
@@ -142,7 +143,7 @@ Milestone notes are dated snapshots. Later checklist results can supersede their
 
 **Goal:** assets and signed firmware install safely over BLE, with recoverable failures.
 
-**Status:** partially delivered through M6a. The user approved doing the asset sink separately on 2026-10-17; the real firmware OTA integration remains planned. M5's complete hardware matrix is still open and must be considered before OTA device acceptance.
+**Status:** M6a and M6b delivered in code; device acceptance of the firmware OTA is open. The user approved doing the asset sink separately on 2026-10-17; the firmware OTA integration was added 2026-11-03. M5's complete hardware matrix is still open and must be considered before OTA device acceptance.
 
 ### M6a: LittleFS asset sink and app icons
 
@@ -159,17 +160,20 @@ Milestone notes are dated snapshots. Later checklist results can supersede their
 
 **Remaining hardware acceptance:** persist across reboot/power loss, interrupted upload/resume, replacement/deletion/forget/eviction on current firmware, `NO_SPACE`, real storage reporting and Paper upload/rendering. `tools/test_client` real-board icon upload is not established by the TCP/simulator flows.
 
-### Remaining M6 firmware OTA work
+### M6b: firmware OTA
+
+**Status:** implemented, builds with zero warnings, host-tested on a fake flash; **not run on a board**. [M6b notes](milestone-notes/M6b.md).
+
+**Delivered:** `components/ota` (`esp_ota_*` sink with resume, `esp_ota_end` image and signature check, project-name guard), version/battery policy connected to the running firmware, boot self-check (UI + BLE + 30 s running, 120 s timeout), mark-valid and rollback, reboot after FINISH, `Updating N%` progress on both screens (D111).
 
 **Deliverables still needed:**
 
-- Real `esp_ota_*` firmware sink with resume, signed-image verification and version/battery policy connected to the running firmware.
-- Boot self-check/mark-valid and rollback integration, progress display wired to real installs, recovery and key-handling procedures verified end to end.
+- Device verification of recovery and key-handling procedures end to end (checklist 83).
 - Key generation/signing/verification currently use ESP-IDF/`espsecure.py` and `variants/sdkconfig.signed`; no separate `tools/sign/` wrapper has been delivered.
 
-**Release tooling already present:** release-manifest schema, `tools/release/make_release.py`, CI/release/Pages workflows and browser-site builder. Local script tests and workflow files do not establish a successful GitHub release/deployment or an on-device OTA install. Confirm release location, signing secret and deployment behaviour before release.
+**Release tooling (present; v0.1.0 and v0.1.1 were published from the public repository by the release workflow, 2026-11-02/03; an on-device OTA install from them is still unverified):** release-manifest schema, `tools/release/make_release.py`, CI/release/Pages workflows and browser-site builder. Local script tests and workflow files do not establish a successful GitHub release/deployment or an on-device OTA install. Confirm release location, signing secret and deployment behaviour before release.
 
-**Acceptance on hardware:** signed image installs and is marked valid; unsigned/wrong-key image is rejected at FINISH; failing self-check rolls back; downgrade/low-battery refusal works; disconnect resumes; power loss leaves the old firmware usable and config/assets intact; bonds/NVS/assets survive an update. Record actual release-config unsigned/signed sizes and slot headroom. Existing signed USB builds and the portable OTA model do not satisfy these checks.
+**Acceptance on hardware:** signed image installs and is marked valid; unsigned/wrong-key image is rejected at FINISH; failing self-check rolls back; downgrade/low-battery refusal works; disconnect resumes; power loss leaves the old firmware usable and config/assets intact; bonds/NVS/assets survive an update. Record actual release-config unsigned/signed sizes and slot headroom. Existing signed USB builds, the portable OTA model and the host tests of the sink do not satisfy these checks.
 
 **Tests:** host state-machine/failure simulations plus scripted on-device negative paths after implementation. No irreversible Secure Boot, flash-encryption or anti-rollback eFuse change is authorized by this milestone description.
 
@@ -256,6 +260,7 @@ One file per completed milestone/subpart under `docs/milestone-notes/`: delivere
 - [P1a: LCD board bring-up (2026-10-13)](milestone-notes/P1a.md)
 - [M5: BLE and ANCS (2026-10-14, subsequent radio evidence in checklist)](milestone-notes/M5.md)
 - [M6a: Asset sink and app icons (2026-10-17, with later fixes/results)](milestone-notes/M6a.md)
+- [M6b: Firmware OTA sink, self-check and rollback (2026-11-03)](milestone-notes/M6b.md)
 
 P1b, M6 as a whole and M7 have no closing note yet; their remaining work is listed above.
 

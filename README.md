@@ -115,7 +115,7 @@ Generated files are never edited by hand. Every contract change updates `CONTRAC
 
 ## Privacy and security
 
-Notifications stay in RAM and notification content is excluded from firmware logs by default. Writes require an encrypted, bonded BLE link using LE Secure Connections. Private signing keys belong in the git-ignored `keys/` directory. See [AGENTS.md](AGENTS.md) for the full rules.
+Notifications stay in RAM and notification content is excluded from firmware logs by default. Writes require an encrypted, bonded BLE link using LE Secure Connections. Once a day (switch: config key `update.auto_check`) a board with Wi-Fi asks GitHub's release servers for the newest firmware manifest; GitHub sees the board's public IP address and a user agent with the firmware version and board ID, nothing else, and nothing is installed without the person's choice on the board. Private signing keys belong in the git-ignored `keys/` directory. See [AGENTS.md](AGENTS.md) for the full rules.
 
 ## Repository layout
 
