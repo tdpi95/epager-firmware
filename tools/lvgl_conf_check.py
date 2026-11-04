@@ -9,11 +9,12 @@ reason; anything else fails.
 
 Needs the firmware build directory (build/paper, compile_commands.json) and the host LVGL sources
 (.deps/lvgl-9.5.0, fetched by tests/host). Run inside the ESP-IDF environment.
-Usage: tools/lvgl_conf_check.py
+Usage: tools/lvgl_conf_check.py   (EPAGER_FW_BUILD=<dir> for a firmware build directory other than build/paper)
 """
 from __future__ import annotations
 
 import json
+import os
 import re
 import shlex
 import subprocess
@@ -24,7 +25,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parent.parent
 LVGL_HOST = REPO / ".deps" / "lvgl-9.5.0"
 CONF_DIR = REPO / "components" / "ui_common" / "lv_conf"
-FW_BUILD = REPO / "build" / "paper"
+FW_BUILD = Path(os.environ.get("EPAGER_FW_BUILD", REPO / "build" / "paper"))
 
 # Differences that are expected: macro -> reason. Keep this list short and explained.
 ALLOWED: dict[str, str] = {
@@ -34,6 +35,7 @@ ALLOWED: dict[str, str] = {
     "LV_BUILD_EXAMPLES": "the host build compiles only src/, the firmware turns examples off in sdkconfig",
     "LV_BUILD_DEMOS": "same as LV_BUILD_EXAMPLES",
     "LV_FS_DEFAULT_DRIVER_LETTER": "'\\0' vs 0: the same value (no default drive letter)",
+    "LV_MEM_SIZE": "the host pool is larger so tests can draw clock faces; the firmware's is decided in M8b (docs/clock-faces-plan.md)",
 }
 
 PROBE = '#include "lvgl.h"\n'

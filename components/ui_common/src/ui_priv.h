@@ -9,8 +9,28 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "epager/board_util.h"
 #include "epager/ui.h"
 #include "lvgl.h"
+
+/* Firmware compiles in only the layouts its variant enables (components/ui_common/Kconfig); the host
+ * build has both. */
+#ifdef ESP_PLATFORM
+#include "sdkconfig.h"
+#ifdef CONFIG_EPAGER_UI_MONO
+#define UI_HAS_MONO 1
+#else
+#define UI_HAS_MONO 0
+#endif
+#ifdef CONFIG_EPAGER_UI_COLOUR
+#define UI_HAS_COLOUR 1
+#else
+#define UI_HAS_COLOUR 0
+#endif
+#else
+#define UI_HAS_MONO 1
+#define UI_HAS_COLOUR 1
+#endif
 
 #define TIME_UNKNOWN UINT32_MAX
 
@@ -159,6 +179,22 @@ int ui_weather_icon_for(uint8_t cond, bool day);
 void ui_wifi_qr_data(char *out, size_t cap, const char *ssid, const char *pw);
 /* Report an action from touch to the firmware (ui_params_t.on_action). */
 void ui_emit(ui_action_t action, uint32_t arg);
+/* Local time (UTC plus the time zone) as shown; false while the time is unknown. */
+bool ui_local_time(board_datetime_t *t);
+
+/* The clock face on the idle screen (ui_face.c; contracts/asset-formats.md "Clock faces"). The layouts ask
+ * ui_face_sync() first: it (re)loads the face when the selection, the option values, the installed assets or the
+ * screen size changed, and falls back to Classic (the layouts' own idle screen) on any failure. */
+void ui_face_sync(void);
+/* A face, not Classic, is what the idle screen shows. */
+bool ui_face_active(void);
+/* Draw the face (show) or hide all of it. The face covers the whole screen: the layout hides its own idle objects, its
+ * status line and its badge while a face shows. */
+void ui_face_apply(bool show);
+/* Free the face and its images, before lv_deinit. */
+void ui_face_reset(void);
+/* The text the face shows now, one line per element (tests and tools: appended to ui_visible_text). */
+size_t ui_face_text(char *out, size_t cap);
 
 /* The settings list (ui_settings.c, PLAN D96, D99). Rows that need Wi-Fi are left out on a board without it. */
 #define UI_SETTINGS_ROWS 7u /* rows on screen at once on the Paper */

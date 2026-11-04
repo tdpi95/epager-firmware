@@ -1,6 +1,6 @@
 # Plan: installable clock faces (M8)
 
-**Status: approved 2026-11-04 (D113), with the open defaults below as written. Nothing is implemented; M8a is next.**
+**Status: approved 2026-11-04 (D113), with the open defaults below as written. M8a (contract 0.15.0, parser, renderer, built-in faces) is done on the host (2026-11-04); M8b is next. Where the code differs from this text, [the M8a notes](milestone-notes/M8a.md) and `contracts/asset-formats.md` are right.**
 
 **User decisions, 2026-11-04:**
 - The feature is called **clock face** (`clock_face` in the contract and code): the board is a desk display, not a watch, and the UI already calls its idle screen the clock screen.
@@ -172,3 +172,11 @@ Three sub-milestones, each ending with notes and a stop for review, like M6a-c.
 ## Documents to change as the work lands
 
 `AGENTS.md` (repo layout: `components/clock_face`, `tools/clock_face`; commands with their status), `docs/PLAN.md` (§3 architecture, §7 requirements: assets; D113), `docs/MILESTONES.md` (M8 status), `contracts/*` as listed, `docs/hw-checklist.md` (item 85), `docs/clock-faces.md` (developer guide, M8c), `docs/milestone-notes/M8a.md`, `M8b.md`, `M8c.md` at the end of each part.
+
+## As built in M8a (differences from the text above)
+
+- **Payload:** the description is a TLV, but image pixels do not fit a TLV value (its length is 16 bits, an LCD image is 142 KB): the payload is `tlv_len`, the TLV, padding to a multiple of 4 from the start of the file, then a data area with every image's pixels in table order.
+- **Sources and formats:** `time` (the Classic `HH:MM`) was added next to `hour` and `minute`; `text` may also show a `literal`; the format tokens are `pad2`, `plain`, `short`, `long`, `year2`, `unit`, `nounit` (no single-letter weekday). Fonts are roles (`small`, `small_bold`, `large_bold`, `clock`), not the generated fonts' names, so one description serves both boards. Icons: `weather`, `ble`, `wifi`, `charging` (more are additive later).
+- **`mono1` in a face is a mask:** its black pixels are ink and take the element's colour (on both boards); `rgb565` and `rgb565a8` are drawn as they are.
+- **Renderer:** the file is read into a buffer, parsed, its images are copied into aligned buffers outside LVGL's pool and the file buffer is freed; a face that needs more LVGL objects than the pool has falls back to Classic. **The Paper's idle screen leaves about 5 KB of the 48 KB pool: faces need M8b's decision** (pool size or PSRAM, checklist 85).
+- **Not in M8a (M8b):** the transfer layer storing and listing `origin`, the `XFER_FINISH` check of a face file (`cf_parse` as the asset check), `asset_support` for `clock_face`, budgets, the option files, `app.c` glue. The `epager-face` tool has `build` and `check` only (as `python -m clock_face`), the rest is M8c.

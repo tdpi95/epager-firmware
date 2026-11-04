@@ -20,7 +20,15 @@
 #define LV_USE_STDLIB_SPRINTF LV_STDLIB_BUILTIN
 /* Measured peak of the host UI tests (longest text, 8 cards, icons): 24.4 KB. 2x headroom; this is
  * internal RAM on the Paper (static pool), so do not oversize. Re-measure when the real UI lands. */
+#ifdef ESP_PLATFORM
 #define LV_MEM_SIZE (48 * 1024U)
+#else
+/* The host builds (tests, fake board) also draw clock faces (M8a): a face costs about 30-100 LVGL objects, and the
+ * Paper's idle screen leaves only about 5 KB of the firmware's 48 KB pool (measured on the fake board, 2026-11-04).
+ * What the boards need is decided in M8b from a measurement on the hardware (a larger pool, or in PSRAM): until
+ * then a face that does not fit falls back to Classic (ui_face.c checks the pool before it builds). */
+#define LV_MEM_SIZE (192 * 1024U)
+#endif
 #define LV_USE_OS LV_OS_NONE
 #define LV_USE_LOG 0
 #define LV_USE_SYSMON 0

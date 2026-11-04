@@ -107,6 +107,38 @@ def delete_app_icon(board: FakeBoard, app_id: str) -> None:
         s.close()
 
 
+ASSET_TYPE_CLOCK_FACE = 6
+
+
+def install_clock_face(board: FakeBoard, ident: str, data: bytes, want: str = "OK") -> None:
+    """Install a clock face file (a clock_face_v1 asset) under `ident` through the transfer protocol."""
+    install_asset(board, ASSET_TYPE_CLOCK_FACE, ident, data, want)
+
+
+def delete_clock_face(board: FakeBoard, ident: str) -> None:
+    s = _Session(board)
+    try:
+        s.request("ASSET_DELETE", {"asset_type": ASSET_TYPE_CLOCK_FACE, "id": ident})
+    finally:
+        s.close()
+
+
+def asset_list(board: FakeBoard, asset_type: int | None = None) -> list[dict]:
+    """ASSET_LIST, every page: the installed assets (of one type) as {asset_type, id, size, version?, origin?}."""
+    out: list[dict] = []
+    s = _Session(board)
+    try:
+        while True:
+            r = s.request("ASSET_LIST", {"offset": len(out), "limit": 16})
+            page = r.get("asset", [])
+            out += page
+            if not page or len(out) >= r.get("total", 0):
+                break
+    finally:
+        s.close()
+    return [a for a in out if asset_type is None or a["asset_type"] == asset_type]
+
+
 def time_sync(board: FakeBoard, utc_s: int, tz_offset_min: int = 0) -> None:
     """TIME_SYNC as the app sends it: sets the clock, the RTC and time.tz_offset_min."""
     s = _Session(board)

@@ -885,10 +885,14 @@ static void apply(void)
     const bool settings = settings_open();
     const npipe_notif_t *n = setup || pairing || settings ? NULL : ui_current_card();
     const bool idle = ui.powered && !n && !setup && !pairing && !settings;
+    if (idle) {
+        ui_face_sync(); /* (re)loads the selected clock face when something changed; Classic when it cannot */
+    }
+    const bool face = idle && ui_face_active(); /* a clock face covers the whole screen: no status bar, no badge */
     lv_obj_t *bar[] = {c.bar, c.bar_line, c.bar_left, c.bar_right, c.link};
     lv_obj_t *card[] = {c.stripe, c.card_box, c.tile, c.builtin, c.app_icon, c.app, c.counter, c.title, c.body};
     lv_obj_t *idle_items[] = {c.clock, c.ampm, c.date};
-    const bool badge = idle && ui.n_cards > 0;
+    const bool badge = idle && !face && ui.n_cards > 0;
     ui_set_hidden(c.badge, !badge);
     if (badge) {
         char num[8];
@@ -903,7 +907,7 @@ static void apply(void)
     lv_obj_t *setup_items[] = {c.setup_text, c.close_btn};
     for (size_t i = 0; i < sizeof(bar) / sizeof(bar[0]); i++) {
         if (bar[i]) {
-            ui_set_hidden(bar[i], !ui.powered);
+            ui_set_hidden(bar[i], !ui.powered || face);
         }
     }
     for (size_t i = 0; i < sizeof(card) / sizeof(card[0]); i++) {
@@ -912,9 +916,9 @@ static void apply(void)
         }
     }
     for (size_t i = 0; i < sizeof(idle_items) / sizeof(idle_items[0]); i++) {
-        ui_set_hidden(idle_items[i], !idle);
+        ui_set_hidden(idle_items[i], !idle || face);
     }
-    if (!idle) {
+    if (!idle || face) {
         lv_obj_t *row[] = {c.wx_icon, c.wx_temp, c.wx_detail, c.wx_place};
         for (size_t i = 0; i < sizeof(row) / sizeof(row[0]); i++) {
             ui_set_hidden(row[i], true);
@@ -949,6 +953,7 @@ static void apply(void)
         char buf[48];
         snprintf(buf, sizeof(buf), "ePager\n%s", ui_strings()->off);
         ui_set_text(c.off, buf);
+        ui_face_apply(false);
         return;
     }
     if (setup) {
@@ -959,13 +964,17 @@ static void apply(void)
         apply_settings();
     } else if (n) {
         apply_card(n);
-    } else {
+    } else if (!face) {
         apply_idle();
     }
     if (!n) {
         c.shown_id = 0;
     }
     apply_status(idle);
+    if (face && c.wifi) {
+        ui_set_hidden(c.wifi, true); /* the status bar's Wi-Fi icon is not part of a face */
+    }
+    ui_face_apply(face);
 }
 
 /* Neither the label nor a parent (a button) is hidden. */

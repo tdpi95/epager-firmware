@@ -10,6 +10,7 @@
 #include "epager/sim_lcd.h"
 #include "epager/ui.h"
 #include "epager/xfer.h"
+#include "face_test.h"
 #include "lvgl.h"
 #include "unity.h"
 
@@ -1101,6 +1102,120 @@ static void test_brightness_step(void)
     TEST_ASSERT_EQUAL_UINT8(70, ui_brightness_step(76, false)); /* 76 -> 80 -> 70 */
 }
 
+
+/* ---------------------------------------------------------------- clock faces */
+
+#define T_14_27_05 1791728825u /* Sunday 2026-10-11 14:27:05 UTC */
+
+static ui_config_t face_cfg(void)
+{
+    ui_config_t c = cfg();
+    c.tz_offset_min = 0;
+    return c;
+}
+
+static uint16_t pixel(uint32_t x, uint32_t y) { return sim_lcd_frame()[y * 296u + x]; }
+
+static void test_face_builtin_faces_draw_and_fall_back(void)
+{
+    ui_set_time(T_14_27_05);
+    face_config(face_cfg(), "epager.big", NULL, 0);
+    run(300);
+    TEST_ASSERT_EQUAL_STRING("epager.big", ui_clock_face_shown());
+    TEST_ASSERT_NOT_NULL(strstr(text(), "14:27\n"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Sunday, 11 Oct"));
+    TEST_ASSERT_EQUAL_UINT16(0x10c4, pixel(2, 2)); /* #111827 as RGB565: the face's page, not the light Classic one */
+    face_config(face_cfg(), "epager.night", NULL, 0);
+    run(300);
+    TEST_ASSERT_EQUAL_STRING("epager.night", ui_clock_face_shown());
+    TEST_ASSERT_NOT_NULL(strstr(text(), "14:27\n")); /* the clock font as text */
+    ui_status_t st = {.battery_pct = 63, .wifi_state = 0};
+    ui_set_status(&st);
+    run(300);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "63\n")); /* inside the battery ring */
+    face_config(face_cfg(), "epager.nope", NULL, 0);
+    run(300);
+    TEST_ASSERT_EQUAL_STRING("", ui_clock_face_shown());
+    TEST_ASSERT_EQUAL_UINT32(1, ui_clock_face_errors());
+    TEST_ASSERT_NOT_EQUAL_UINT16(0x10c4, pixel(2, 2));
+    TEST_ASSERT_EQUAL_UINT32(0, state().violations);
+}
+
+static void test_face_colour_option_and_another_screen(void)
+{
+    ui_set_time(T_14_27_05);
+    face_config(face_cfg(), "epager.night", NULL, 0);
+    run(300);
+    const uint16_t page = pixel(2, 2);
+    TEST_ASSERT_EQUAL_UINT16(0x0022, page); /* #020617 */
+    static const uint8_t no_ring[] = {3, 0, 1, 0};
+    face_config(face_cfg(), "epager.night", no_ring, sizeof(no_ring));
+    ui_status_t st = {.battery_pct = 63};
+    ui_set_status(&st);
+    run(300);
+    TEST_ASSERT_NULL(strstr(text(), "63\n")); /* the ring and its number are off */
+    static uint8_t file[FACE_FILE_MAX];
+    size_t n = vector_face("paper_min", file, sizeof(file)); /* made for 200x200 */
+    install_face(&blob, "test.min", file, n);
+    face_config(face_cfg(), "test.min", NULL, 0);
+    run(300);
+    TEST_ASSERT_EQUAL_STRING("", ui_clock_face_shown());
+    TEST_ASSERT_EQUAL_UINT32(1, ui_clock_face_errors());
+    n = vector_face("lcd_min", file, sizeof(file));
+    install_face(&blob, "test.min", file, n);
+    run(300);
+    TEST_ASSERT_EQUAL_STRING("test.min", ui_clock_face_shown());
+    TEST_ASSERT_EQUAL_UINT16(0x0000, pixel(2, 2)); /* its 10x10 black square */
+    n = vector_face("lcd_heavy", file, sizeof(file));
+    install_face(&blob, "test.heavy", file, n);
+    face_config(face_cfg(), "test.heavy", NULL, 0);
+    run(300);
+    TEST_ASSERT_EQUAL_STRING("", ui_clock_face_shown());
+    TEST_ASSERT_EQUAL_UINT32(2, ui_clock_face_errors());
+}
+
+static void test_face_badge_and_update_mark(void)
+{
+    ui_set_time(T_14_27_05);
+    face_config(face_cfg(), "epager.big", NULL, 0);
+    npipe_notif_t a = notif(1, PROTO_CATEGORY_SOCIAL, "Zalo", "First", "a"), b = notif(2, PROTO_CATEGORY_EMAIL, "Mail", "Second", "b");
+    ui_on_notification(&a);
+    ui_on_notification(&b);
+    run(2100);
+    drag(148, 200, 148, 60, 6); /* swipe up: the clock, the notifications stay */
+    run(300);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "\n2\n")); /* the badge, on a built-in face */
+    ui_update_t u = {.state = UI_UPD_AVAILABLE, .mark = true};
+    snprintf(u.version, sizeof(u.version), "0.3.0");
+    ui_set_update(&u);
+    run(300);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "!\n")); /* the firmware's mark: the face does not draw update_available */
+    static uint8_t file[FACE_FILE_MAX];
+    const size_t n = vector_face("lcd_min", file, sizeof(file));
+    install_face(&blob, "test.min", file, n);
+    face_config(face_cfg(), "test.min", NULL, 0);
+    run(300);
+    TEST_ASSERT_EQUAL_STRING("test.min", ui_clock_face_shown());
+    TEST_ASSERT_NULL(strstr(text(), "\n2\n")); /* never on an installed face */
+    TEST_ASSERT_NOT_NULL(strstr(text(), "!\n"));
+}
+
+static void test_face_other_screens_cover_it(void)
+{
+    ui_set_time(T_14_27_05);
+    face_config(face_cfg(), "epager.big", NULL, 0);
+    run(300);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Sunday, 11 Oct")); /* the face's date */
+    drag(148, 200, 148, 60, 6); /* swipe up on the clock: the settings (D99) */
+    run(300);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings"));
+    TEST_ASSERT_NULL(strstr(text(), "Sunday, 11 Oct")); /* the face is under the settings, not on top */
+    ui_set_power(false);
+    run(300);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Powered off"));
+    TEST_ASSERT_NULL(strstr(text(), "Sunday, 11 Oct"));
+}
+
 int main(void)
 {
     UNITY_BEGIN();
@@ -1137,5 +1252,9 @@ int main(void)
     RUN_TEST(test_pairing_passkey);
     RUN_TEST(test_wifi_setup_screen);
     RUN_TEST(test_lvgl_pool_headroom);
+    RUN_TEST(test_face_builtin_faces_draw_and_fall_back);
+    RUN_TEST(test_face_colour_option_and_another_screen);
+    RUN_TEST(test_face_badge_and_update_mark);
+    RUN_TEST(test_face_other_screens_cover_it);
     return UNITY_END();
 }

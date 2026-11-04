@@ -1,0 +1,32 @@
+{
+  "meta": {"id": "epager.night", "name": "Night", "name_vi": "Ban đêm", "author": "ePager", "version": "1.0.0",
+           "min_contract": "0.15.0", "update_anchor": "top_right"},
+  "options": [
+    {"id": 1, "type": "toggle", "label": "Weather", "label_vi": "Thời tiết", "default": true},
+    {"id": 2, "type": "colour", "label": "Accent", "label_vi": "Màu nhấn", "default": 0,
+     "choices": [{"label": "Cyan", "label_vi": "Xanh lơ", "colour": "#22d3ee"},
+                 {"label": "Amber", "label_vi": "Hổ phách", "colour": "#f59e0b"},
+                 {"label": "Green", "label_vi": "Xanh lá", "colour": "#4ade80"}]},
+    {"id": 3, "type": "toggle", "label": "Battery ring", "label_vi": "Vòng pin", "default": true}
+  ],
+  "boards": {
+    "lcd": {
+      "elements": [
+        {"kind": "rect", "x": 0, "y": 0, "w": 296, "h": 240, "fill": true, "colour": "#020617"},
+        {"kind": "text", "x": 0, "y": 26, "w": 296, "h": 99, "font": "clock", "align": "center", "source": "time", "colour": "white"},
+        {"kind": "text", "x": 0, "y": 128, "w": 296, "h": 28, "font": "small_bold", "align": "center", "source": "date",
+         "colour_option": 2},
+        {"kind": "arc", "x": 14, "y": 170, "w": 56, "h": 56, "source": "battery_pct", "arc_start": 135, "arc_end": 45, "thickness": 6,
+         "colour_option": 2, "visible_if": [{"option": 3, "equals": 1}]},
+        {"kind": "text", "x": 14, "y": 188, "w": 56, "h": 24, "font": "small", "align": "center", "source": "battery_pct",
+         "format": "nounit", "colour": "white", "visible_if": [{"option": 3, "equals": 1}]},
+        {"kind": "icon", "x": 90, "y": 180, "w": 32, "h": 32, "icon": "weather", "visible_if": [{"option": 1, "equals": 1}]},
+        {"kind": "text", "x": 128, "y": 180, "w": 80, "h": 28, "font": "large_bold", "source": "weather_temp", "colour": "white",
+         "visible_if": [{"option": 1, "equals": 1}]},
+        {"kind": "text", "x": 128, "y": 208, "w": 120, "h": 24, "font": "small", "source": "room_temp", "colour": "#9ca3af"},
+        {"kind": "icon", "x": 262, "y": 186, "w": 16, "h": 16, "icon": "ble", "colour": "#9ca3af"},
+        {"kind": "icon", "x": 262, "y": 208, "w": 16, "h": 16, "icon": "wifi", "colour": "#9ca3af"}
+      ]
+    }
+  }
+}

@@ -93,9 +93,12 @@ Stock firmware was “Xiaozhi ESP32 Mod” 2.4.2.1, with two 5376 KiB app slots 
      -> queued status/readings applied by the app task
 
  + components/ota: esp_ota_* sink (ota_sink.c portable), self-check, mark-valid / rollback (M6b, D111)
+
+ clock faces (M8a, D113-D116): asset file -> clock_face (portable: cf_parse, cf_opts, cf_eval)
+     -> ui_common/ui_face.c (LVGL objects; Classic = the layouts' own idle screen is the fallback)
 ```
 
-- **Portable C11:** protocol, notification pipeline, config store, transfer, core and weather, plus portable helpers in net, BLE and ANCS. No ESP-IDF/FreeRTOS includes in these parts; platform needs use storage, firmware-sink and clock/battery interfaces. Caller-owned buffers and explicit lengths keep parser and notification hot paths bounded.
+- **Portable C11:** protocol, notification pipeline, config store, transfer, core, weather and clock_face (the clock face parser and evaluator, M8a), plus portable helpers in net, BLE and ANCS. No ESP-IDF/FreeRTOS includes in these parts; platform needs use storage, firmware-sink and clock/battery interfaces. Caller-owned buffers and explicit lengths keep parser and notification hot paths bounded.
 - **Threading:** the NimBLE host queues events; one app task owns the core, ANCS state machine and LVGL UI, services keys/radio/network events, and performs core storage operations. There is no separate UI task consuming a notification-event queue. The Wi-Fi task fetches data independently and reports results for the app task to apply. See [app.c](../components/app/src/app.c).
 - **Notification model:** both sources become `npipe_notif_t` callbacks with a board-local id, source, added/modified/removed kind, category, priority, flags, app id/name, title/subtitle/body and UTC timestamp. The UI does not branch on phone source. Notifications stay in RAM; seen apps and policies are persisted separately.
 - **Board selection:** `variants/common.cmake` selects one board with `-DEPAGER_BOARD=<folder>`. `board.cmake` names its product class and target chip. Settings layer common → chip → variant → board → optional signing / extra fragments. Use a fresh build directory for a new configuration; an existing `sdkconfig` retains old values.
@@ -113,12 +116,13 @@ The current [board API](../components/board_api/include/epager/board_api.h) prov
 
 | Area | Status |
 | --- | --- |
-| Contracts, portable core and simulator (M1–M3) | Implemented, with recorded host tests, shared vectors, sanitizer checks and golden images. Current contract is 0.13.0; no contract change is part of this refresh. |
+| Contracts, portable core and simulator (M1–M3) | Implemented, with recorded host tests, shared vectors, sanitizer checks and golden images. Current contract is 0.15.0 (clock faces, M8a). |
 | Firmware and idle UI (M4/M4b), LCD bring-up (P1a) | Implemented. Both boards have run firmware; hardware coverage is per checklist item, not a blanket pass. |
 | BLE and ANCS (M5) | Firmware glue and portable state machine implemented and host-tested. Android pairing/reconnect/encrypted communication and iPad pairing/service discovery have partial hardware evidence; complete interoperability remains open (§9). |
 | LCD product UI (P1b) | Implemented UI, simulator, settings and weather; milestone remains in progress pending its remaining acceptance checks and review. |
 | Assets (M6 asset half) | LittleFS app-icon storage and UI integration implemented. LCD upload/drawing verified after the open-file-size fix on 2026-10-17. Other device cases remain open. |
 | Firmware OTA (M6b) | `components/ota` sink on the inactive slot, self-check (UI, BLE, 30 s running; 120 s timeout), mark-valid and rollback wired in `app.c`; builds, host-tested on a fake flash ([notes](milestone-notes/M6b.md)). Signature rejection, rollback, resume after power loss and bonds/assets surviving an update still need a board (checklist 83). |
+| Clock faces (M8) | **M8a done on the host (2026-11-04, [notes](milestone-notes/M8a.md)):** contract 0.15.0, `components/clock_face` (parser, options, evaluator; vectors, fuzz, 96 % coverage), the renderer `ui_face.c`, built-in faces (Big, Minimal on the Paper; Big, Night on the LCD), fake-board commands and golden images. Nothing is installed on a board yet: `asset_support`, budgets, the Settings pages and the hardware checks are M8b; the LVGL pool is too small for a face on the Paper (found in M8a, open for M8b). |
 | Hardware completion (M7) | Remaining checklist work includes throughput, power/current measurements, full phone interoperability and device update tests. |
 
 Continue one approved milestone at a time. A documentation refresh does not close an acceptance criterion, approve a flash or start a new milestone.
@@ -175,7 +179,7 @@ The 1.4× rule permits an image of about **2.86 MiB**. Assets total 8,257,536 by
 | Persistence and privacy | Notification history in RAM only; config, bonds and seen apps in NVS; app icons and diagnostics in LittleFS. Notification content is excluded from firmware logs by default. |
 | UI languages | English and Vietnamese, with generated fonts and emoji support. |
 | Assets | App icons only are advertised by firmware: Paper 24 × 24 `mono1` (max 88 B), LCD 32 × 32 `rgb565a8` (max 3088 B). Forgetting/evicting an app removes its icon. Backgrounds/themes/fonts are not advertised as supported uploads. |
-| Clock faces | **Planned (M8, approved 2026-11-04, D113; not implemented): [clock-faces-plan.md](clock-faces-plan.md).** Data-only `clock_face` assets (layout, image digit sets, per-face options) installed over BLE by the phone apps, from a GitHub gallery or a file; Classic (today's idle screen) stays as the fallback. An iOS app is planned later (user, 2026-11-04). |
+| Clock faces | **M8 approved 2026-11-04 (D113); M8a (contract 0.15.0, parser, renderer, built-in faces) done on the host, M8b (firmware) and M8c (tools, gallery) not started: [clock-faces-plan.md](clock-faces-plan.md), [M8a](milestone-notes/M8a.md).** Data-only `clock_face` assets (layout, image digit sets, per-face options) installed over BLE by the phone apps, from a GitHub gallery or a file; Classic (today's idle screen) stays as the fallback. An iOS app is planned later (user, 2026-11-04). |
 | OTA direction | **Updates over Wi-Fi from the public GitHub Releases are required (user, 2026-11-03: there is no iOS app); implemented and run on the Paper: [wifi-ota-plan.md](wifi-ota-plan.md), [M6c](milestone-notes/M6c.md).** BLE OTA stays for the Android app. Signed application updates without hardware Secure Boot; downgrade refusal and a 30% low-battery threshold are intended. Portable policies and the device-side integration (M6b, D111) exist; both are unverified on a board. |
 
 ### 7b. LCD recovery and power constraints

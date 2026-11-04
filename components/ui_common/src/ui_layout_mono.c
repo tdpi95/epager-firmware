@@ -761,8 +761,12 @@ static void apply(void)
                                  ? &ui.cards[ui.cur]
                                  : NULL;
     const bool idle = ui.powered && !n && !setup && !pairing && !settings;
-    ui_set_hidden(m.foot_left, !ui.powered || setup || settings);
-    ui_set_hidden(m.foot_right, !ui.powered || setup || settings);
+    if (idle) {
+        ui_face_sync(); /* (re)loads the selected clock face when something changed; Classic when it cannot */
+    }
+    const bool face = idle && ui_face_active(); /* a clock face covers the whole screen: no header, footer or badge */
+    ui_set_hidden(m.foot_left, !ui.powered || setup || settings || face);
+    ui_set_hidden(m.foot_right, !ui.powered || setup || settings || face);
     ui_set_hidden(m.bar, !ui.powered || idle || setup || pairing); /* the cards and the settings have a header */
     ui_set_hidden(m.rule, !ui.powered || idle || setup || settings);
     if (!settings) { /* apply_settings shows its rows again */
@@ -772,11 +776,11 @@ static void apply(void)
             ui_set_hidden(m.set_value[i], true);
         }
     }
-    ui_set_hidden(m.clock_box, !idle);
-    ui_set_hidden(m.clock, !idle);
-    ui_set_hidden(m.ampm, !idle);
-    ui_set_hidden(m.date, !idle);
-    if (!idle) { /* apply_idle shows its rows again */
+    ui_set_hidden(m.clock_box, !idle || face);
+    ui_set_hidden(m.clock, !idle || face);
+    ui_set_hidden(m.ampm, !idle || face);
+    ui_set_hidden(m.date, !idle || face);
+    if (!idle || face) { /* apply_idle shows its rows again */
         lv_obj_t *rows[] = {m.wx_icon.obj, m.wx_hilo, m.rain_icon.obj, m.wx_rain, m.divider,
                             m.temp_icon.obj, m.temp, m.rh_icon.obj, m.rh};
         for (size_t i = 0; i < sizeof(rows) / sizeof(rows[0]); i++) {
@@ -784,7 +788,7 @@ static void apply(void)
         }
     }
     /* at most UI_MAX_CARDS: one digit; the footer's left text (a software update) takes its place */
-    const bool badge = idle && ui.n_cards > 0 && ui.st.ota_pct < 0;
+    const bool badge = idle && !face && ui.n_cards > 0 && ui.st.ota_pct < 0;
     ui_set_hidden(m.badge, !badge);
     if (badge) {
         lv_label_set_text_fmt(m.badge, "%u", (unsigned)ui.n_cards);
@@ -814,6 +818,7 @@ static void apply(void)
     if (!ui.powered) {
         lv_label_set_text_fmt(m.off, "ePager\n%s", s->off);
         apply_status_right(); /* hides the icon */
+        ui_face_apply(false);
         return;
     }
 
@@ -826,7 +831,9 @@ static void apply(void)
     } else if (!n) {
         lv_label_set_text(m.app, "ePager");
         lv_label_set_text(m.counter, "");
-        apply_idle();
+        if (!face) {
+            apply_idle();
+        }
     } else {
         lv_label_set_text(m.app, n->app_name_len ? n->app_name : n->app_id);
         snprintf(buf, sizeof(buf), "%u/%u", (unsigned)(ui.cur + 1), (unsigned)ui.n_cards);
@@ -868,7 +875,8 @@ static void apply(void)
         lv_label_set_text(m.foot_left, "--:--");
     }
     apply_status_right();
-    if (setup || settings || notice) {
+    ui_face_apply(face);
+    if (setup || settings || notice || face) {
         ui_set_hidden(m.link, true); /* the hint, or the message, takes the footer */
         ui_set_hidden(m.wifi_icon.obj, true);
         ui_set_hidden(m.bolt_icon.obj, true);

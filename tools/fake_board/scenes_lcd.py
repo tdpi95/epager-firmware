@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from typing import Callable
 
-from . import loopback, sample_icons
+from . import loopback, sample_faces, sample_icons
 from .board import BoardConfig, FakeBoard
 from .native import BTN_DOWN
 from .scenes import TS, VI_BODY, VI_TITLE, Frames, post
@@ -120,6 +120,93 @@ def scene_badge() -> Frames:
     settle(b)
     swipe(b, 148, 200, 148, 60)  # up: back to the clock screen, the notifications stay
     return [("badge", rgb(b))]
+
+
+def face_board() -> FakeBoard:
+    b = board()
+    loopback.time_sync(b, TS + 2 * 3600 + 27 * 60, 420)  # 15:57 local
+    b.set_weather(31.2, 1, True, 32.1, 24.6, 86, "Ho Chi Minh City")
+    b.set_wifi_state("connected")
+    b.set_battery(63)
+    settle(b)
+    return b
+
+
+def select_face(b: FakeBoard, ident: str, opts: list[int] | None = None) -> None:
+    loopback.config_set(b, {"ui.clock_face_id": ident, "ui.clock_face_opts": bytes(opts or []).hex()})
+    settle(b)
+
+
+def scene_face_big() -> Frames:
+    """The built-in face Big: seven-segment digits as masks recoloured by an option, then another colour with the
+    weather and the date off, then 12-hour in Vietnamese with Fahrenheit."""
+    b = face_board()
+    select_face(b, "epager.big")
+    assert b.clock_face_shown() == "epager.big"
+    out: Frames = [("face_big", rgb(b))]
+    select_face(b, "epager.big", [3, 1, 1, 0, 2, 0])  # digits amber, weather off, date off
+    out.append(("face_big_amber_bare", rgb(b)))
+    loopback.config_set(b, {"ui.clock_24h": False, "ui.temp_unit": 1, "ui.language": 1})
+    select_face(b, "epager.big", [3, 2])  # digits green
+    out.append(("face_big_green_12h_vi_f", rgb(b)))
+    return out
+
+
+def scene_face_night() -> Frames:
+    """The built-in face Night: the clock font, a battery ring (an arc), the weather and the room."""
+    b = face_board()
+    b.set_climate(23.73, 62.97)
+    select_face(b, "epager.night")
+    out: Frames = [("face_night", rgb(b))]
+    b.set_battery(12)
+    select_face(b, "epager.night", [2, 1])  # amber
+    out.append(("face_night_amber_low_battery", rgb(b)))
+    b.set_battery(100)
+    b.set_weather(-3.4, 65, False, 1.0, -5.5, 100, "Sa Pa")
+    select_face(b, "epager.night", [2, 2, 1, 0, 3, 0])  # green, weather and ring off
+    out.append(("face_night_green_bare", rgb(b)))
+    return out
+
+
+def scene_face_firmware_parts() -> Frames:
+    """The notification badge on a built-in face, the update mark, and an installed face that gets neither the badge
+    nor (when it draws update_available) the mark."""
+    b = face_board()
+    select_face(b, "epager.big")
+    for i, (app, title, cat) in enumerate([("Zalo", "Mẹ", 4), ("Gmail", "Lịch họp thứ Hai", 6)]):
+        post(b, i, title, "…", app=app, app_id=f"app.{i}", category=cat)
+    settle(b)
+    swipe(b, 148, 200, 148, 60)  # up: the clock, the notifications stay
+    out: Frames = [("face_builtin_badge", rgb(b))]
+    b.set_update("available", version="0.3.0", size=2800000)
+    settle(b)
+    out.append(("face_builtin_badge_update_mark", rgb(b)))
+    loopback.install_clock_face(b, "sample.plain", sample_faces.big_variant("lcd", "sample.plain"))
+    select_face(b, "sample.plain")
+    out.append(("face_installed_no_badge_update_mark", rgb(b)))
+    loopback.install_clock_face(b, "sample.count", sample_faces.big_variant("lcd", "sample.count", count=True))
+    select_face(b, "sample.count")
+    out.append(("face_installed_with_count", rgb(b)))
+    loopback.install_clock_face(b, "sample.update", sample_faces.big_variant("lcd", "sample.update", draws_update=True))
+    select_face(b, "sample.update")
+    out.append(("face_installed_draws_update", rgb(b)))
+    return out
+
+
+def scene_face_fallback() -> Frames:
+    """Classic for a face that is missing, damaged, or made for the other board's screen."""
+    b = face_board()
+    select_face(b, "no.such.face")
+    out: Frames = [("face_missing_classic", rgb(b))]
+    assert (b.clock_face_shown(), b.clock_face_errors()) == ("", 1)
+    loopback.install_clock_face(b, "bad.file", sample_faces.broken("lcd"))
+    select_face(b, "bad.file")
+    out.append(("face_damaged_classic", rgb(b)))
+    loopback.install_clock_face(b, "paper.big", sample_faces.big_variant("paper", "paper.big"))
+    select_face(b, "paper.big")  # made for 200x200
+    out.append(("face_wrong_screen_classic", rgb(b)))
+    assert (b.clock_face_shown(), b.clock_face_errors()) == ("", 3)
+    return out
 
 
 def scene_emoji() -> Frames:
@@ -257,6 +344,10 @@ SCENES: dict[str, Callable[[], Frames]] = {
     "emoji": scene_emoji,
     "status": scene_status,
     "weather": scene_weather,
+    "face_big": scene_face_big,
+    "face_night": scene_face_night,
+    "face_firmware_parts": scene_face_firmware_parts,
+    "face_fallback": scene_face_fallback,
     "wifi_setup": scene_wifi_setup,
     "settings": scene_settings,
     "update": scene_update,

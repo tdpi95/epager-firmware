@@ -1,0 +1,58 @@
+{
+  "meta": {"id": "epager.big", "name": "Big", "name_vi": "Số lớn", "author": "ePager", "version": "1.0.0",
+           "min_contract": "0.15.0", "update_anchor": "top_right"},
+  "options": [
+    {"id": 1, "type": "toggle", "label": "Weather", "label_vi": "Thời tiết", "default": true},
+    {"id": 2, "type": "toggle", "label": "Date", "label_vi": "Ngày", "default": true},
+    {"id": 3, "type": "colour", "label": "Digits", "label_vi": "Màu số", "default": 0,
+     "choices": [{"label": "Cyan", "label_vi": "Xanh lơ", "colour": "#22d3ee"},
+                 {"label": "Amber", "label_vi": "Hổ phách", "colour": "#f59e0b"},
+                 {"label": "Green", "label_vi": "Xanh lá", "colour": "#4ade80"},
+                 {"label": "White", "label_vi": "Trắng", "colour": "#ffffff"}]}
+  ],
+  "boards": {
+    "paper": {
+      "images": [{"digit_set": "seg", "format": "mono1", "dir": "digits-paper"}],
+      "elements": [
+        {"kind": "rect", "x": 0, "y": 0, "w": 200, "h": 200, "fill": true, "colour": "white"},
+        {"kind": "number", "x": 0, "y": 22, "w": 200, "align": "center", "set": "seg", "source": "time", "spacing": 4},
+        {"kind": "text", "x": 140, "y": 104, "w": 52, "h": 20, "font": "small_bold", "align": "right", "source": "ampm"},
+        {"kind": "text", "x": 8, "y": 108, "w": 130, "h": 20, "font": "small_bold", "source": "date",
+         "visible_if": [{"option": 2, "equals": 1}]},
+        {"kind": "line", "x": 12, "y": 134, "w": 176, "h": 0, "thickness": 2},
+        {"kind": "icon", "x": 10, "y": 142, "w": 32, "h": 32, "icon": "weather", "visible_if": [{"option": 1, "equals": 1}]},
+        {"kind": "text", "x": 46, "y": 142, "w": 90, "h": 32, "font": "large_bold", "source": "weather_temp",
+         "visible_if": [{"option": 1, "equals": 1}]},
+        {"kind": "text", "x": 140, "y": 150, "w": 52, "h": 20, "font": "small_bold", "align": "right", "source": "weather_rain",
+         "visible_if": [{"option": 1, "equals": 1}]},
+        {"kind": "icon", "x": 104, "y": 180, "w": 16, "h": 16, "icon": "wifi"},
+        {"kind": "icon", "x": 124, "y": 180, "w": 16, "h": 16, "icon": "ble"},
+        {"kind": "icon", "x": 144, "y": 180, "w": 16, "h": 16, "icon": "charging"},
+        {"kind": "text", "x": 160, "y": 177, "w": 34, "h": 22, "font": "small", "align": "right", "source": "battery_pct"}
+      ]
+    },
+    "lcd": {
+      "images": [{"digit_set": "seg", "format": "mono1", "dir": "digits-lcd"}],
+      "elements": [
+        {"kind": "rect", "x": 0, "y": 0, "w": 296, "h": 240, "fill": true, "colour": "#111827"},
+        {"kind": "number", "x": 0, "y": 30, "w": 296, "align": "center", "set": "seg", "source": "time", "spacing": 6,
+         "colour_option": 3},
+        {"kind": "text", "x": 236, "y": 116, "w": 52, "h": 28, "font": "small_bold", "align": "right", "source": "ampm",
+         "colour": "#9ca3af"},
+        {"kind": "text", "x": 12, "y": 116, "w": 220, "h": 28, "font": "small_bold", "source": "date", "colour": "white",
+         "visible_if": [{"option": 2, "equals": 1}]},
+        {"kind": "rect", "x": 12, "y": 150, "w": 272, "h": 2, "fill": true, "colour_option": 3},
+        {"kind": "icon", "x": 12, "y": 164, "w": 32, "h": 32, "icon": "weather", "visible_if": [{"option": 1, "equals": 1}]},
+        {"kind": "text", "x": 52, "y": 166, "w": 80, "h": 28, "font": "large_bold", "source": "weather_temp", "colour": "white",
+         "visible_if": [{"option": 1, "equals": 1}]},
+        {"kind": "text", "x": 140, "y": 170, "w": 144, "h": 24, "font": "small", "align": "right", "source": "weather_place",
+         "colour": "#9ca3af", "visible_if": [{"option": 1, "equals": 1}]},
+        {"kind": "icon", "x": 180, "y": 208, "w": 16, "h": 16, "icon": "wifi", "colour": "#9ca3af"},
+        {"kind": "icon", "x": 204, "y": 208, "w": 16, "h": 16, "icon": "ble", "colour": "#9ca3af"},
+        {"kind": "icon", "x": 228, "y": 208, "w": 16, "h": 16, "icon": "charging", "colour": "#f59e0b"},
+        {"kind": "text", "x": 244, "y": 204, "w": 44, "h": 24, "font": "small", "align": "right", "source": "battery_pct",
+         "colour": "#9ca3af"}
+      ]
+    }
+  }
+}

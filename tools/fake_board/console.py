@@ -2,11 +2,16 @@
 from __future__ import annotations
 
 import shlex
+import sys
 import time
+from pathlib import Path
 from typing import Callable
 
-from . import live_weather, loopback, png, sample_icons, scenes
-from .board import FakeBoard
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from epager_proto import clockface as CF  # noqa: E402
+
+from . import live_weather, loopback, png, sample_icons, scenes  # noqa: E402
+from .board import FakeBoard  # noqa: E402
 from .native import BTN_BOOT, BTN_BOOT_PWR, BTN_DOWN, BTN_PWR, BTN_UP, BTN_UP_DOWN
 
 PRESETS = {
@@ -27,6 +32,10 @@ HELP = """commands:
   ancs-reset                           new ANCS session (drops ANCS notifications)
   icon APP_ID [zalo|ring|cross]        upload an app icon (through the transfer protocol), shown for that app
   icon-remove APP_ID                   delete it again (the category icon is used)
+  face install FILE [id=ID]            install a clock face file (id from the file unless given)
+  face select [ID]                     show an installed or built-in face (no ID: Classic); its options come back
+  face opt N V                         set option N of the shown face to V
+  face list | delete ID                the installed faces; remove one
   battery PCT [ext] [unreadable] [none]  battery level / external power / failing or no reader
   time [now|UTC_S] [tz=MIN]            TIME_SYNC as the app sends it (clock, RTC, time zone; default now, tz=0)
   clock 12|24                          clock format (config ui.clock_24h)
@@ -59,6 +68,53 @@ HELP = """commands:
   snapshot FILE.png [ZOOM]             save the panel as PNG
   state                                board state
   help | quit"""
+
+
+def _face_limits(board: FakeBoard) -> CF.Limits:
+    return CF.PAPER if board.size[2] == 1 else CF.LCD
+
+
+def _wait(board: FakeBoard, ms: int = 100) -> None:
+    """Let the UI draw what a command changed (manual clock: step it; real clock: the ticker thread does it)."""
+    if board.clock == "manual":
+        board.advance(ms)
+    else:
+        time.sleep(ms / 1000)
+
+
+def _face(board: FakeBoard, pos: list[str], kv: dict[str, str]) -> str:
+    """face install|select|opt|list|delete (the firmware's per-face option memory of M8b, done here in the console)."""
+    sub = pos[0] if pos else "list"
+    mem = board.__dict__.setdefault("_face_values", {})  # face id -> {option id: value}
+    shown = board.clock_face_shown()
+    if sub == "install":
+        data = Path(pos[1]).read_bytes()
+        ident = kv.get("id")
+        if ident is None:
+            ident = CF.parse_face(data, _face_limits(board), None).meta["id"]
+        loopback.install_clock_face(board, ident, data)
+        return f"face {ident} installed ({len(data)} bytes)"
+    if sub == "select":
+        ident = pos[1] if len(pos) > 1 else ""
+        pairs = b"".join(bytes([k, v]) for k, v in mem.get(ident, {}).items())
+        loopback.config_set(board, {"ui.clock_face_id": ident, "ui.clock_face_opts": pairs.hex()})
+        _wait(board)
+        return f"face {board.clock_face_shown() or 'classic'} (errors: {board.clock_face_errors()})"
+    if sub == "opt":
+        if not shown:
+            return "no face is shown"
+        mem.setdefault(shown, {})[int(pos[1])] = int(pos[2])
+        pairs = b"".join(bytes([k, v]) for k, v in mem[shown].items())
+        loopback.config_set(board, {"ui.clock_face_opts": pairs.hex()})
+        _wait(board)
+        return f"option {pos[1]} = {pos[2]}"
+    if sub == "delete":
+        loopback.delete_clock_face(board, pos[1])
+        mem.pop(pos[1], None)
+        _wait(board)
+        return f"face {pos[1]} deleted"
+    items = loopback.asset_list(board, loopback.ASSET_TYPE_CLOCK_FACE)
+    return "\n".join([f"{'*' if a['id'] == shown else ' '} {a['id']} {a['size']} bytes" for a in items] or ["(no faces installed)"])
 
 
 def run_command(board: FakeBoard, line: str, out: Callable[[str], None] = print) -> bool:
@@ -101,6 +157,8 @@ def run_command(board: FakeBoard, line: str, out: Callable[[str], None] = print)
         elif cmd == "icon-remove":
             loopback.delete_app_icon(board, pos[0])
             out(f"icon of {pos[0]} deleted")
+        elif cmd == "face":
+            out(_face(board, pos, kv))
         elif cmd == "ancs-reset":
             board.ancs_reset()
         elif cmd == "battery":

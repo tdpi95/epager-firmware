@@ -1,0 +1,33 @@
+{
+  "meta": {"id": "epager.minimal", "name": "Minimal", "name_vi": "Tối giản", "author": "ePager", "version": "1.0.0",
+           "min_contract": "0.15.0", "update_anchor": "top_right"},
+  "options": [
+    {"id": 1, "type": "choice", "label": "Style", "label_vi": "Kiểu", "default": 0,
+     "choices": [{"label": "Light", "label_vi": "Sáng"}, {"label": "Dark", "label_vi": "Tối"}]},
+    {"id": 2, "type": "toggle", "label": "Date", "label_vi": "Ngày", "default": true}
+  ],
+  "boards": {
+    "paper": {
+      "elements": [
+        {"kind": "rect", "x": 0, "y": 0, "w": 200, "h": 200, "fill": true, "colour": "white", "visible_if": [{"option": 1, "equals": 0}]},
+        {"kind": "rect", "x": 0, "y": 0, "w": 200, "h": 200, "fill": true, "colour": "black", "visible_if": [{"option": 1, "equals": 1}]},
+        {"kind": "text", "x": 0, "y": 50, "w": 200, "h": 78, "font": "clock", "align": "center", "source": "time", "colour": "black",
+         "visible_if": [{"option": 1, "equals": 0}]},
+        {"kind": "text", "x": 0, "y": 50, "w": 200, "h": 78, "font": "clock", "align": "center", "source": "time", "colour": "white",
+         "visible_if": [{"option": 1, "equals": 1}]},
+        {"kind": "text", "x": 150, "y": 128, "w": 40, "h": 20, "font": "small_bold", "align": "right", "source": "ampm", "colour": "black",
+         "visible_if": [{"option": 1, "equals": 0}]},
+        {"kind": "text", "x": 150, "y": 128, "w": 40, "h": 20, "font": "small_bold", "align": "right", "source": "ampm", "colour": "white",
+         "visible_if": [{"option": 1, "equals": 1}]},
+        {"kind": "line", "x": 50, "y": 146, "w": 100, "h": 0, "thickness": 2, "colour": "black",
+         "visible_if": [{"option": 1, "equals": 0}, {"option": 2, "equals": 1}]},
+        {"kind": "line", "x": 50, "y": 146, "w": 100, "h": 0, "thickness": 2, "colour": "white",
+         "visible_if": [{"option": 1, "equals": 1}, {"option": 2, "equals": 1}]},
+        {"kind": "text", "x": 0, "y": 154, "w": 200, "h": 22, "font": "small_bold", "align": "center", "source": "date", "colour": "black",
+         "visible_if": [{"option": 1, "equals": 0}, {"option": 2, "equals": 1}]},
+        {"kind": "text", "x": 0, "y": 154, "w": 200, "h": 22, "font": "small_bold", "align": "center", "source": "date", "colour": "white",
+         "visible_if": [{"option": 1, "equals": 1}, {"option": 2, "equals": 1}]}
+      ]
+    }
+  }
+}

@@ -171,6 +171,11 @@ typedef struct {
     uint8_t orientation;         /* display.orientation (quarter turns), for displays with set_rotation */
     bool weather_enabled;        /* weather.enabled (the Paper's settings list shows it) */
     bool update_auto_check;      /* update.auto_check */
+    /* The clock face on the idle screen: ui.clock_face_id ("" = Classic) and ui.clock_face_opts (id, value) pairs. An
+     * id that is not installed, a face made for another screen size and a damaged file all show Classic. */
+    char clock_face_id[33];
+    uint8_t clock_face_opts[32];
+    uint8_t clock_face_opts_len;
 } ui_config_t;
 
 /* What the Paper's settings pages list (PLAN D97): the bonded phones, the saved Wi-Fi networks, the About page. */
@@ -235,6 +240,10 @@ ui_notice_t ui_current_notice(void);
 void ui_on_notification(const npipe_notif_t *n);
 /* An asset was installed or deleted (core on_asset): app icons are looked up again at the next render. */
 void ui_assets_changed(uint8_t asset_type);
+/* The id of the clock face the idle screen draws now, "" when it is Classic (tests and tools). */
+const char *ui_clock_face_shown(void);
+/* How many times a selected face could not be shown (missing, wrong size, damaged, too big for memory). */
+uint32_t ui_clock_face_errors(void);
 ui_icon_t ui_current_icon(void);
 ui_link_icon_t ui_link_icon(void);
 ui_wifi_icon_t ui_wifi_icon(void);

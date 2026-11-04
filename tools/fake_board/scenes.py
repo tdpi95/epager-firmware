@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from typing import Callable
 
-from . import loopback, sample_icons
+from . import loopback, sample_faces, sample_icons
 from .board import BoardConfig, FakeBoard
 from .native import BTN_BOOT, BTN_PWR, HEIGHT, WIDTH
 
@@ -111,6 +111,90 @@ def scene_badge() -> Frames:
     b.button(BTN_PWR)  # newer than the newest card: the clock
     settle(b)
     return [("clock_badge", b.panel())]
+
+
+def face_board() -> FakeBoard:
+    """A board at 15:57 (UTC+7) with the sensor, the weather and Wi-Fi, for the clock face scenes."""
+    b = board()
+    loopback.time_sync(b, TS + 2 * 3600 + 27 * 60, 420)
+    b.set_climate(23.73, 62.97)
+    b.set_weather(31.2, 1, True, 32.1, 24.6, 86, "Hà Nội")
+    b.set_wifi_state("connected")
+    b.set_battery(80)
+    settle(b)
+    return b
+
+
+def select_face(b: FakeBoard, ident: str, opts: list[int] | None = None) -> None:
+    set_config(b, {"ui.clock_face_id": ident, "ui.clock_face_opts": bytes(opts or []).hex()})
+
+
+def scene_face_big() -> Frames:
+    """The built-in face Big (an image digit set, fonts, icons): 24-hour clock, then 12-hour Vietnamese in
+    Fahrenheit, then with the weather and the date switched off through its options."""
+    b = face_board()
+    select_face(b, "epager.big")
+    assert b.clock_face_shown() == "epager.big"
+    out: Frames = [("face_big", b.panel())]
+    set_config(b, {"ui.clock_24h": False, "ui.temp_unit": 1, "ui.language": 1})
+    out.append(("face_big_12h_vi_f", b.panel()))
+    set_config(b, {"ui.clock_24h": True, "ui.temp_unit": 0, "ui.language": 0})
+    select_face(b, "epager.big", [1, 0, 2, 0])  # option 1 (weather) off, option 2 (date) off
+    out.append(("face_big_options", b.panel()))
+    return out
+
+
+def scene_face_minimal() -> Frames:
+    """The built-in face Minimal (fonts and a line only): light, then dark and without the date through its options."""
+    b = face_board()
+    select_face(b, "epager.minimal")
+    out: Frames = [("face_minimal", b.panel())]
+    select_face(b, "epager.minimal", [1, 1])
+    out.append(("face_minimal_dark", b.panel()))
+    set_config(b, {"ui.clock_24h": False})
+    select_face(b, "epager.minimal", [1, 1, 2, 0])
+    out.append(("face_minimal_dark_12h_no_date", b.panel()))
+    return out
+
+
+def scene_face_firmware_parts() -> Frames:
+    """What the firmware adds to a face: the notification badge on a built-in face, the update mark on any face that
+    does not draw update_available itself; an installed face never gets the badge, with or without the count field."""
+    b = face_board()
+    select_face(b, "epager.big")
+    post(b, 1, "Mẹ", "…", app_id="app.1")
+    post(b, 2, "Lịch họp thứ Hai", "…", app="Gmail", app_id="app.2")
+    b.button(BTN_PWR)  # the clock: the two notifications wait
+    settle(b)
+    out: Frames = [("face_builtin_badge", b.panel())]
+    b.set_update("available", version="0.3.0", size=1500000)
+    settle(b)
+    out.append(("face_builtin_badge_update_mark", b.panel()))
+    loopback.install_clock_face(b, "sample.plain", sample_faces.big_variant("paper", "sample.plain"))
+    select_face(b, "sample.plain")
+    out.append(("face_installed_no_badge_update_mark", b.panel()))
+    loopback.install_clock_face(b, "sample.count", sample_faces.big_variant("paper", "sample.count", count=True))
+    select_face(b, "sample.count")
+    out.append(("face_installed_with_count", b.panel()))
+    loopback.install_clock_face(b, "sample.update", sample_faces.big_variant("paper", "sample.update", draws_update=True))
+    select_face(b, "sample.update")
+    out.append(("face_installed_draws_update", b.panel()))
+    return out
+
+
+def scene_face_fallback() -> Frames:
+    """Classic comes back for a face that is not there, is damaged, or is made for another screen."""
+    b = face_board()
+    select_face(b, "no.such.face")
+    out: Frames = [("face_missing_classic", b.panel())]
+    assert (b.clock_face_shown(), b.clock_face_errors()) == ("", 1)
+    loopback.install_clock_face(b, "bad.file", sample_faces.broken("paper"))
+    select_face(b, "bad.file")
+    out.append(("face_damaged_classic", b.panel()))
+    assert (b.clock_face_shown(), b.clock_face_errors()) == ("", 2)
+    select_face(b, "")  # back to Classic by choice
+    assert b.clock_face_errors() == 2
+    return out
 
 
 def scene_settings() -> Frames:
@@ -341,6 +425,10 @@ SCENES: dict[str, Callable[[], Frames]] = {
     "settings": scene_settings,
     "update": scene_update,
     "weather": scene_weather,
+    "face_big": scene_face_big,
+    "face_minimal": scene_face_minimal,
+    "face_firmware_parts": scene_face_firmware_parts,
+    "face_fallback": scene_face_fallback,
     "notice": scene_notice,
     "wifi_setup": scene_wifi_setup,
     "rotation": scene_rotation,

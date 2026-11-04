@@ -8,6 +8,7 @@
 #include "epager/sim_epaper.h"
 #include "epager/ui.h"
 #include "epager/xfer.h"
+#include "face_test.h"
 #include "ui_icons.h"
 #include "unity.h"
 #include "lvgl.h"
@@ -1838,6 +1839,227 @@ static void test_connection_icon(void)
     TEST_ASSERT_EQUAL_INT(UI_LINK_NONE, ui_link_icon());
 }
 
+
+/* ---------------------------------------------------------------- clock faces */
+
+static ui_config_t face_cfg(void)
+{
+    ui_config_t c = cfg(10);
+    c.tz_offset_min = 0;
+    return c;
+}
+
+static void test_face_builtin_replaces_classic(void)
+{
+    ui_set_time(T_14_27_05);
+    run(2100);
+    TEST_ASSERT_EQUAL_STRING("", ui_clock_face_shown());
+    TEST_ASSERT_NOT_NULL(strstr(text(), "14:27")); /* Classic */
+    face_config(face_cfg(), "epager.big", NULL, 0);
+    run(2100);
+    TEST_ASSERT_EQUAL_STRING("epager.big", ui_clock_face_shown());
+    TEST_ASSERT_EQUAL_UINT32(0, ui_clock_face_errors());
+    TEST_ASSERT_NOT_NULL(strstr(text(), "14:27\n")); /* the number element's text */
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Sunday, 11 Oct"));
+    TEST_ASSERT_NULL(strstr(text(), "Time not set"));
+    TEST_ASSERT_EQUAL_UINT32(0, state().violations);
+    face_config(face_cfg(), "", NULL, 0); /* back to Classic by choice: no error */
+    run(2100);
+    TEST_ASSERT_EQUAL_STRING("", ui_clock_face_shown());
+    TEST_ASSERT_EQUAL_UINT32(0, ui_clock_face_errors());
+}
+
+static void test_face_follows_the_data(void)
+{
+    ui_set_time(T_14_27_05);
+    ui_config_t c = face_cfg();
+    c.clock_24h = false;
+    c.language = PROTO_LANGUAGE_VI;
+    face_config(c, "epager.big", NULL, 0);
+    run(2100);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "2:27\n"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "PM\n")); /* the face's AM/PM text */
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Chủ nhật, 11/10"));
+    ui_set_time(T_14_27_05 + 60);
+    run(2100);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "2:28\n")); /* the minute moves */
+    wx_reading_t r;
+    memset(&r, 0, sizeof(r));
+    r.temp_c10 = 312;
+    r.high_c10 = r.low_c10 = WX_TEMP_UNKNOWN;
+    r.precip_pct = 86;
+    r.cond = WX_COND_CLEAR;
+    r.is_day = true;
+    ui_set_weather(&r);
+    run(2100);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "31\xc2\xb0""C\n"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "86%\n"));
+    ui_set_weather(NULL);
+    run(2100);
+    TEST_ASSERT_NULL(strstr(text(), "31\xc2\xb0""C"));
+}
+
+static void test_face_unavailable_falls_back_to_classic(void)
+{
+    ui_set_time(T_14_27_05);
+    face_config(face_cfg(), "no.such.face", NULL, 0);
+    run(2100);
+    TEST_ASSERT_EQUAL_STRING("", ui_clock_face_shown());
+    TEST_ASSERT_EQUAL_UINT32(1, ui_clock_face_errors());
+    run(2100); /* the same failure is not counted again at every redraw */
+    ui_set_time(T_14_27_05 + 60);
+    run(2100);
+    TEST_ASSERT_EQUAL_UINT32(1, ui_clock_face_errors());
+    TEST_ASSERT_NOT_NULL(strstr(text(), "14:28\n")); /* Classic draws the clock */
+    /* installing it later makes it show */
+    static uint8_t file[FACE_FILE_MAX];
+    const size_t n = vector_face("paper_min", file, sizeof(file));
+    install_face(&blob, "no.such.face", file, n); /* its meta.id is test.min: refused */
+    run(2100);
+    TEST_ASSERT_EQUAL_STRING("", ui_clock_face_shown());
+    TEST_ASSERT_EQUAL_UINT32(2, ui_clock_face_errors());
+    install_face(&blob, "test.min", file, n);
+    face_config(face_cfg(), "test.min", NULL, 0);
+    run(2100);
+    TEST_ASSERT_EQUAL_STRING("test.min", ui_clock_face_shown());
+    TEST_ASSERT_EQUAL_UINT32(2, ui_clock_face_errors());
+    TEST_ASSERT_TRUE(pixel_black(2, 2)); /* its 10x10 black square */
+    TEST_ASSERT_FALSE(pixel_black(50, 50));
+    /* replaced under the same id: the new file is read at the next render */
+    static uint8_t other[FACE_FILE_MAX];
+    const size_t m = vector_face("paper_full", other, sizeof(other)); /* a face with another id and size */
+    install_face(&blob, "test.min", other, m);
+    run(2100);
+    TEST_ASSERT_EQUAL_STRING("", ui_clock_face_shown()); /* the file's id differs from its asset id: damaged */
+    TEST_ASSERT_EQUAL_UINT32(3, ui_clock_face_errors());
+    /* deleted: Classic */
+    install_face(&blob, "test.min", file, n);
+    run(2100);
+    TEST_ASSERT_EQUAL_STRING("test.min", ui_clock_face_shown());
+    remove_face(&blob, "test.min");
+    run(2100);
+    TEST_ASSERT_EQUAL_STRING("", ui_clock_face_shown());
+    TEST_ASSERT_EQUAL_UINT32(4, ui_clock_face_errors());
+}
+
+static void test_face_for_another_screen_or_too_heavy_falls_back(void)
+{
+    static uint8_t file[FACE_FILE_MAX];
+    size_t n = vector_face("lcd_min", file, sizeof(file)); /* made for 296x240 */
+    install_face(&blob, "test.min", file, n);
+    face_config(face_cfg(), "test.min", NULL, 0);
+    run(2100);
+    TEST_ASSERT_EQUAL_STRING("", ui_clock_face_shown());
+    TEST_ASSERT_EQUAL_UINT32(1, ui_clock_face_errors());
+    n = vector_face("paper_heavy", file, sizeof(file)); /* 240 glyph objects: more than a board draws */
+    install_face(&blob, "test.heavy", file, n);
+    face_config(face_cfg(), "test.heavy", NULL, 0);
+    run(2100);
+    TEST_ASSERT_EQUAL_STRING("", ui_clock_face_shown());
+    TEST_ASSERT_EQUAL_UINT32(2, ui_clock_face_errors());
+}
+
+static void test_face_options_change_what_is_drawn(void)
+{
+    ui_set_time(T_14_27_05);
+    face_config(face_cfg(), "epager.minimal", NULL, 0);
+    run(2100);
+    TEST_ASSERT_FALSE(pixel_black(2, 2)); /* light: white page */
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Sunday, 11 Oct"));
+    static const uint8_t dark[] = {1, 1};
+    face_config(face_cfg(), "epager.minimal", dark, sizeof(dark));
+    run(2100);
+    TEST_ASSERT_TRUE(pixel_black(2, 2)); /* dark: black page */
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Sunday, 11 Oct"));
+    static const uint8_t no_date[] = {1, 1, 2, 0};
+    face_config(face_cfg(), "epager.minimal", no_date, sizeof(no_date));
+    run(2100);
+    TEST_ASSERT_NULL(strstr(text(), "Sunday, 11 Oct"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "14:27")); /* the time stays */
+    static const uint8_t junk[] = {9, 9, 1, 7, 2}; /* unknown id, value out of range, an odd last byte */
+    face_config(face_cfg(), "epager.minimal", junk, sizeof(junk));
+    run(2100);
+    TEST_ASSERT_FALSE(pixel_black(2, 2)); /* the defaults */
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Sunday, 11 Oct"));
+    TEST_ASSERT_EQUAL_UINT32(0, ui_clock_face_errors());
+}
+
+/* The firmware's own parts: the badge is for the built-in faces, the update mark for faces that do not draw it. */
+static void waiting_notifications(void)
+{
+    npipe_notif_t a = notif(1, "Zalo", "First", "a"), b = notif(2, "Mail", "Second", "b");
+    ui_on_notification(&a);
+    ui_on_notification(&b);
+    run(2100);
+    ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT); /* newer than the newest card: the clock */
+    run(2100);
+}
+
+static void test_face_badge_only_on_builtin_faces(void)
+{
+    ui_set_time(T_14_27_05);
+    face_config(face_cfg(), "epager.big", NULL, 0);
+    waiting_notifications();
+    TEST_ASSERT_NOT_NULL(strstr(text(), "\n2\n")); /* the badge */
+    static uint8_t file[FACE_FILE_MAX];
+    const size_t n = vector_face("paper_min", file, sizeof(file));
+    install_face(&blob, "test.min", file, n);
+    face_config(face_cfg(), "test.min", NULL, 0);
+    run(2100);
+    TEST_ASSERT_EQUAL_STRING("test.min", ui_clock_face_shown());
+    TEST_ASSERT_NULL(strstr(text(), "\n2\n")); /* an installed face never gets it */
+    TEST_ASSERT_NULL(strstr(text(), "2\n"));
+    /* a face that places the count itself shows it where it wants (the vector face has the field) */
+    const size_t m = vector_face("paper_full", file, sizeof(file));
+    install_face(&blob, "test.full", file, m);
+    face_config(face_cfg(), "test.full", NULL, 0);
+    run(2100);
+    TEST_ASSERT_EQUAL_STRING("test.full", ui_clock_face_shown());
+    TEST_ASSERT_NOT_NULL(strstr(text(), "\n2\n")); /* its notif_count number element */
+}
+
+static void test_face_update_mark(void)
+{
+    ui_set_time(T_14_27_05);
+    ui_update_t u = {.state = UI_UPD_AVAILABLE, .mark = true};
+    snprintf(u.version, sizeof(u.version), "0.3.0");
+    ui_set_update(&u);
+    face_config(face_cfg(), "epager.minimal", NULL, 0);
+    run(2100);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "!\n")); /* no update_available source in the face: the firmware's mark */
+    static uint8_t file[FACE_FILE_MAX];
+    const size_t n = vector_face("paper_update", file, sizeof(file)); /* it draws update_available itself */
+    install_face(&blob, "test.update", file, n);
+    face_config(face_cfg(), "test.update", NULL, 0);
+    run(2100);
+    TEST_ASSERT_EQUAL_STRING("test.update", ui_clock_face_shown());
+    TEST_ASSERT_NOT_NULL(strstr(text(), "U\n")); /* the face's own mark, no firmware mark */
+    TEST_ASSERT_NULL(strstr(text(), "!\n"));
+    u.mark = false;
+    ui_set_update(&u);
+    face_config(face_cfg(), "epager.minimal", NULL, 0);
+    run(2100);
+    TEST_ASSERT_NULL(strstr(text(), "!\n"));
+}
+
+static void test_face_hides_under_other_screens(void)
+{
+    ui_set_time(T_14_27_05);
+    face_config(face_cfg(), "epager.big", NULL, 0);
+    run(2100);
+    ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT); /* the settings */
+    run(400);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings"));
+    TEST_ASSERT_NULL(strstr(text(), "14:27")); /* the face's number is not on screen */
+    ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_LONG);
+    run(2100);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "14:27\n"));
+    ui_set_power(false);
+    run(2100);
+    TEST_ASSERT_NULL(strstr(text(), "14:27"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Powered off"));
+}
+
 int main(void)
 {
     UNITY_BEGIN();
@@ -1891,5 +2113,13 @@ int main(void)
     RUN_TEST(test_climate_values_fit_their_boxes);
     RUN_TEST(test_connection_icon);
     RUN_TEST(test_climate_line);
+    RUN_TEST(test_face_builtin_replaces_classic);
+    RUN_TEST(test_face_follows_the_data);
+    RUN_TEST(test_face_unavailable_falls_back_to_classic);
+    RUN_TEST(test_face_for_another_screen_or_too_heavy_falls_back);
+    RUN_TEST(test_face_options_change_what_is_drawn);
+    RUN_TEST(test_face_badge_only_on_builtin_faces);
+    RUN_TEST(test_face_update_mark);
+    RUN_TEST(test_face_hides_under_other_screens);
     return UNITY_END();
 }

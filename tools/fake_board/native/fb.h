@@ -112,6 +112,10 @@ FB_API int fb_weather_json(const char *json, size_t len, const char *place);
  * update page and the clock screen's mark. fb_update_prompt opens the prompt (1 if it opened). */
 FB_API void fb_set_update(uint8_t state, uint8_t error, const char *version, uint32_t size, int skipped);
 FB_API int fb_update_prompt(void);
+/* The clock face the idle screen draws ("" = Classic) and how many times a selected face could not be shown
+ * (simulator libraries; "" and 0 otherwise). */
+FB_API size_t fb_clock_face_shown(char *out, size_t cap);
+FB_API uint32_t fb_clock_face_errors(void);
 /* The Wi-Fi setup screen (ui_setup_state_t; simulator libraries). */
 FB_API void fb_wifi_setup(uint8_t state, const char *ap_ssid, const char *ap_password, const char *url,
                           const char *network);

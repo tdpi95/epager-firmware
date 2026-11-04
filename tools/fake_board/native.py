@@ -121,6 +121,7 @@ _SIGS = {
     "fb_wifi_setup": ([C.c_uint8] + [C.c_char_p] * 4, None),
     "fb_set_update": ([C.c_uint8, C.c_uint8, C.c_char_p, C.c_uint32, C.c_int], None),
     "fb_update_prompt": ([], C.c_int),
+    "fb_clock_face_shown": ([C.c_char_p, C.c_size_t], C.c_size_t), "fb_clock_face_errors": ([], C.c_uint32),
 }
 
 TEMP_UNKNOWN, PCT_UNKNOWN = -32768, 255  # WX_TEMP_UNKNOWN, WX_PCT_UNKNOWN
@@ -222,6 +223,13 @@ class Native:
 
     def update_prompt(self) -> bool:
         return bool(self.lib.fb_update_prompt())
+
+    def clock_face_shown(self) -> str:
+        n = self.lib.fb_clock_face_shown(self._buf, len(self._buf))
+        return self._buf.raw[:n].decode()
+
+    def clock_face_errors(self) -> int:
+        return self.lib.fb_clock_face_errors()
 
     def wifi_setup(self, state: str, ap_ssid: str = "", ap_password: str = "", url: str = "",
                    network: str = "") -> None:

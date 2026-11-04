@@ -8,8 +8,9 @@ python3 -m venv tools/.venv && tools/.venv/bin/pip install -r tools/requirements
 
 | Tool | What it is |
 |---|---|
-| `epager_proto/` | Python reference codec, segments, text rules, transfer and dispatch models (vector generation) |
+| `epager_proto/` | Python reference codec, segments, text rules, transfer and dispatch models (vector generation); `clockface.py`: clock face parser, option merging and evaluator |
 | `codegen/` | `gen.py` (registry → C tables, schemas, reference.md), `vectors.py` (contract vectors) |
+| `clock_face/` | M8a: compiler of a clock face source (`face.json` + PNGs) into a `clock_face_v1` file (`python -m clock_face build|check`), `gen_builtin.py` (the built-in faces into `components/ui_common/src/ui_face_builtin.c`), `make_builtin_images.py`; the full `epager-face` tool is M8c |
 | `contract_check.py` | contract drift and portability checks |
 | `fake_board/` | the board core in a process: TCP and BLE transports, simulated Paper screen, viewer |
 | `test_client/` | scripted end-to-end flows and a benchmark, over TCP or BLE |

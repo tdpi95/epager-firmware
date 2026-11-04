@@ -230,6 +230,14 @@ class FakeBoard:
         """Open the update prompt (only from the awake clock screen); False if it did not open."""
         return bool(self._call(self.n.update_prompt))
 
+    def clock_face_shown(self) -> str:
+        """The id of the clock face the idle screen draws; "" when it is Classic."""
+        return self._call(self.n.clock_face_shown)
+
+    def clock_face_errors(self) -> int:
+        """How many times a selected clock face could not be shown (and Classic was used instead)."""
+        return self._call(self.n.clock_face_errors)
+
     def set_storage_total(self, total: int) -> None:
         self._call(self.n.set_storage_total, total)
 

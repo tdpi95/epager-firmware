@@ -14,25 +14,6 @@
 #include "ui_icons.h"
 #include "ui_priv.h"
 
-/* Firmware compiles in only the layouts its variant enables (components/ui_common/Kconfig); the host
- * build has both. */
-#ifdef ESP_PLATFORM
-#include "sdkconfig.h"
-#ifdef CONFIG_EPAGER_UI_MONO
-#define UI_HAS_MONO 1
-#else
-#define UI_HAS_MONO 0
-#endif
-#ifdef CONFIG_EPAGER_UI_COLOUR
-#define UI_HAS_COLOUR 1
-#else
-#define UI_HAS_COLOUR 0
-#endif
-#else
-#define UI_HAS_MONO 1
-#define UI_HAS_COLOUR 1
-#endif
-
 UI_EXT_BSS ui_state_t ui;
 
 static const ui_strings_t STRINGS[] = {
@@ -300,6 +281,15 @@ void ui_format_time(char *buf, size_t cap, const char **ampm, bool padded)
     snprintf(buf, cap, padded ? "%02d:%02d" : "%d:%02d", h, t.min);
 }
 
+bool ui_local_time(board_datetime_t *t)
+{
+    if (!ui.utc) {
+        return false;
+    }
+    board_datetime_from_s(local_s(), t);
+    return true;
+}
+
 void ui_format_date(char *buf, size_t cap)
 {
     const ui_strings_t *s = ui_strings();
@@ -380,6 +370,7 @@ bool ui_init(const ui_params_t *p)
 
 void ui_deinit(void)
 {
+    ui_face_reset();
     if (ui.disp) {
         lv_deinit(); /* frees every LVGL allocation, including the backend's buffers */
     }
@@ -406,10 +397,13 @@ void ui_set_config(const ui_config_t *c)
     if (c->language != ui.cfg.language || c->show_body != ui.cfg.show_body || c->mask_numbers != ui.cfg.mask_numbers ||
         c->tz_offset_min != ui.cfg.tz_offset_min || c->clock_24h != ui.cfg.clock_24h ||
         c->temp_unit != ui.cfg.temp_unit || c->weather_enabled != ui.cfg.weather_enabled ||
-        c->update_auto_check != ui.cfg.update_auto_check) {
+        c->update_auto_check != ui.cfg.update_auto_check || c->clock_face_opts_len != ui.cfg.clock_face_opts_len ||
+        strcmp(c->clock_face_id, ui.cfg.clock_face_id) != 0 ||
+        memcmp(c->clock_face_opts, ui.cfg.clock_face_opts, sizeof(c->clock_face_opts)) != 0) {
         ui.model_dirty = true;
     }
     ui.cfg = *c;
+    ui.cfg.clock_face_id[sizeof(ui.cfg.clock_face_id) - 1] = '\0';
 }
 
 void ui_set_update(const ui_update_t *u)
@@ -620,7 +614,7 @@ void ui_on_notification(const npipe_notif_t *n)
 
 void ui_assets_changed(uint8_t asset_type)
 {
-    if (asset_type == PROTO_ASSET_TYPE_APP_ICON) {
+    if (asset_type == PROTO_ASSET_TYPE_APP_ICON || asset_type == PROTO_ASSET_TYPE_CLOCK_FACE) {
         ui.assets_gen++;
         ui.model_dirty = true; /* an unchanged frame is not refreshed, so this costs nothing when no card is affected */
     }
@@ -792,5 +786,9 @@ size_t ui_visible_text(char *out, size_t cap)
         return 0;
     }
     out[0] = 0;
-    return ui.disp ? ui.layout->visible_text(out, cap) : 0;
+    if (!ui.disp) {
+        return 0;
+    }
+    size_t n = ui.layout->visible_text(out, cap);
+    return n + ui_face_text(out + n, cap - n);
 }

@@ -55,7 +55,7 @@ static struct {
     uint8_t *fw_buf;
     npipe_slot_t slots[PROTO_LIMIT_NOTIF_HISTORY_MAX];
     npipe_app_t apps[PROTO_LIMIT_SEEN_APPS_MAX];
-    xfer_asset_support_t assets[4];
+    xfer_asset_support_t assets[5];
     core_params_t params;
     core_t core;
     char version[XFER_OTA_VERSION_MAX + 1], prev_version[XFER_OTA_VERSION_MAX + 1], device_name[21];
@@ -146,6 +146,12 @@ static void sync_ui_config(void)
                      .orientation = (uint8_t)cfg_get_int(&fb.core.cfg, PROTO_CFG_DISPLAY_ORIENTATION),
                      .weather_enabled = cfg_get_int(&fb.core.cfg, PROTO_CFG_WEATHER_ENABLED) != 0,
                      .update_auto_check = cfg_get_int(&fb.core.cfg, PROTO_CFG_UPDATE_AUTO_CHECK) != 0};
+    const uint8_t *str;
+    size_t n = cfg_get_str(&fb.core.cfg, PROTO_CFG_UI_CLOCK_FACE_ID, &str);
+    memcpy(c.clock_face_id, str, n < sizeof(c.clock_face_id) - 1 ? n : sizeof(c.clock_face_id) - 1);
+    n = cfg_get_str(&fb.core.cfg, PROTO_CFG_UI_CLOCK_FACE_OPTS, &str);
+    c.clock_face_opts_len = (uint8_t)(n < sizeof(c.clock_face_opts) ? n : sizeof(c.clock_face_opts));
+    memcpy(c.clock_face_opts, str, c.clock_face_opts_len);
     ui_set_config(&c);
 }
 
@@ -324,6 +330,7 @@ static void boot(bool image_pending_verify)
     fb.assets[1] = (xfer_asset_support_t){PROTO_ASSET_TYPE_THEME, PROTO_ASSET_FORMAT_THEME_V1, 4096, 0, 0};
     fb.assets[2] = (xfer_asset_support_t){PROTO_ASSET_TYPE_FONT, PROTO_ASSET_FORMAT_FONT_V1, 262144, 0, 0};
     fb.assets[3] = (xfer_asset_support_t){PROTO_ASSET_TYPE_APP_ICON, PROTO_ASSET_FORMAT_MONO1, 88, 24, 24};
+    fb.assets[4] = (xfer_asset_support_t){PROTO_ASSET_TYPE_CLOCK_FACE, PROTO_ASSET_FORMAT_CLOCK_FACE_V1, 65536, 0, 0};
     fb.params = (core_params_t){
         .device_name = fb.device_name, .board_id = "fake_epaper_154", .firmware_version = fb.version,
         .variant = PROTO_VARIANT_PAPER, .display_type = PROTO_DISPLAY_TYPE_EPAPER_BW, .color_depth = 1,
@@ -332,7 +339,7 @@ static void boot(bool image_pending_verify)
                     PROTO_FEATURES_OTA | PROTO_FEATURES_BATTERY,
         .transports = PROTO_TRANSPORTS_BLE, .max_mtu = 517,
         .kv_cfg = &fb.kv.iface, .kv_apps = &fb.kv.iface, .kv_xfer = &fb.kv.iface,
-        .blob = &fb.blob.iface, .assets = fb.assets, .n_assets = 4, .fw = &fb.fw.iface,
+        .blob = &fb.blob.iface, .assets = fb.assets, .n_assets = 5, .fw = &fb.fw.iface,
         .allow_downgrade = fb.allow_downgrade, .low_battery_pct = 30,
         .ota_required_checks = SELF_CHECK_BIT, .ota_verify_timeout_ms = 30000,
         .ack_window = 4096, .journal_every = 16384,
@@ -359,7 +366,8 @@ static void boot(bool image_pending_verify)
 #ifdef FB_SIM_LCD
     fb.assets[0] = (xfer_asset_support_t){PROTO_ASSET_TYPE_BACKGROUND, PROTO_ASSET_FORMAT_RGB565, 142096, 0, 0};
     fb.assets[1] = (xfer_asset_support_t){PROTO_ASSET_TYPE_APP_ICON, PROTO_ASSET_FORMAT_RGB565A8, 3088, 32, 32};
-    fb.params.n_assets = 2;
+    fb.assets[2] = (xfer_asset_support_t){PROTO_ASSET_TYPE_CLOCK_FACE, PROTO_ASSET_FORMAT_CLOCK_FACE_V1, 1048576, 0, 0};
+    fb.params.n_assets = 3;
 #endif
     fb.params.read_battery = b->read_battery;
     fb.params.rtc_get = b->rtc_get;
@@ -788,7 +796,21 @@ void fb_set_update(uint8_t state, uint8_t error, const char *version, uint32_t s
 }
 
 int fb_update_prompt(void) { return ui_show_update_prompt() ? 1 : 0; }
+
+size_t fb_clock_face_shown(char *out, size_t cap)
+{
+    return cap ? (size_t)snprintf(out, cap, "%s", ui_clock_face_shown()) : 0;
+}
+uint32_t fb_clock_face_errors(void) { return ui_clock_face_errors(); }
 #else
+size_t fb_clock_face_shown(char *out, size_t cap)
+{
+    if (cap) {
+        out[0] = '\0';
+    }
+    return 0;
+}
+uint32_t fb_clock_face_errors(void) { return 0; }
 void fb_set_update(uint8_t state, uint8_t error, const char *version, uint32_t size, int skipped)
 {
     (void)state, (void)error, (void)version, (void)size, (void)skipped;
