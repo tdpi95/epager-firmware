@@ -53,13 +53,13 @@
           "type": "integer",
           "minimum": 0,
           "maximum": 255,
-          "description": "enum asset_type (unknown values -> 0): 0 unknown, 1 font, 2 background, 3 theme, 5 app_icon"
+          "description": "enum asset_type (unknown values -> 0): 0 unknown, 1 font, 2 background, 3 theme, 5 app_icon, 6 clock_face"
         },
         "format": {
           "type": "integer",
           "minimum": 0,
           "maximum": 255,
-          "description": "enum asset_format (unknown values -> 0): 0 unknown, 1 mono1, 2 rgb565, 3 font_v1, 4 theme_v1, 6 rgb565a8"
+          "description": "enum asset_format (unknown values -> 0): 0 unknown, 1 mono1, 2 rgb565, 3 font_v1, 4 theme_v1, 6 rgb565a8, 7 clock_face_v1"
         },
         "max_size": {
           "type": "integer",
@@ -198,7 +198,7 @@
           "type": "integer",
           "minimum": 0,
           "maximum": 255,
-          "description": "enum asset_type (unknown values -> 0): 0 unknown, 1 font, 2 background, 3 theme, 5 app_icon"
+          "description": "enum asset_type (unknown values -> 0): 0 unknown, 1 font, 2 background, 3 theme, 5 app_icon, 6 clock_face"
         },
         "id": {
           "type": "string",
@@ -214,6 +214,12 @@
         "version": {
           "type": "string",
           "description": "str: max 32 UTF-8 bytes"
+        },
+        "origin": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "description": "Since 0.15.0: the origin tag sent at XFER_BEGIN; absent = never tagged.; enum asset_origin (unknown values -> 0): 0 unknown, 1 gallery, 2 local"
         }
       },
       "required": [
@@ -222,6 +228,370 @@
         "size"
       ],
       "description": "An installed asset."
+    },
+    "face_meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9_-][a-z0-9._-]{0,31}$",
+          "minLength": 1,
+          "description": "The face's id; equals the asset id the face is installed under.; id: max 32 UTF-8 bytes; min 1 bytes"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "English name.; text: max 32 UTF-8 bytes; min 1 bytes"
+        },
+        "name_vi": {
+          "type": "string",
+          "description": "Vietnamese name; absent = the English one.; text: max 32 UTF-8 bytes"
+        },
+        "author": {
+          "type": "string",
+          "description": "text: max 32 UTF-8 bytes"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The face's own version (semver).; str: max 32 UTF-8 bytes; min 1 bytes"
+        },
+        "min_contract": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Lowest contract version the face needs; a board that is older refuses the face.; str: max 16 UTF-8 bytes; min 5 bytes"
+        },
+        "update_anchor": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "description": "Where the firmware draws its update mark when the face does not draw the update_available source.; enum face_anchor (unknown values -> 0): 0 top_right, 1 top_left, 2 bottom_right, 3 bottom_left"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "version"
+      ],
+      "description": "clock_face_v1: who and what (asset-formats.md)."
+    },
+    "face_image": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "format": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "description": "mono1, rgb565 or rgb565a8, as the board lists for clock_face.; enum asset_format (unknown values -> 0): 0 unknown, 1 mono1, 2 rgb565, 3 font_v1, 4 theme_v1, 6 rgb565a8, 7 clock_face_v1"
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 400
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 400
+        },
+        "set": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8,
+          "description": "Digit set this image belongs to; absent = a plain image."
+        },
+        "slot": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 15,
+          "description": "Position in the digit set: 0-9 the digits, 10 colon, 11 AM, 12 PM, 13 minus, 14 degree, 15 percent."
+        }
+      },
+      "required": [
+        "format",
+        "width",
+        "height"
+      ],
+      "description": "clock_face_v1: one image of the face; the pixels are in the data area, in table order."
+    },
+    "face_choice": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "description": "English label.; text: max 24 UTF-8 bytes; min 1 bytes"
+        },
+        "label_vi": {
+          "type": "string",
+          "description": "text: max 24 UTF-8 bytes"
+        },
+        "colour": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535,
+          "description": "RGB565 value of a colour option's choice."
+        }
+      },
+      "required": [
+        "label"
+      ],
+      "description": "clock_face_v1: one value of a choice or colour option."
+    },
+    "face_option": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "description": "Stable across versions of the face; unique in the face."
+        },
+        "type": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "description": "enum face_option_type (unknown values -> 0): 0 unknown, 1 toggle, 2 choice, 3 colour"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "description": "English label.; text: max 24 UTF-8 bytes; min 1 bytes"
+        },
+        "label_vi": {
+          "type": "string",
+          "description": "text: max 24 UTF-8 bytes"
+        },
+        "default": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "description": "Default value: 0/1 for a toggle, else a choice index."
+        },
+        "choice": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/face_choice"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "label"
+      ],
+      "description": "clock_face_v1: a setting the person can change without editing the face."
+    },
+    "face_cond": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "description": "enum face_cond (unknown values -> 0): 0 unknown, 1 option_eq, 2 source_has, 3 source_gt0"
+        },
+        "option": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "description": "option_eq: the option id."
+        },
+        "value": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "description": "option_eq: the value it must have."
+        },
+        "source": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "description": "source_has, source_gt0: the data source.; enum face_source (unknown values -> 0): 0 none, 1 hour, 2 minute, 3 ampm, 4 time, 5 day, 6 month, 7 year, 8 weekday, 9 date, 10 weather_temp, 11 weather_high, 12 weather_low, 13 weather_rain, 14 weather_condition, 15 weather_place, 16 room_temp, 17 room_humidity, 18 battery_pct, 19 charging, 20 ble_connected, 21 wifi_connected, 22 notif_count, 23 update_available"
+        },
+        "negate": {
+          "type": "boolean",
+          "description": "True: draw when the condition does not hold."
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "description": "clock_face_v1: a condition for drawing an element."
+    },
+    "face_element": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "description": "enum face_element (unknown values -> 0): 0 unknown, 1 rect, 2 line, 3 arc, 4 image, 5 number, 6 text, 7 icon"
+        },
+        "x": {
+          "type": "integer",
+          "minimum": -32768,
+          "maximum": 32767,
+          "description": "Left edge in pixels; default 0."
+        },
+        "y": {
+          "type": "integer",
+          "minimum": -32768,
+          "maximum": 32767,
+          "description": "Top edge in pixels; default 0."
+        },
+        "w": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 400,
+          "description": "Width of the element's box; a line's horizontal extent."
+        },
+        "h": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 400,
+          "description": "Height of the element's box; a line's vertical extent."
+        },
+        "align": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "description": "number, text: where the value sits in the box.; enum face_align (unknown values -> 0): 0 left, 1 center, 2 right"
+        },
+        "colour": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535,
+          "description": "RGB565; default black. A 1-bit display shows light colours white and the rest black."
+        },
+        "colour_option": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "description": "Id of a colour option: its chosen colour replaces colour."
+        },
+        "source": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "description": "number, text, icon, arc: the value shown.; enum face_source (unknown values -> 0): 0 none, 1 hour, 2 minute, 3 ampm, 4 time, 5 day, 6 month, 7 year, 8 weekday, 9 date, 10 weather_temp, 11 weather_high, 12 weather_low, 13 weather_rain, 14 weather_condition, 15 weather_place, 16 room_temp, 17 room_humidity, 18 battery_pct, 19 charging, 20 ble_connected, 21 wifi_connected, 22 notif_count, 23 update_available"
+        },
+        "format": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "description": "How the source is written (asset-formats.md).; enum face_format (unknown values -> 0): 0 default, 1 pad2, 2 plain, 3 short, 4 long, 5 year2, 6 unit, 7 nounit"
+        },
+        "image": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "description": "image: index in the image table."
+        },
+        "set": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8,
+          "description": "number: the digit set that draws the value."
+        },
+        "font": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "description": "text: the built-in font.; enum face_font (unknown values -> 0): 0 unknown, 1 small, 2 small_bold, 3 large_bold, 4 clock"
+        },
+        "spacing": {
+          "type": "integer",
+          "minimum": -64,
+          "maximum": 64,
+          "description": "number: pixels added between digits."
+        },
+        "icon": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "description": "icon: which built-in icon.; enum face_icon (unknown values -> 0): 0 unknown, 1 weather, 2 ble, 3 wifi, 4 charging"
+        },
+        "thickness": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 64,
+          "description": "line, arc: stroke width; rect: border width (0 with fill = none)."
+        },
+        "radius": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 200,
+          "description": "rect: corner radius."
+        },
+        "fill": {
+          "type": "boolean",
+          "description": "rect: filled."
+        },
+        "arc_start": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 360,
+          "description": "arc: start angle in degrees, 0 = three o'clock, clockwise."
+        },
+        "arc_end": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 360,
+          "description": "arc: angle at 100 %."
+        },
+        "literal": {
+          "type": "string",
+          "description": "text: fixed text, when there is no source.; text: max 24 UTF-8 bytes"
+        },
+        "visible_if": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/face_cond"
+          }
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "description": "clock_face_v1: one thing the face draws; elements are drawn in table order."
+    },
+    "face_root": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "meta": {
+          "$ref": "common.schema.json#/$defs/face_meta"
+        },
+        "image": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/face_image"
+          }
+        },
+        "option": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/face_option"
+          }
+        },
+        "element": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/face_element"
+          }
+        }
+      },
+      "required": [
+        "meta"
+      ],
+      "description": "clock_face_v1: the TLV of a clock face (asset-formats.md)."
     },
     "status_code": {
       "type": "integer",

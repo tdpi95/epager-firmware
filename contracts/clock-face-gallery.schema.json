@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epager.local/contracts/clock-face-gallery.schema.json",
+  "title": "ePager clock face gallery manifest (gallery.json)",
+  "type": "object",
+  "required": ["schema", "faces"],
+  "properties": {
+    "schema": {"type": "integer", "minimum": 1},
+    "generated": {"type": "string"},
+    "faces": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "version", "boards"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^[a-z0-9_-][a-z0-9._-]{0,31}$"},
+          "name": {
+            "type": "object",
+            "required": ["en"],
+            "properties": {"en": {"type": "string", "minLength": 1, "maxLength": 32}, "vi": {"type": "string", "maxLength": 32}}
+          },
+          "author": {"type": "string", "maxLength": 32},
+          "version": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+([-+][0-9A-Za-z.+-]*)?$", "maxLength": 32},
+          "license": {"type": "string"},
+          "boards": {
+            "type": "object",
+            "minProperties": 1,
+            "propertyNames": {"enum": ["paper", "lcd"]},
+            "additionalProperties": {
+              "type": "object",
+              "required": ["file", "size", "sha256", "min_contract"],
+              "properties": {
+                "file": {"type": "string", "pattern": "^[A-Za-z0-9._-]+\\.epface$"},
+                "size": {"type": "integer", "minimum": 36},
+                "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+                "min_contract": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+                "thumbnail": {"type": "string", "pattern": "^[A-Za-z0-9._-]+\\.png$"}
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

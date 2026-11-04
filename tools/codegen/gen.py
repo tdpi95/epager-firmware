@@ -76,6 +76,9 @@ def gen_header(reg: R.Registry, gatt: dict) -> str:
     for sname, fields in reg.structs.items():
         for f in fields:
             L.append(f"#define PROTO_TAG_{cname(sname)}_{cname(f.name)} {f.tag}")
+    L += ["", "/* Struct descriptors (proto_validate_body) */"]
+    for sname in reg.structs:
+        L.append(f"extern const proto_struct_desc_t proto_struct_{sname};")
     L += ["", "/* Enums (receivers map unknown values to *_FALLBACK) */"]
     for ename, e in reg.enums.items():
         for v in e["values"]:
@@ -88,7 +91,7 @@ def gen_header(reg: R.Registry, gatt: dict) -> str:
     L += ["", "/* Config keys */"]
     for k in reg.config_keys:
         L.append(f"#define PROTO_CFG_{cname(k['name'])} {k['id']}")
-    str_max = max([k["max_len"] for k in reg.config_keys if k["type"] == "str"], default=0)
+    str_max = max([k["max_len"] for k in reg.config_keys if k["type"] in ("str", "bytes")], default=0)
     L += [f"#define PROTO_CFG_KEY_COUNT {len(reg.config_keys)}u",
           f"#define PROTO_CFG_STR_MAX_LEN {str_max}u",
           "/* Contract versions packed as major << 16 | minor << 8 | patch (config key `since`) */",
@@ -176,7 +179,7 @@ def gen_source(reg: R.Registry) -> str:
         L.append(f"static const proto_field_desc_t proto_fields_{sname}[] = {{")
         L += [field_initializer(f, sname) for f in fields]
         L.append("};")
-        L.append(f'static const proto_struct_desc_t proto_struct_{sname} = '
+        L.append(f'const proto_struct_desc_t proto_struct_{sname} = '
                  f'{{ "{sname}", proto_fields_{sname}, {len(fields)} }};')
         L.append("")
     for m in reg.messages:
@@ -216,7 +219,7 @@ def gen_source(reg: R.Registry) -> str:
             en = "NULL, 0"
         d = k["default"]
         dint = int(d) if not isinstance(d, str) else 0
-        dstr = json.dumps(d) if isinstance(d, str) else "NULL"
+        dstr = json.dumps(d) if isinstance(d, str) and k["type"] == "str" else "NULL"
         L.append(f'    {{ "{k["name"]}", {k["id"]}, {FT[k["type"]]}, {" | ".join(flags) or "0"}, '
                  f'{k.get("max_len", 0)}, {k.get("min", 0)}, {k.get("max", 0)}, 0x{mask:x}u, {en}, {dint}, {dstr}, '
                  f'0x{pack_version(k["since"]):06x}u }},')

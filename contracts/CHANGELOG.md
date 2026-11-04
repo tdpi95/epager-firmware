@@ -2,6 +2,17 @@
 
 Rules (protocol.md §9): while 0.x, breaking changes bump the minor version and are marked **BREAKING**; from 1.0.0, additive = minor and breaking = major. Every entry lists the vector files that changed. A contract change, its version bump, this changelog and the vectors land in one commit.
 
+## 0.15.0 (2026-11-04)
+
+Additive, both variants: installable **clock faces** (docs/clock-faces-plan.md, PLAN D113). Data-only descriptions of the clock screen (shapes, images, numbers written with image digit sets, text in the board's fonts, built-in icons, per-face options) that the phone apps install over the existing asset transfer, from a GitHub gallery or from a file. An app that does not know them needs no change (unknown keys, tags and enum values are skipped, §2.3, §9).
+
+- New asset type **`clock_face`** (6) and format **`clock_face_v1`** (7): the container, the payload (a TLV description plus a data area of image pixels), the limits per board, the elements, data sources, formats, conditions, options and the validation rules are in `asset-formats.md` ("Clock faces"); the field tables are the registry structs `face_root`, `face_meta`, `face_image`, `face_option`, `face_choice`, `face_element`, `face_cond`.
+- New enums: `asset_origin`, `face_option_type`, `face_element`, `face_source`, `face_format`, `face_font`, `face_icon`, `face_cond`, `face_align`, `face_anchor`.
+- New config keys **`ui.clock_face_id`** (67, str 32, default `""` = the built-in Classic face) and **`ui.clock_face_opts`** (68, **bytes** 32, default empty: `(option id, value)` pairs). `bytes` is a new config value type: any bytes up to `max_len`, lower-case hex in the logical form; width errors are `TOO_LARGE`. `protocol.md` §5 describes how a board keeps each face's values.
+- `XFER_BEGIN` gets the optional field **`origin`** (9, `asset_origin`: `unknown`, `gallery`, `local`) and `asset_entry` the optional field **`origin`** (5): the board stores the tag with the asset and lists it (§7.2, §7.5).
+- New documents: `clock-face-gallery.md` and `clock-face-gallery.schema.json` (how faces are published and found; the board has no gallery client).
+- Vectors: new `clock_faces.json` (parse cases that must be accepted or refused with `IMAGE_INVALID`, option merging, and evaluation cases: the text, visibility and colour of every element for a data snapshot); `messages.json` (`XFER_BEGIN` and `ASSET_LIST` with `origin`); `config_values.json` (keys 67 and 68); every other vector file only carries the new version.
+
 ## 0.14.0 (2026-11-03)
 
 Additive, both variants: the board can check for a new firmware release by itself once a day (docs/wifi-ota-plan.md; there is no iOS app to send an image over BLE). An app that does not know the key needs no change (an unknown key is skipped, §9).

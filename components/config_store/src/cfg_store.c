@@ -42,7 +42,8 @@ static void decode(const proto_cfg_key_desc_t *k, const uint8_t *val, size_t len
 {
     memset(v, 0, sizeof(*v));
     switch (k->type) {
-    case PROTO_FT_STR: v->len = (uint8_t)len; memcpy(v->s, val, len); break;
+    case PROTO_FT_STR:
+    case PROTO_FT_BYTES: v->len = (uint8_t)len; memcpy(v->s, val, len); break;
     case PROTO_FT_U16: v->i = proto_rd16(val); break;
     case PROTO_FT_I16: v->i = (int16_t)proto_rd16(val); break;
     case PROTO_FT_U32:
@@ -54,7 +55,8 @@ static void decode(const proto_cfg_key_desc_t *k, const uint8_t *val, size_t len
 static size_t encode(const proto_cfg_key_desc_t *k, const cfg_value_t *v, uint8_t *out)
 {
     switch (k->type) {
-    case PROTO_FT_STR: memcpy(out, v->s, v->len); return v->len;
+    case PROTO_FT_STR:
+    case PROTO_FT_BYTES: memcpy(out, v->s, v->len); return v->len;
     case PROTO_FT_U16:
     case PROTO_FT_I16: proto_wr16(out, (uint16_t)v->i); return 2;
     case PROTO_FT_U32:

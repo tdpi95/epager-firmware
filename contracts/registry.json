@@ -126,11 +126,13 @@
     "asset_type": {"fallback": 0, "values": [
       {"value": 0, "name": "unknown"}, {"value": 1, "name": "font"}, {"value": 2, "name": "background"},
       {"value": 3, "name": "theme"},
-      {"value": 5, "name": "app_icon", "description": "per-app notification icon, since 0.4.0; id = app_icon_id(app_id), see asset-formats.md"}]},
+      {"value": 5, "name": "app_icon", "description": "per-app notification icon, since 0.4.0; id = app_icon_id(app_id), see asset-formats.md"},
+      {"value": 6, "name": "clock_face", "description": "installable clock face, since 0.15.0; id = the face's own id, see asset-formats.md"}]},
     "asset_format": {"fallback": 0, "values": [
       {"value": 0, "name": "unknown"}, {"value": 1, "name": "mono1"}, {"value": 2, "name": "rgb565"},
       {"value": 3, "name": "font_v1"}, {"value": 4, "name": "theme_v1"},
-      {"value": 6, "name": "rgb565a8", "description": "since 0.8.0: an RGB565 plane, then an 8-bit alpha plane (asset-formats.md)"}]},
+      {"value": 6, "name": "rgb565a8", "description": "since 0.8.0: an RGB565 plane, then an 8-bit alpha plane (asset-formats.md)"},
+      {"value": 7, "name": "clock_face_v1", "description": "since 0.15.0: a clock face description with its images (asset-formats.md)"}]},
     "xfer_state": {"fallback": 0, "values": [
       {"value": 0, "name": "idle"}, {"value": 1, "name": "receiving"}, {"value": 2, "name": "verifying"},
       {"value": 3, "name": "complete"}, {"value": 4, "name": "failed"}]},
@@ -145,7 +147,45 @@
       {"value": 6, "name": "no_internet"}]},
     "weather_state": {"fallback": 0, "values": [
       {"value": 0, "name": "off"}, {"value": 1, "name": "waiting"}, {"value": 2, "name": "ok"},
-      {"value": 3, "name": "stale"}, {"value": 4, "name": "locate_failed"}, {"value": 5, "name": "fetch_failed"}]}
+      {"value": 3, "name": "stale"}, {"value": 4, "name": "locate_failed"}, {"value": 5, "name": "fetch_failed"}]},
+    "asset_origin": {"fallback": 0, "values": [
+      {"value": 0, "name": "unknown"}, {"value": 1, "name": "gallery"}, {"value": 2, "name": "local"}]},
+    "face_option_type": {"fallback": 0, "values": [
+      {"value": 0, "name": "unknown"}, {"value": 1, "name": "toggle"}, {"value": 2, "name": "choice"},
+      {"value": 3, "name": "colour"}]},
+    "face_element": {"fallback": 0, "values": [
+      {"value": 0, "name": "unknown"}, {"value": 1, "name": "rect"}, {"value": 2, "name": "line"},
+      {"value": 3, "name": "arc"}, {"value": 4, "name": "image"}, {"value": 5, "name": "number"},
+      {"value": 6, "name": "text"}, {"value": 7, "name": "icon"}]},
+    "face_source": {"fallback": 0, "values": [
+      {"value": 0, "name": "none"}, {"value": 1, "name": "hour"}, {"value": 2, "name": "minute"},
+      {"value": 3, "name": "ampm"}, {"value": 4, "name": "time"}, {"value": 5, "name": "day"},
+      {"value": 6, "name": "month"}, {"value": 7, "name": "year"}, {"value": 8, "name": "weekday"},
+      {"value": 9, "name": "date"}, {"value": 10, "name": "weather_temp"}, {"value": 11, "name": "weather_high"},
+      {"value": 12, "name": "weather_low"}, {"value": 13, "name": "weather_rain"},
+      {"value": 14, "name": "weather_condition"}, {"value": 15, "name": "weather_place"},
+      {"value": 16, "name": "room_temp"}, {"value": 17, "name": "room_humidity"},
+      {"value": 18, "name": "battery_pct"}, {"value": 19, "name": "charging"},
+      {"value": 20, "name": "ble_connected"}, {"value": 21, "name": "wifi_connected"},
+      {"value": 22, "name": "notif_count"}, {"value": 23, "name": "update_available"}]},
+    "face_format": {"fallback": 0, "values": [
+      {"value": 0, "name": "default"}, {"value": 1, "name": "pad2"}, {"value": 2, "name": "plain"},
+      {"value": 3, "name": "short"}, {"value": 4, "name": "long"}, {"value": 5, "name": "year2"},
+      {"value": 6, "name": "unit"}, {"value": 7, "name": "nounit"}]},
+    "face_font": {"fallback": 0, "values": [
+      {"value": 0, "name": "unknown"}, {"value": 1, "name": "small"}, {"value": 2, "name": "small_bold"},
+      {"value": 3, "name": "large_bold"}, {"value": 4, "name": "clock"}]},
+    "face_icon": {"fallback": 0, "values": [
+      {"value": 0, "name": "unknown"}, {"value": 1, "name": "weather"}, {"value": 2, "name": "ble"},
+      {"value": 3, "name": "wifi"}, {"value": 4, "name": "charging"}]},
+    "face_cond": {"fallback": 0, "values": [
+      {"value": 0, "name": "unknown"}, {"value": 1, "name": "option_eq"}, {"value": 2, "name": "source_has"},
+      {"value": 3, "name": "source_gt0"}]},
+    "face_align": {"fallback": 0, "values": [
+      {"value": 0, "name": "left"}, {"value": 1, "name": "center"}, {"value": 2, "name": "right"}]},
+    "face_anchor": {"fallback": 0, "values": [
+      {"value": 0, "name": "top_right"}, {"value": 1, "name": "top_left"}, {"value": 2, "name": "bottom_right"},
+      {"value": 3, "name": "bottom_left"}]}
   },
   "bitmasks": {
     "features": [
@@ -196,7 +236,67 @@
       {"tag": 1, "name": "asset_type", "type": "u8", "enum": "asset_type", "required": true},
       {"tag": 2, "name": "id", "type": "id", "required": true},
       {"tag": 3, "name": "size", "type": "u32", "required": true},
-      {"tag": 4, "name": "version", "type": "str", "max_len": 32}]}
+      {"tag": 4, "name": "version", "type": "str", "max_len": 32},
+      {"tag": 5, "name": "origin", "type": "u8", "enum": "asset_origin", "description": "Since 0.15.0: the origin tag sent at XFER_BEGIN; absent = never tagged."}]},
+    "face_meta": {"description": "clock_face_v1: who and what (asset-formats.md).", "fields": [
+      {"tag": 1, "name": "id", "type": "id", "required": true, "description": "The face's id; equals the asset id the face is installed under."},
+      {"tag": 2, "name": "name", "type": "text", "max_len": 32, "min_len": 1, "required": true, "description": "English name."},
+      {"tag": 3, "name": "name_vi", "type": "text", "max_len": 32, "description": "Vietnamese name; absent = the English one."},
+      {"tag": 4, "name": "author", "type": "text", "max_len": 32},
+      {"tag": 5, "name": "version", "type": "str", "max_len": 32, "min_len": 1, "required": true, "description": "The face's own version (semver)."},
+      {"tag": 6, "name": "min_contract", "type": "str", "max_len": 16, "min_len": 5, "description": "Lowest contract version the face needs; a board that is older refuses the face."},
+      {"tag": 7, "name": "update_anchor", "type": "u8", "enum": "face_anchor", "description": "Where the firmware draws its update mark when the face does not draw the update_available source."}]},
+    "face_image": {"description": "clock_face_v1: one image of the face; the pixels are in the data area, in table order.", "fields": [
+      {"tag": 1, "name": "format", "type": "u8", "enum": "asset_format", "required": true, "description": "mono1, rgb565 or rgb565a8, as the board lists for clock_face."},
+      {"tag": 2, "name": "width", "type": "u16", "min": 1, "max": 400, "required": true},
+      {"tag": 3, "name": "height", "type": "u16", "min": 1, "max": 400, "required": true},
+      {"tag": 4, "name": "set", "type": "u8", "min": 1, "max": 8, "description": "Digit set this image belongs to; absent = a plain image."},
+      {"tag": 5, "name": "slot", "type": "u8", "max": 15, "description": "Position in the digit set: 0-9 the digits, 10 colon, 11 AM, 12 PM, 13 minus, 14 degree, 15 percent."}]},
+    "face_choice": {"description": "clock_face_v1: one value of a choice or colour option.", "fields": [
+      {"tag": 1, "name": "label", "type": "text", "max_len": 24, "min_len": 1, "required": true, "description": "English label."},
+      {"tag": 2, "name": "label_vi", "type": "text", "max_len": 24},
+      {"tag": 3, "name": "colour", "type": "u16", "description": "RGB565 value of a colour option's choice."}]},
+    "face_option": {"description": "clock_face_v1: a setting the person can change without editing the face.", "fields": [
+      {"tag": 1, "name": "id", "type": "u8", "required": true, "description": "Stable across versions of the face; unique in the face."},
+      {"tag": 2, "name": "type", "type": "u8", "enum": "face_option_type", "required": true},
+      {"tag": 3, "name": "label", "type": "text", "max_len": 24, "min_len": 1, "required": true, "description": "English label."},
+      {"tag": 4, "name": "label_vi", "type": "text", "max_len": 24},
+      {"tag": 5, "name": "default", "type": "u8", "description": "Default value: 0/1 for a toggle, else a choice index."},
+      {"tag": 6, "name": "choice", "type": "struct", "struct": "face_choice", "repeated": true, "description": "1-8 for a choice or colour option; none for a toggle."}]},
+    "face_cond": {"description": "clock_face_v1: a condition for drawing an element.", "fields": [
+      {"tag": 1, "name": "kind", "type": "u8", "enum": "face_cond", "required": true},
+      {"tag": 2, "name": "option", "type": "u8", "description": "option_eq: the option id."},
+      {"tag": 3, "name": "value", "type": "u8", "description": "option_eq: the value it must have."},
+      {"tag": 4, "name": "source", "type": "u8", "enum": "face_source", "description": "source_has, source_gt0: the data source."},
+      {"tag": 5, "name": "negate", "type": "bool", "description": "True: draw when the condition does not hold."}]},
+    "face_element": {"description": "clock_face_v1: one thing the face draws; elements are drawn in table order.", "fields": [
+      {"tag": 1, "name": "kind", "type": "u8", "enum": "face_element", "required": true},
+      {"tag": 2, "name": "x", "type": "i16", "description": "Left edge in pixels; default 0."},
+      {"tag": 3, "name": "y", "type": "i16", "description": "Top edge in pixels; default 0."},
+      {"tag": 4, "name": "w", "type": "u16", "max": 400, "description": "Width of the element's box; a line's horizontal extent."},
+      {"tag": 5, "name": "h", "type": "u16", "max": 400, "description": "Height of the element's box; a line's vertical extent."},
+      {"tag": 6, "name": "align", "type": "u8", "enum": "face_align", "description": "number, text: where the value sits in the box."},
+      {"tag": 7, "name": "colour", "type": "u16", "description": "RGB565; default black. A 1-bit display shows light colours white and the rest black."},
+      {"tag": 8, "name": "colour_option", "type": "u8", "description": "Id of a colour option: its chosen colour replaces colour."},
+      {"tag": 9, "name": "source", "type": "u8", "enum": "face_source", "description": "number, text, icon, arc: the value shown."},
+      {"tag": 10, "name": "format", "type": "u8", "enum": "face_format", "description": "How the source is written (asset-formats.md)."},
+      {"tag": 11, "name": "image", "type": "u8", "description": "image: index in the image table."},
+      {"tag": 12, "name": "set", "type": "u8", "min": 1, "max": 8, "description": "number: the digit set that draws the value."},
+      {"tag": 13, "name": "font", "type": "u8", "enum": "face_font", "description": "text: the built-in font."},
+      {"tag": 14, "name": "spacing", "type": "i16", "min": -64, "max": 64, "description": "number: pixels added between digits."},
+      {"tag": 15, "name": "icon", "type": "u8", "enum": "face_icon", "description": "icon: which built-in icon."},
+      {"tag": 16, "name": "thickness", "type": "u8", "max": 64, "description": "line, arc: stroke width; rect: border width (0 with fill = none)."},
+      {"tag": 17, "name": "radius", "type": "u8", "max": 200, "description": "rect: corner radius."},
+      {"tag": 18, "name": "fill", "type": "bool", "description": "rect: filled."},
+      {"tag": 19, "name": "arc_start", "type": "u16", "max": 360, "description": "arc: start angle in degrees, 0 = three o'clock, clockwise."},
+      {"tag": 20, "name": "arc_end", "type": "u16", "max": 360, "description": "arc: angle at 100 %."},
+      {"tag": 21, "name": "literal", "type": "text", "max_len": 24, "description": "text: fixed text, when there is no source."},
+      {"tag": 22, "name": "visible_if", "type": "struct", "struct": "face_cond", "repeated": true, "description": "Up to 2, all must hold."}]},
+    "face_root": {"description": "clock_face_v1: the TLV of a clock face (asset-formats.md).", "fields": [
+      {"tag": 1, "name": "meta", "type": "struct", "struct": "face_meta", "required": true},
+      {"tag": 2, "name": "image", "type": "struct", "struct": "face_image", "repeated": true, "description": "At most 32."},
+      {"tag": 3, "name": "option", "type": "struct", "struct": "face_option", "repeated": true, "description": "At most 8."},
+      {"tag": 4, "name": "element", "type": "struct", "struct": "face_element", "repeated": true, "description": "At most 48."}]}
   },
   "messages": [
     {"id": 1, "name": "PING", "kind": "request", "channel": "any", "description": "Echo request.", "fields": [
@@ -290,7 +390,8 @@
       {"tag": 5, "name": "crc32", "type": "u32", "required": true},
       {"tag": 6, "name": "sha256", "type": "bytes", "min_len": 32, "max_len": 32, "required": true},
       {"tag": 7, "name": "version", "type": "str", "max_len": 32},
-      {"tag": 8, "name": "restart", "type": "bool"}]},
+      {"tag": 8, "name": "restart", "type": "bool"},
+      {"tag": 9, "name": "origin", "type": "u8", "enum": "asset_origin", "description": "Since 0.15.0, assets: where the file came from; the board stores it with the asset and lists it in ASSET_LIST."}]},
     {"id": 176, "name": "XFER_BEGIN_RSP", "kind": "response", "channel": "transfer", "fields": [
       {"tag": 1, "name": "status", "type": "u8", "enum": "status", "required": true},
       {"tag": 2, "name": "handle", "type": "u8"},
@@ -408,6 +509,8 @@
     {"id": 64, "name": "ui.theme_id", "type": "str", "max_len": 32, "default": "", "since": "0.1.0", "description": "Installed theme asset id; empty = built-in."},
     {"id": 65, "name": "ui.font_id", "type": "str", "max_len": 32, "default": "", "since": "0.1.0", "description": "Installed font asset id; empty = built-in."},
     {"id": 66, "name": "ui.background_id", "type": "str", "max_len": 32, "default": "", "since": "0.7.0", "description": "Installed background asset id; empty = none. Takes precedence over a theme's background."},
+    {"id": 67, "name": "ui.clock_face_id", "type": "str", "max_len": 32, "default": "", "since": "0.15.0", "description": "Installed clock_face asset id (or a built-in face's id) shown on the clock screen; empty = the built-in Classic face. An id that is not installed shows Classic."},
+    {"id": 68, "name": "ui.clock_face_opts", "type": "bytes", "max_len": 32, "default": "", "since": "0.15.0", "description": "The active face's option values: pairs of bytes (option id, value). Unknown ids are ignored and a value out of range uses the option's default. Lower-case hex in logical form."},
     {"id": 80, "name": "weather.enabled", "type": "bool", "default": true, "variants": ["lcd", "paper"], "since": "0.9.0", "description": "Fetch the weather over Wi-Fi and show it on the idle screen."},
     {"id": 81, "name": "weather.city", "type": "str", "max_len": 64, "default": "", "variants": ["lcd", "paper"], "since": "0.9.0", "description": "Place name the board looks up for the weather; empty = locate by the network's IP address."},
     {"id": 82, "name": "weather.interval_min", "type": "u16", "min": 15, "max": 240, "default": 60, "variants": ["lcd", "paper"], "since": "0.9.0", "description": "Minutes between weather fetches (each one joins Wi-Fi and runs a TLS handshake). Default 30 before 0.12.1."},

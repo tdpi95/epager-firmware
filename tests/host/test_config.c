@@ -88,7 +88,10 @@ static void test_defaults_on_empty_storage(void)
     TEST_ASSERT_EQUAL_UINT32(0, cfg_revision(&cfg));
     for (size_t i = 0; i < proto_cfg_keys_count; i++) {
         const proto_cfg_key_desc_t *k = &proto_cfg_keys[i];
-        if (k->type == PROTO_FT_STR) {
+        if (k->type == PROTO_FT_BYTES) {
+            const uint8_t *s;
+            TEST_ASSERT_EQUAL_UINT(0, cfg_get_str(&cfg, k->id, &s));
+        } else if (k->type == PROTO_FT_STR) {
             const uint8_t *s;
             TEST_ASSERT_EQUAL_UINT(strlen(k->default_str), cfg_get_str(&cfg, k->id, &s));
         } else {
@@ -390,7 +393,8 @@ static void test_msg_config_get(void)
         handle("{\"type\":\"CONFIG_GET\",\"req_id\":3,\"fields\":{\"key\":[17,999,2,17,64]}}"));
     const char *all = handle("{\"type\":\"CONFIG_GET\",\"req_id\":4}");
     TEST_ASSERT_NOT_NULL(strstr(all, "{\"key\":3,\"value\":\"1e\"}"));
-    TEST_ASSERT_NOT_NULL(strstr(all, "{\"key\":65,\"value\":\"\"},{\"key\":66,\"value\":\"\"},{\"key\":80,\"value\":\"01\"},"
+    TEST_ASSERT_NOT_NULL(strstr(all, "{\"key\":65,\"value\":\"\"},{\"key\":66,\"value\":\"\"},{\"key\":67,\"value\":\"\"},"
+                                     "{\"key\":68,\"value\":\"\"},{\"key\":80,\"value\":\"01\"},"
                                      "{\"key\":81,\"value\":\"\"},{\"key\":82,\"value\":\"3c00\"},{\"key\":83,\"value\":\"01\"}]"));
     boot(PROTO_VARIANT_LCD);
     TEST_ASSERT_NULL(strstr(handle("{\"type\":\"CONFIG_GET\",\"req_id\":4}"), "{\"key\":3,"));

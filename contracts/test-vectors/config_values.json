@@ -1,5 +1,5 @@
 {
- "contract_version": "0.14.0",
+ "contract_version": "0.15.0",
  "description": "Config value validation (protocol.md 5). A board of the given variant must return 'expect' for value_hex written to key. 'value' is the typed logical value.",
  "scope": "app+board",
  "cases": [
@@ -166,6 +166,22 @@
   {
    "name": "default_ui.background_id",
    "key": 66,
+   "variant": "paper",
+   "value_hex": "",
+   "value": "",
+   "expect": "OK"
+  },
+  {
+   "name": "default_ui.clock_face_id",
+   "key": 67,
+   "variant": "paper",
+   "value_hex": "",
+   "value": "",
+   "expect": "OK"
+  },
+  {
+   "name": "default_ui.clock_face_opts",
+   "key": 68,
    "variant": "paper",
    "value_hex": "",
    "value": "",
@@ -624,6 +640,75 @@
    "variant": "paper",
    "value_hex": "0100",
    "expect": "TYPE_MISMATCH"
+  },
+  {
+   "name": "clock_face_id_set",
+   "key": 67,
+   "variant": "paper",
+   "value_hex": "6570616765722e626967",
+   "expect": "OK",
+   "value": "epager.big"
+  },
+  {
+   "name": "clock_face_id_32_bytes",
+   "key": 67,
+   "variant": "lcd",
+   "value_hex": "6161616161616161616161616161616161616161616161616161616161616161",
+   "expect": "OK",
+   "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  {
+   "name": "clock_face_id_33_bytes",
+   "key": 67,
+   "variant": "paper",
+   "value_hex": "616161616161616161616161616161616161616161616161616161616161616161",
+   "expect": "TOO_LARGE"
+  },
+  {
+   "name": "clock_face_id_invalid_utf8",
+   "key": 67,
+   "variant": "lcd",
+   "value_hex": "c3",
+   "expect": "INVALID_UTF8"
+  },
+  {
+   "name": "clock_face_opts_pairs",
+   "key": 68,
+   "variant": "paper",
+   "value_hex": "010002010302",
+   "expect": "OK",
+   "value": "010002010302"
+  },
+  {
+   "name": "clock_face_opts_32_bytes",
+   "key": 68,
+   "variant": "lcd",
+   "value_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+   "expect": "OK",
+   "value": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+  },
+  {
+   "name": "clock_face_opts_33_bytes",
+   "key": 68,
+   "variant": "paper",
+   "value_hex": "000000000000000000000000000000000000000000000000000000000000000000",
+   "expect": "TOO_LARGE"
+  },
+  {
+   "name": "clock_face_opts_empty",
+   "key": 68,
+   "variant": "paper",
+   "value_hex": "",
+   "expect": "OK",
+   "value": ""
+  },
+  {
+   "name": "clock_face_opts_odd_length",
+   "key": 68,
+   "variant": "paper",
+   "value_hex": "01",
+   "expect": "OK",
+   "value": "01"
   },
   {
    "name": "unknown_key",

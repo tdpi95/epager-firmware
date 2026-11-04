@@ -1,5 +1,5 @@
 {
- "contract_version": "0.14.0",
+ "contract_version": "0.15.0",
  "description": "Board rules for WIFI_SET after message validation (protocol.md 5, Wi-Fi and weather). On a secure link, a board with (has_wifi) or without the wifi feature answers WIFI_SET_RSP with 'expect'. Cases run in order on one board: after an OK, saved_ssids is the LRU-to-MRU profile list (at most three); DEVICE_STATUS.wifi_ssid is 'stored_ssid' when that operation selects a network (null = absent). The password is never readable.",
  "scope": "board",
  "cases": [

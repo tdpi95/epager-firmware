@@ -9,7 +9,7 @@ OUT="${1:-$REPO/build/xtensa}"
 CC=xtensa-esp32s3-elf-gcc
 command -v "$CC" >/dev/null || { echo "$CC not found: run . ~/esp/esp-idf/export.sh" >&2; exit 1; }
 
-COMPONENTS=(protocol config_store notification_pipeline transfer core weather ble_core ancs_client ota)
+COMPONENTS=(protocol config_store notification_pipeline transfer core weather ble_core ancs_client ota clock_face)
 # components with ESP-IDF glue next to their portable part: only that part is built here (M5)
 declare -A ONLY=([ble_core]=ble_util.c [ancs_client]=ancs_sm.c [ota]="ota_sink.c upd_manifest.c upd_policy.c upd_download.c")
 FLAGS=(-std=c11 -Os -ffunction-sections -fdata-sections -mlongcalls -fstack-usage

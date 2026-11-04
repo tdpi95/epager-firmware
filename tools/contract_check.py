@@ -8,6 +8,7 @@
 5. CONTRACT_VERSION is semver and has a CHANGELOG entry
 6. release-manifest.schema.json is a valid schema and agrees with the releases.json vectors
 7. portable components include no ESP-IDF / FreeRTOS headers
+8. clock-face-gallery.schema.json is a valid schema and agrees with the gallery cases of clock_faces.json
 """
 from __future__ import annotations
 
@@ -25,7 +26,7 @@ TOOLS = Path(__file__).resolve().parent
 sys.path.insert(0, str(TOOLS))
 from epager_proto import registry as R  # noqa: E402
 
-PORTABLE = ["protocol", "notification_pipeline", "config_store", "transfer", "core"]
+PORTABLE = ["protocol", "notification_pipeline", "config_store", "transfer", "core", "clock_face"]
 FORBIDDEN_INCLUDE = re.compile(r'#\s*include\s*[<"](esp_|freertos/|driver/|sdkconfig|nvs|soc/|hal/)')
 
 problems: list[str] = []
@@ -123,6 +124,15 @@ def check_releases() -> None:
               f"releases.json {c['name']}: schema result disagrees with problem {c['problem']!r}")
 
 
+def check_clock_faces() -> None:
+    schema = json.loads((R.CONTRACTS / "clock-face-gallery.schema.json").read_text())
+    jsonschema.Draft202012Validator.check_schema(schema)
+    v = jsonschema.Draft202012Validator(schema)
+    vec = json.loads((R.CONTRACTS / "test-vectors/clock_faces.json").read_text())
+    for c in vec["gallery"]:
+        check(v.is_valid(c["manifest"]) == c["valid"], f"clock_faces.json gallery {c['name']}: schema result disagrees")
+
+
 def check_version(reg: R.Registry) -> None:
     check(re.fullmatch(r"\d+\.\d+\.\d+", reg.contract_version) is not None, "CONTRACT_VERSION is not semver")
     log = (R.CONTRACTS / "CHANGELOG.md").read_text() if (R.CONTRACTS / "CHANGELOG.md").exists() else ""
@@ -150,6 +160,7 @@ def main() -> int:
         check_version(reg)
     check_gatt()
     check_releases()
+    check_clock_faces()
     check_portable()
     if problems:
         print("contract check FAILED:")

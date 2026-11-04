@@ -156,8 +156,10 @@ def check(reg: Registry) -> None:
         if k["id"] in seen_keys:
             errs.append(f"duplicate config key {k['id']}")
         seen_keys.add(k["id"])
-        if k["type"] == "str" and "max_len" not in k:
-            errs.append(f"config {k['name']}: str needs max_len")
+        if k["type"] in ("str", "bytes") and "max_len" not in k:
+            errs.append(f"config {k['name']}: {k['type']} needs max_len")
+        if k["type"] == "bytes" and k["default"] != "":
+            errs.append(f"config {k['name']}: a bytes key's default is the empty value")
         if k.get("enum") and k["enum"] not in reg.enums:
             errs.append(f"config {k['name']}: unknown enum")
     if errs:

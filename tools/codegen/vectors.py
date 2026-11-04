@@ -20,6 +20,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from epager_proto import ancs, apps, assets, codec, config, dispatch, releases, segments, text, transfer, wifi  # noqa: E402
 from epager_proto import registry as R  # noqa: E402
+import clockface_vectors  # noqa: E402
 
 OUT = R.CONTRACTS / "test-vectors"
 reg = R.load()
@@ -164,6 +165,11 @@ VALID = [
     ("xfer_begin_app_icon", "App icon upload (asset-formats.md app_icon): id = app_icon_id(\"com.zing.zalo\"), "
      "88-byte 24x24 mono1 file", "XFER_BEGIN", 49, {"kind": 1, "id": ZALO_ICON_ID, "asset_type": 5, "size": len(ICON),
                                                    "crc32": zlib.crc32(ICON), "sha256": hashlib.sha256(ICON).hexdigest()}),
+    ("xfer_begin_clock_face_gallery", "A clock face from the gallery (since 0.15.0): origin 1", "XFER_BEGIN", 50,
+     {"kind": 1, "id": "epager.big", "asset_type": 6, "size": 5432, "crc32": 0x0F0E0D0C, "sha256": SHA,
+      "version": "1.0.0", "origin": 1}),
+    ("xfer_begin_clock_face_local", "A person's own file: origin 2", "XFER_BEGIN", 51,
+     {"kind": 1, "id": "me.mine", "asset_type": 6, "size": 900, "crc32": 1, "sha256": SHA, "origin": 2}),
     ("xfer_begin_firmware_restart", "", "XFER_BEGIN", 41, {"kind": 2, "id": "firmware", "size": 1500000,
                                                           "crc32": 0xDEADBEEF, "sha256": SHA, "version": "0.2.0", "restart": True}),
     ("xfer_begin_rsp_resume", "", "XFER_BEGIN_RSP", 41, {"status": 0, "handle": 1, "offset": 65536,
@@ -182,6 +188,9 @@ VALID = [
     ("asset_list", "", "ASSET_LIST", 47, {"offset": 2, "limit": 1}),
     ("asset_list_rsp", "", "ASSET_LIST_RSP", 47, {"status": 0, "total": 3, "asset": [
         {"asset_type": 2, "id": "bg-cat_01.v2", "size": 5016, "version": "1.0.0"}]}),
+    ("asset_list_rsp_origin", "Since 0.15.0: the origin sent at XFER_BEGIN", "ASSET_LIST_RSP", 52, {"status": 0, "total": 2, "asset": [
+        {"asset_type": 6, "id": "epager.big", "size": 5432, "version": "1.0.0", "origin": 1},
+        {"asset_type": 6, "id": "me.mine", "size": 900, "origin": 2}]}),
     ("asset_delete", "", "ASSET_DELETE", 48, {"asset_type": 2, "id": "bg-cat_01.v2"}),
     ("asset_delete_rsp", "", "ASSET_DELETE_RSP", 48, {"status": 0}),
     ("event_config_changed", "", "CONFIG_CHANGED", 0, {"revision": 8, "key": [1, 33]}),
@@ -580,6 +589,15 @@ def gen_config_values() -> dict:
     add("update_auto_check_off", 83, b"\x00", "OK", variant="lcd", value=False)
     add("update_auto_check_on_paper", 83, b"\x01", "OK", value=True)
     add("update_auto_check_two_bytes", 83, b"\x01\x00", "TYPE_MISMATCH")
+    add("clock_face_id_set", 67, b"epager.big", "OK", value="epager.big")
+    add("clock_face_id_32_bytes", 67, b"a" * 32, "OK", variant="lcd", value="a" * 32)
+    add("clock_face_id_33_bytes", 67, b"a" * 33, "TOO_LARGE")
+    add("clock_face_id_invalid_utf8", 67, b"\xc3", "INVALID_UTF8", variant="lcd")
+    add("clock_face_opts_pairs", 68, bytes([1, 0, 2, 1, 3, 2]), "OK", value="010002010302")
+    add("clock_face_opts_32_bytes", 68, bytes(range(32)), "OK", variant="lcd", value=bytes(range(32)).hex())
+    add("clock_face_opts_33_bytes", 68, bytes(33), "TOO_LARGE")
+    add("clock_face_opts_empty", 68, b"", "OK", value="")
+    add("clock_face_opts_odd_length", 68, b"\x01", "OK", value="01")
     add("unknown_key", 0x9999, b"\x01", "UNKNOWN_KEY")
     assert K
     return {"description": "Config value validation (protocol.md 5). A board of the given variant must return "
@@ -1516,7 +1534,8 @@ def outputs() -> dict[Path, str]:
     files = {"messages.json": gen_messages(), "segments.json": gen_segments(), "config_values.json": gen_config_values(),
              "text.json": gen_text(), "ancs.json": gen_ancs(), "crc32.json": gen_crc32(),
              "transfer.json": gen_transfer(), "dispatch.json": gen_dispatch(), "app_icons.json": gen_app_icons(),
-             "releases.json": gen_releases(), "wifi.json": gen_wifi()}
+             "releases.json": gen_releases(), "wifi.json": gen_wifi(),
+             "clock_faces.json": clockface_vectors.gen_clock_faces()}
     out = {}
     for name, doc in files.items():
         doc = {"contract_version": reg.contract_version, **doc}

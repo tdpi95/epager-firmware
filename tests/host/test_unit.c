@@ -35,6 +35,7 @@ static void test_config_defaults_are_valid(void)
         size_t n;
         switch (k->type) {
         case PROTO_FT_STR: n = strlen(k->default_str); memcpy(v, k->default_str, n); break;
+        case PROTO_FT_BYTES: n = 0; break; /* the default of a bytes key is empty */
         case PROTO_FT_U16: case PROTO_FT_I16: n = 2; proto_wr16(v, (uint16_t)k->default_int); break;
         case PROTO_FT_U32: case PROTO_FT_I32: n = 4; proto_wr32(v, (uint32_t)k->default_int); break;
         default: n = 1; v[0] = (uint8_t)k->default_int; break;

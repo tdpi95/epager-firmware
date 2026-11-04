@@ -30,7 +30,7 @@ if(EPAGER_COVERAGE)
 endif()
 
 # Portable components under test
-foreach(c protocol config_store notification_pipeline transfer core weather)
+foreach(c protocol config_store notification_pipeline transfer core weather clock_face)
     add_subdirectory(${REPO_ROOT}/components/${c} ${CMAKE_BINARY_DIR}/${c})
     target_compile_options(epager_${c} PRIVATE ${WARNINGS})
 endforeach()
@@ -104,6 +104,11 @@ foreach(t test_ota test_upd)
     target_compile_options(${t} PRIVATE ${WARNINGS})
     add_test(NAME ${t} COMMAND ${t})
 endforeach()
+
+add_executable(test_clock_face test_clock_face.c)
+target_link_libraries(test_clock_face PRIVATE epager_clock_face test_support)
+target_compile_options(test_clock_face PRIVATE ${WARNINGS})
+add_test(NAME test_clock_face COMMAND test_clock_face)
 
 add_executable(test_weather test_weather.c)
 target_link_libraries(test_weather PRIVATE epager_weather test_thirdparty)

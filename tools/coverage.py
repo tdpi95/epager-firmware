@@ -17,7 +17,7 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
-PORTABLE = ("protocol", "config_store", "notification_pipeline", "transfer", "core", "weather", "net", "ble_core", "ancs_client", "ota")
+PORTABLE = ("protocol", "config_store", "notification_pipeline", "transfer", "core", "weather", "net", "ble_core", "ancs_client", "ota", "clock_face")
 
 
 def collect(build: Path) -> dict[Path, dict[int, int]]:

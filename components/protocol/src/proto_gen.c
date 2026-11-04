@@ -8,7 +8,7 @@ static const proto_field_desc_t proto_fields_display_info[] = {
     { .name = "color_depth", .tag = 4, .type = PROTO_FT_U8, .flags = PROTO_F_REQUIRED, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = NULL },
     { .name = "refresh_class", .tag = 5, .type = PROTO_FT_U8, .flags = PROTO_F_REQUIRED, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = NULL },
 };
-static const proto_struct_desc_t proto_struct_display_info = { "display_info", proto_fields_display_info, 5 };
+const proto_struct_desc_t proto_struct_display_info = { "display_info", proto_fields_display_info, 5 };
 
 static const proto_field_desc_t proto_fields_asset_support[] = {
     { .name = "asset_type", .tag = 1, .type = PROTO_FT_U8, .flags = PROTO_F_REQUIRED, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = NULL },
@@ -17,19 +17,19 @@ static const proto_field_desc_t proto_fields_asset_support[] = {
     { .name = "width", .tag = 4, .type = PROTO_FT_U16, .flags = 0, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = NULL },
     { .name = "height", .tag = 5, .type = PROTO_FT_U16, .flags = 0, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = NULL },
 };
-static const proto_struct_desc_t proto_struct_asset_support = { "asset_support", proto_fields_asset_support, 5 };
+const proto_struct_desc_t proto_struct_asset_support = { "asset_support", proto_fields_asset_support, 5 };
 
 static const proto_field_desc_t proto_fields_config_entry[] = {
     { .name = "key", .tag = 1, .type = PROTO_FT_U16, .flags = PROTO_F_REQUIRED, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = NULL },
     { .name = "value", .tag = 2, .type = PROTO_FT_BYTES, .flags = PROTO_F_REQUIRED, .min_len = 0, .max_len = 64, .min = 0, .max = 0, .nested = NULL },
 };
-static const proto_struct_desc_t proto_struct_config_entry = { "config_entry", proto_fields_config_entry, 2 };
+const proto_struct_desc_t proto_struct_config_entry = { "config_entry", proto_fields_config_entry, 2 };
 
 static const proto_field_desc_t proto_fields_key_status[] = {
     { .name = "key", .tag = 1, .type = PROTO_FT_U16, .flags = PROTO_F_REQUIRED, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = NULL },
     { .name = "status", .tag = 2, .type = PROTO_FT_U8, .flags = PROTO_F_REQUIRED, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = NULL },
 };
-static const proto_struct_desc_t proto_struct_key_status = { "key_status", proto_fields_key_status, 2 };
+const proto_struct_desc_t proto_struct_key_status = { "key_status", proto_fields_key_status, 2 };
 
 static const proto_field_desc_t proto_fields_app_entry[] = {
     { .name = "app_id", .tag = 1, .type = PROTO_FT_STR, .flags = PROTO_F_REQUIRED, .min_len = 1, .max_len = 64, .min = 0, .max = 0, .nested = NULL },
@@ -38,21 +38,102 @@ static const proto_field_desc_t proto_fields_app_entry[] = {
     { .name = "source", .tag = 4, .type = PROTO_FT_U8, .flags = 0, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = NULL },
     { .name = "last_seen", .tag = 5, .type = PROTO_FT_U32, .flags = 0, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = NULL },
 };
-static const proto_struct_desc_t proto_struct_app_entry = { "app_entry", proto_fields_app_entry, 5 };
+const proto_struct_desc_t proto_struct_app_entry = { "app_entry", proto_fields_app_entry, 5 };
 
 static const proto_field_desc_t proto_fields_policy_entry[] = {
     { .name = "app_id", .tag = 1, .type = PROTO_FT_STR, .flags = PROTO_F_REQUIRED, .min_len = 1, .max_len = 64, .min = 0, .max = 0, .nested = NULL },
     { .name = "policy", .tag = 2, .type = PROTO_FT_U8, .flags = PROTO_F_REQUIRED, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = NULL },
 };
-static const proto_struct_desc_t proto_struct_policy_entry = { "policy_entry", proto_fields_policy_entry, 2 };
+const proto_struct_desc_t proto_struct_policy_entry = { "policy_entry", proto_fields_policy_entry, 2 };
 
 static const proto_field_desc_t proto_fields_asset_entry[] = {
     { .name = "asset_type", .tag = 1, .type = PROTO_FT_U8, .flags = PROTO_F_REQUIRED, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = NULL },
     { .name = "id", .tag = 2, .type = PROTO_FT_ID, .flags = PROTO_F_REQUIRED, .min_len = 1, .max_len = 32, .min = 0, .max = 0, .nested = NULL },
     { .name = "size", .tag = 3, .type = PROTO_FT_U32, .flags = PROTO_F_REQUIRED, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = NULL },
     { .name = "version", .tag = 4, .type = PROTO_FT_STR, .flags = 0, .min_len = 0, .max_len = 32, .min = 0, .max = 0, .nested = NULL },
+    { .name = "origin", .tag = 5, .type = PROTO_FT_U8, .flags = 0, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = NULL },
 };
-static const proto_struct_desc_t proto_struct_asset_entry = { "asset_entry", proto_fields_asset_entry, 4 };
+const proto_struct_desc_t proto_struct_asset_entry = { "asset_entry", proto_fields_asset_entry, 5 };
+
+static const proto_field_desc_t proto_fields_face_meta[] = {
+    { .name = "id", .tag = 1, .type = PROTO_FT_ID, .flags = PROTO_F_REQUIRED, .min_len = 1, .max_len = 32, .min = 0, .max = 0, .nested = NULL },
+    { .name = "name", .tag = 2, .type = PROTO_FT_TEXT, .flags = PROTO_F_REQUIRED, .min_len = 1, .max_len = 32, .min = 0, .max = 0, .nested = NULL },
+    { .name = "name_vi", .tag = 3, .type = PROTO_FT_TEXT, .flags = 0, .min_len = 0, .max_len = 32, .min = 0, .max = 0, .nested = NULL },
+    { .name = "author", .tag = 4, .type = PROTO_FT_TEXT, .flags = 0, .min_len = 0, .max_len = 32, .min = 0, .max = 0, .nested = NULL },
+    { .name = "version", .tag = 5, .type = PROTO_FT_STR, .flags = PROTO_F_REQUIRED, .min_len = 1, .max_len = 32, .min = 0, .max = 0, .nested = NULL },
+    { .name = "min_contract", .tag = 6, .type = PROTO_FT_STR, .flags = 0, .min_len = 5, .max_len = 16, .min = 0, .max = 0, .nested = NULL },
+    { .name = "update_anchor", .tag = 7, .type = PROTO_FT_U8, .flags = 0, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = NULL },
+};
+const proto_struct_desc_t proto_struct_face_meta = { "face_meta", proto_fields_face_meta, 7 };
+
+static const proto_field_desc_t proto_fields_face_image[] = {
+    { .name = "format", .tag = 1, .type = PROTO_FT_U8, .flags = PROTO_F_REQUIRED, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = NULL },
+    { .name = "width", .tag = 2, .type = PROTO_FT_U16, .flags = PROTO_F_REQUIRED | PROTO_F_HAS_MIN | PROTO_F_HAS_MAX, .min_len = 0, .max_len = 0, .min = 1, .max = 400, .nested = NULL },
+    { .name = "height", .tag = 3, .type = PROTO_FT_U16, .flags = PROTO_F_REQUIRED | PROTO_F_HAS_MIN | PROTO_F_HAS_MAX, .min_len = 0, .max_len = 0, .min = 1, .max = 400, .nested = NULL },
+    { .name = "set", .tag = 4, .type = PROTO_FT_U8, .flags = PROTO_F_HAS_MIN | PROTO_F_HAS_MAX, .min_len = 0, .max_len = 0, .min = 1, .max = 8, .nested = NULL },
+    { .name = "slot", .tag = 5, .type = PROTO_FT_U8, .flags = PROTO_F_HAS_MAX, .min_len = 0, .max_len = 0, .min = 0, .max = 15, .nested = NULL },
+};
+const proto_struct_desc_t proto_struct_face_image = { "face_image", proto_fields_face_image, 5 };
+
+static const proto_field_desc_t proto_fields_face_choice[] = {
+    { .name = "label", .tag = 1, .type = PROTO_FT_TEXT, .flags = PROTO_F_REQUIRED, .min_len = 1, .max_len = 24, .min = 0, .max = 0, .nested = NULL },
+    { .name = "label_vi", .tag = 2, .type = PROTO_FT_TEXT, .flags = 0, .min_len = 0, .max_len = 24, .min = 0, .max = 0, .nested = NULL },
+    { .name = "colour", .tag = 3, .type = PROTO_FT_U16, .flags = 0, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = NULL },
+};
+const proto_struct_desc_t proto_struct_face_choice = { "face_choice", proto_fields_face_choice, 3 };
+
+static const proto_field_desc_t proto_fields_face_option[] = {
+    { .name = "id", .tag = 1, .type = PROTO_FT_U8, .flags = PROTO_F_REQUIRED, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = NULL },
+    { .name = "type", .tag = 2, .type = PROTO_FT_U8, .flags = PROTO_F_REQUIRED, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = NULL },
+    { .name = "label", .tag = 3, .type = PROTO_FT_TEXT, .flags = PROTO_F_REQUIRED, .min_len = 1, .max_len = 24, .min = 0, .max = 0, .nested = NULL },
+    { .name = "label_vi", .tag = 4, .type = PROTO_FT_TEXT, .flags = 0, .min_len = 0, .max_len = 24, .min = 0, .max = 0, .nested = NULL },
+    { .name = "default", .tag = 5, .type = PROTO_FT_U8, .flags = 0, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = NULL },
+    { .name = "choice", .tag = 6, .type = PROTO_FT_STRUCT, .flags = PROTO_F_REPEATED, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = &proto_struct_face_choice },
+};
+const proto_struct_desc_t proto_struct_face_option = { "face_option", proto_fields_face_option, 6 };
+
+static const proto_field_desc_t proto_fields_face_cond[] = {
+    { .name = "kind", .tag = 1, .type = PROTO_FT_U8, .flags = PROTO_F_REQUIRED, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = NULL },
+    { .name = "option", .tag = 2, .type = PROTO_FT_U8, .flags = 0, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = NULL },
+    { .name = "value", .tag = 3, .type = PROTO_FT_U8, .flags = 0, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = NULL },
+    { .name = "source", .tag = 4, .type = PROTO_FT_U8, .flags = 0, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = NULL },
+    { .name = "negate", .tag = 5, .type = PROTO_FT_BOOL, .flags = 0, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = NULL },
+};
+const proto_struct_desc_t proto_struct_face_cond = { "face_cond", proto_fields_face_cond, 5 };
+
+static const proto_field_desc_t proto_fields_face_element[] = {
+    { .name = "kind", .tag = 1, .type = PROTO_FT_U8, .flags = PROTO_F_REQUIRED, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = NULL },
+    { .name = "x", .tag = 2, .type = PROTO_FT_I16, .flags = 0, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = NULL },
+    { .name = "y", .tag = 3, .type = PROTO_FT_I16, .flags = 0, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = NULL },
+    { .name = "w", .tag = 4, .type = PROTO_FT_U16, .flags = PROTO_F_HAS_MAX, .min_len = 0, .max_len = 0, .min = 0, .max = 400, .nested = NULL },
+    { .name = "h", .tag = 5, .type = PROTO_FT_U16, .flags = PROTO_F_HAS_MAX, .min_len = 0, .max_len = 0, .min = 0, .max = 400, .nested = NULL },
+    { .name = "align", .tag = 6, .type = PROTO_FT_U8, .flags = 0, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = NULL },
+    { .name = "colour", .tag = 7, .type = PROTO_FT_U16, .flags = 0, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = NULL },
+    { .name = "colour_option", .tag = 8, .type = PROTO_FT_U8, .flags = 0, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = NULL },
+    { .name = "source", .tag = 9, .type = PROTO_FT_U8, .flags = 0, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = NULL },
+    { .name = "format", .tag = 10, .type = PROTO_FT_U8, .flags = 0, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = NULL },
+    { .name = "image", .tag = 11, .type = PROTO_FT_U8, .flags = 0, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = NULL },
+    { .name = "set", .tag = 12, .type = PROTO_FT_U8, .flags = PROTO_F_HAS_MIN | PROTO_F_HAS_MAX, .min_len = 0, .max_len = 0, .min = 1, .max = 8, .nested = NULL },
+    { .name = "font", .tag = 13, .type = PROTO_FT_U8, .flags = 0, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = NULL },
+    { .name = "spacing", .tag = 14, .type = PROTO_FT_I16, .flags = PROTO_F_HAS_MIN | PROTO_F_HAS_MAX, .min_len = 0, .max_len = 0, .min = -64, .max = 64, .nested = NULL },
+    { .name = "icon", .tag = 15, .type = PROTO_FT_U8, .flags = 0, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = NULL },
+    { .name = "thickness", .tag = 16, .type = PROTO_FT_U8, .flags = PROTO_F_HAS_MAX, .min_len = 0, .max_len = 0, .min = 0, .max = 64, .nested = NULL },
+    { .name = "radius", .tag = 17, .type = PROTO_FT_U8, .flags = PROTO_F_HAS_MAX, .min_len = 0, .max_len = 0, .min = 0, .max = 200, .nested = NULL },
+    { .name = "fill", .tag = 18, .type = PROTO_FT_BOOL, .flags = 0, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = NULL },
+    { .name = "arc_start", .tag = 19, .type = PROTO_FT_U16, .flags = PROTO_F_HAS_MAX, .min_len = 0, .max_len = 0, .min = 0, .max = 360, .nested = NULL },
+    { .name = "arc_end", .tag = 20, .type = PROTO_FT_U16, .flags = PROTO_F_HAS_MAX, .min_len = 0, .max_len = 0, .min = 0, .max = 360, .nested = NULL },
+    { .name = "literal", .tag = 21, .type = PROTO_FT_TEXT, .flags = 0, .min_len = 0, .max_len = 24, .min = 0, .max = 0, .nested = NULL },
+    { .name = "visible_if", .tag = 22, .type = PROTO_FT_STRUCT, .flags = PROTO_F_REPEATED, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = &proto_struct_face_cond },
+};
+const proto_struct_desc_t proto_struct_face_element = { "face_element", proto_fields_face_element, 22 };
+
+static const proto_field_desc_t proto_fields_face_root[] = {
+    { .name = "meta", .tag = 1, .type = PROTO_FT_STRUCT, .flags = PROTO_F_REQUIRED, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = &proto_struct_face_meta },
+    { .name = "image", .tag = 2, .type = PROTO_FT_STRUCT, .flags = PROTO_F_REPEATED, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = &proto_struct_face_image },
+    { .name = "option", .tag = 3, .type = PROTO_FT_STRUCT, .flags = PROTO_F_REPEATED, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = &proto_struct_face_option },
+    { .name = "element", .tag = 4, .type = PROTO_FT_STRUCT, .flags = PROTO_F_REPEATED, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = &proto_struct_face_element },
+};
+const proto_struct_desc_t proto_struct_face_root = { "face_root", proto_fields_face_root, 4 };
 
 static const proto_field_desc_t proto_fields_msg_PING[] = {
     { .name = "payload", .tag = 1, .type = PROTO_FT_BYTES, .flags = 0, .min_len = 0, .max_len = 512, .min = 0, .max = 0, .nested = NULL },
@@ -155,6 +236,7 @@ static const proto_field_desc_t proto_fields_msg_XFER_BEGIN[] = {
     { .name = "sha256", .tag = 6, .type = PROTO_FT_BYTES, .flags = PROTO_F_REQUIRED, .min_len = 32, .max_len = 32, .min = 0, .max = 0, .nested = NULL },
     { .name = "version", .tag = 7, .type = PROTO_FT_STR, .flags = 0, .min_len = 0, .max_len = 32, .min = 0, .max = 0, .nested = NULL },
     { .name = "restart", .tag = 8, .type = PROTO_FT_BOOL, .flags = 0, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = NULL },
+    { .name = "origin", .tag = 9, .type = PROTO_FT_U8, .flags = 0, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = NULL },
 };
 static const proto_field_desc_t proto_fields_msg_XFER_BEGIN_RSP[] = {
     { .name = "status", .tag = 1, .type = PROTO_FT_U8, .flags = PROTO_F_REQUIRED, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = NULL },
@@ -275,7 +357,7 @@ const proto_msg_desc_t proto_messages[] = {
     { 0x20, PROTO_KIND_REQUEST, PROTO_CHAN_NOTIFICATION, { "NOTIF_POST", proto_fields_msg_NOTIF_POST, 10 } },
     { 0x21, PROTO_KIND_REQUEST, PROTO_CHAN_NOTIFICATION, { "NOTIF_REMOVE", proto_fields_msg_NOTIF_REMOVE, 1 } },
     { 0x22, PROTO_KIND_REQUEST, PROTO_CHAN_NOTIFICATION, { "NOTIF_CLEAR", NULL, 0 } },
-    { 0x30, PROTO_KIND_REQUEST, PROTO_CHAN_TRANSFER, { "XFER_BEGIN", proto_fields_msg_XFER_BEGIN, 8 } },
+    { 0x30, PROTO_KIND_REQUEST, PROTO_CHAN_TRANSFER, { "XFER_BEGIN", proto_fields_msg_XFER_BEGIN, 9 } },
     { 0x31, PROTO_KIND_REQUEST, PROTO_CHAN_TRANSFER, { "XFER_CHUNK", proto_fields_msg_XFER_CHUNK, 3 } },
     { 0x32, PROTO_KIND_REQUEST, PROTO_CHAN_TRANSFER, { "XFER_STATUS", proto_fields_msg_XFER_STATUS, 1 } },
     { 0x33, PROTO_KIND_REQUEST, PROTO_CHAN_TRANSFER, { "XFER_FINISH", proto_fields_msg_XFER_FINISH, 1 } },
@@ -338,6 +420,8 @@ const proto_cfg_key_desc_t proto_cfg_keys[] = {
     { "ui.theme_id", 64, PROTO_FT_STR, 0, 32, 0, 0, 0x0u, NULL, 0, 0, "", 0x000100u },
     { "ui.font_id", 65, PROTO_FT_STR, 0, 32, 0, 0, 0x0u, NULL, 0, 0, "", 0x000100u },
     { "ui.background_id", 66, PROTO_FT_STR, 0, 32, 0, 0, 0x0u, NULL, 0, 0, "", 0x000700u },
+    { "ui.clock_face_id", 67, PROTO_FT_STR, 0, 32, 0, 0, 0x0u, NULL, 0, 0, "", 0x000f00u },
+    { "ui.clock_face_opts", 68, PROTO_FT_BYTES, 0, 32, 0, 0, 0x0u, NULL, 0, 0, NULL, 0x000f00u },
     { "weather.enabled", 80, PROTO_FT_BOOL, 0, 0, 0, 0, 0x6u, NULL, 0, 1, NULL, 0x000900u },
     { "weather.city", 81, PROTO_FT_STR, 0, 64, 0, 0, 0x6u, NULL, 0, 0, "", 0x000900u },
     { "weather.interval_min", 82, PROTO_FT_U16, PROTO_CFG_HAS_MIN | PROTO_CFG_HAS_MAX, 0, 15, 240, 0x6u, NULL, 0, 60, NULL, 0x000900u },

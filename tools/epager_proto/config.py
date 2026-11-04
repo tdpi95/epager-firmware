@@ -24,6 +24,8 @@ def encode_value(key: dict, v: Any) -> bytes:
         return int(v).to_bytes(INT_WIDTH[t], "little", signed=t in SIGNED)
     if t == "bool":
         return b"\x01" if v else b"\x00"
+    if t == "bytes":
+        return bytes.fromhex(v)
     return v.encode("utf-8")
 
 
@@ -33,6 +35,8 @@ def decode_value(key: dict, b: bytes) -> Any:
         return int.from_bytes(b, "little", signed=t in SIGNED)
     if t == "bool":
         return bool(b[0])
+    if t == "bytes":
+        return b.hex()
     return b.decode("utf-8")
 
 
@@ -59,6 +63,8 @@ def validate(reg: Registry, key_id: int, value: bytes, variant: str) -> str:
         return "OK" if value[0] <= 1 else "OUT_OF_RANGE"
     if len(value) > key["max_len"]:
         return "TOO_LARGE"
+    if t == "bytes":
+        return "OK"
     try:
         value.decode("utf-8")
     except UnicodeDecodeError:

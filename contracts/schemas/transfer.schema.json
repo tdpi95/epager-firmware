@@ -93,7 +93,7 @@
               "type": "integer",
               "minimum": 0,
               "maximum": 255,
-              "description": "enum asset_type (unknown values -> 0): 0 unknown, 1 font, 2 background, 3 theme, 5 app_icon"
+              "description": "enum asset_type (unknown values -> 0): 0 unknown, 1 font, 2 background, 3 theme, 5 app_icon, 6 clock_face"
             },
             "size": {
               "type": "integer",
@@ -118,6 +118,12 @@
             },
             "restart": {
               "type": "boolean"
+            },
+            "origin": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255,
+              "description": "Since 0.15.0, assets: where the file came from; the board stores it with the asset and lists it in ASSET_LIST.; enum asset_origin (unknown values -> 0): 0 unknown, 1 gallery, 2 local"
             }
           },
           "required": [
@@ -670,7 +676,7 @@
               "type": "integer",
               "minimum": 0,
               "maximum": 255,
-              "description": "enum asset_type (unknown values -> 0): 0 unknown, 1 font, 2 background, 3 theme, 5 app_icon"
+              "description": "enum asset_type (unknown values -> 0): 0 unknown, 1 font, 2 background, 3 theme, 5 app_icon, 6 clock_face"
             },
             "id": {
               "type": "string",

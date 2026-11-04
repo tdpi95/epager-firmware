@@ -218,7 +218,8 @@
               "i16",
               "i32",
               "bool",
-              "str"
+              "str",
+              "bytes"
             ]
           },
           "enum": {

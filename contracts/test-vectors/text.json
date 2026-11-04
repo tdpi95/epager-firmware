@@ -1,5 +1,5 @@
 {
- "contract_version": "0.14.0",
+ "contract_version": "0.15.0",
  "description": "Board text normalisation (protocol.md 8) against the reference renderable set in registry text.renderable_ranges and text.emoji_ranges. Board scope: the app need not implement this.",
  "scope": "board",
  "placeholder": "U+25A1",

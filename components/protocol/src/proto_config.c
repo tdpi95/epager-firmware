@@ -35,6 +35,8 @@ proto_status_t proto_cfg_validate(uint16_t key, const uint8_t *val, size_t len, 
     case PROTO_FT_STR:
         if (len > k->max_len) return PROTO_TOO_LARGE;
         return proto_utf8_valid(val, len) ? PROTO_OK : PROTO_INVALID_UTF8;
+    case PROTO_FT_BYTES:
+        return len > k->max_len ? PROTO_TOO_LARGE : PROTO_OK;
     case PROTO_FT_U8:
         if (len != 1) return PROTO_TYPE_MISMATCH;
         x = val[0];

@@ -636,6 +636,18 @@
           "description": "key 66 (0x0042), since 0.7.0. Installed background asset id; empty = none. Takes precedence over a theme's background. str: max 32 UTF-8 bytes",
           "default": ""
         },
+        "ui.clock_face_id": {
+          "type": "string",
+          "description": "key 67 (0x0043), since 0.15.0. Installed clock_face asset id (or a built-in face's id) shown on the clock screen; empty = the built-in Classic face. An id that is not installed shows Classic. str: max 32 UTF-8 bytes",
+          "default": ""
+        },
+        "ui.clock_face_opts": {
+          "type": "string",
+          "pattern": "^([0-9a-f]{2})*$",
+          "maxLength": 64,
+          "description": "key 68 (0x0044), since 0.15.0. The active face's option values: pairs of bytes (option id, value). Unknown ids are ignored and a value out of range uses the option's default. Lower-case hex in logical form. hex-encoded bytes",
+          "default": ""
+        },
         "weather.enabled": {
           "type": "boolean",
           "default": true,

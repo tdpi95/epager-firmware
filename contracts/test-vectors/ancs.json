@@ -1,5 +1,5 @@
 {
- "contract_version": "0.14.0",
+ "contract_version": "0.15.0",
  "description": "ANCS client helpers (Apple ANCS spec). notification_source: 8-byte packets. requests: exact Control Point bytes. data_source: feeding 'fragments' to a reassembler for 'request' yields 'expect' at fragment index 'at_fragment' (NEED_MORE = still incomplete). dates: yyyyMMdd'T'HHmmSS to seconds since 1970-01-01 local time.",
  "scope": "board",
  "notification_source": [
