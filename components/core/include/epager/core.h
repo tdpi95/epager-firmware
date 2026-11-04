@@ -97,6 +97,9 @@ typedef struct {
     void (*on_setting)(void *ctx, core_setting_t kind);
     void (*on_ota)(void *ctx, const xfer_ota_event_t *ev);   /* reboot, mark valid, rollback, progress */
     void (*on_asset)(void *ctx, uint8_t asset_type);         /* asset installed or deleted (the UI re-reads it) */
+    /* Content check of an asset at XFER_FINISH (xfer_params_t.check_asset): clock faces are parsed here. NULL: none. */
+    proto_status_t (*check_asset)(void *ctx, uint8_t asset_type, const char *id, size_t id_len, const char *blob_name,
+                                  uint32_t size);
     /* The user dismissed a notification on the board (core_dismiss), already removed from the store. The
      * platform tells the phone: ANCS needs the negative action (protocol.md 6.5). NULL: nothing to do. */
     void (*on_dismissed)(void *ctx, const npipe_dismissed_t *d);
@@ -182,6 +185,12 @@ bool core_dismiss(core_t *c, uint32_t id);
  * encoding (little-endian integers, UTF-8 strings). Returns the cfg_set status. */
 proto_status_t core_config_set(core_t *c, uint16_t key, const uint8_t *val, size_t len);
 proto_status_t core_config_set_u8(core_t *c, uint16_t key, uint8_t value);
+/* The settings pages' clock face actions (M8b): `id` ("" = Classic) becomes ui.clock_face_id, which loads that face's stored
+ * option values; `value` of option `option` is put into ui.clock_face_opts and stored with the active face; delete an
+ * installed face (its option values go with it, and Classic shows if it was the active one). */
+proto_status_t core_face_select(core_t *c, const char *id);
+proto_status_t core_face_option(core_t *c, uint8_t option, uint8_t value);
+proto_status_t core_face_delete(core_t *c, const char *id);
 
 /* Milliseconds since a phone last set the clock with TIME_SYNC; UINT32_MAX if none did since boot. The
  * board's own time sources (SNTP, PLAN D63) give way to a phone for a day. */

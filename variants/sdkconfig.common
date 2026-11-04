@@ -65,6 +65,9 @@ CONFIG_LV_BUILD_DEMOS=n
 # --- firmware updates over BLE (components/ota, M6): both variants ship them
 CONFIG_EPAGER_FEATURE_OTA=y
 
+# --- installable clock faces (M8b): asset support, the upload check, the Clock face settings pages
+CONFIG_EPAGER_FEATURE_CLOCK_FACES=y
+
 # --- Wi-Fi for the weather, the time and the setup hotspot (components/net, PLAN D60-D64, D78). The radio is on only
 # while fetching or while the hotspot is open; it never touches GPIO19/20 or the USB PHY (D50). Wi-Fi and lwIP
 # buffers go to PSRAM (internal RAM is shared with BLE and LVGL); the common CA bundle covers Open-Meteo and

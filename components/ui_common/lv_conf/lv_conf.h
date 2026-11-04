@@ -18,17 +18,19 @@
 #define LV_USE_STDLIB_MALLOC LV_STDLIB_BUILTIN
 #define LV_USE_STDLIB_STRING LV_STDLIB_BUILTIN
 #define LV_USE_STDLIB_SPRINTF LV_STDLIB_BUILTIN
-/* Measured peak of the host UI tests (longest text, 8 cards, icons): 24.4 KB. 2x headroom; this is
- * internal RAM on the Paper (static pool), so do not oversize. Re-measure when the real UI lands. */
+/* The pool of LVGL's objects and styles. A clock face costs 30-100 objects of about 250 bytes next to the screens' own (the
+ * Paper's idle screen alone leaves about 5 KB of 48 KB, measured on the fake board 2026-11-04, D117), so the firmware pool
+ * is 128 KB and lives in PSRAM (the static array gets the section attribute; internal RAM is shared with BLE, Wi-Fi and
+ * TLS and gains the 48 KB it used to take). Pixels are drawn from internal buffers; only the object structs are read from
+ * PSRAM, which an e-paper redraw once a minute and the LCD's partial redraws should not notice.
+ * TODO(hw-verify): the LCD's redraw time and the free internal RAM with PSRAM on both boards (checklist 85). The host
+ * builds (tests, fake board) use the same size, so the tests see the same limit. ui_face.c checks the pool before it
+ * builds a face and falls back to Classic. */
 #ifdef ESP_PLATFORM
-#define LV_MEM_SIZE (48 * 1024U)
-#else
-/* The host builds (tests, fake board) also draw clock faces (M8a): a face costs about 30-100 LVGL objects, and the
- * Paper's idle screen leaves only about 5 KB of the firmware's 48 KB pool (measured on the fake board, 2026-11-04).
- * What the boards need is decided in M8b from a measurement on the hardware (a larger pool, or in PSRAM): until
- * then a face that does not fit falls back to Classic (ui_face.c checks the pool before it builds). */
-#define LV_MEM_SIZE (192 * 1024U)
+#include "esp_attr.h"
+#define LV_ATTRIBUTE_LARGE_RAM_ARRAY EXT_RAM_BSS_ATTR
 #endif
+#define LV_MEM_SIZE (128 * 1024U)
 #define LV_USE_OS LV_OS_NONE
 #define LV_USE_LOG 0
 #define LV_USE_SYSMON 0

@@ -35,7 +35,8 @@ static const ui_strings_t STRINGS[] = {
                            "Not checked", "Checking...", "Up to date", "New version", "Skipped", "Updating", "Needs newer app", "Size",
                            "Install", "Check now", "Remind later", "Skip this version", "Cancel",
                            {"", "No Wi-Fi saved", "No connection", "Clock not set", "Download failed", "Update rejected",
-                            "Phone update running", "Cancelled", "Battery below 30%", "Update failed"}},
+                            "Phone update running", "Cancelled", "Battery below 30%", "Update failed"},
+                           "Clock face", "Classic", "In use", "From file", "Use this face", "Delete", "Delete?"},
     [PROTO_LANGUAGE_VI] = {"Chưa đặt giờ", "Chế độ ghép nối", "Đã tắt nguồn", "Đang cập nhật %d%%", "Nhiệt độ", "Độ ẩm",
                            {"Chủ nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"},
                            {0},
@@ -54,7 +55,8 @@ static const ui_strings_t STRINGS[] = {
                            "Chưa kiểm tra", "Đang kiểm tra...", "Đã là mới nhất", "Bản mới", "Đã bỏ qua", "Đang cập nhật", "Cần app mới hơn", "Dung lượng",
                            "Cài đặt", "Kiểm tra ngay", "Nhắc lại sau", "Bỏ qua bản này", "Hủy",
                            {"", "Chưa lưu Wi-Fi", "Không có kết nối", "Chưa đặt giờ", "Tải về lỗi", "Bản cập nhật bị từ chối",
-                            "Điện thoại đang cập nhật", "Đã hủy", "Pin dưới 30%", "Cập nhật lỗi"}},
+                            "Điện thoại đang cập nhật", "Đã hủy", "Pin dưới 30%", "Cập nhật lỗi"},
+                           "Mặt đồng hồ", "Cổ điển", "Đang dùng", "Từ tệp", "Dùng mặt này", "Xóa", "Xóa?"},
 };
 
 ui_wifi_icon_t ui_wifi_icon_for(uint8_t wifi_state)
@@ -617,6 +619,9 @@ void ui_assets_changed(uint8_t asset_type)
     if (asset_type == PROTO_ASSET_TYPE_APP_ICON || asset_type == PROTO_ASSET_TYPE_CLOCK_FACE) {
         ui.assets_gen++;
         ui.model_dirty = true; /* an unchanged frame is not refreshed, so this costs nothing when no card is affected */
+        if (asset_type == PROTO_ASSET_TYPE_CLOCK_FACE) {
+            ui_settings_faces_changed();
+        }
     }
 }
 

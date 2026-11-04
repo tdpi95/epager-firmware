@@ -64,7 +64,8 @@ xboard_t *xboard_new(const cJSON *board)
     cJSON_ArrayForEach(a, cJSON_GetObjectItemCaseSensitive(board, "asset_support")) {
         b->assets[b->n_assets++] = (xfer_asset_support_t){(uint8_t)jnum(a, "asset_type", 0),
                                                           (uint8_t)jnum(a, "format", 0), (uint32_t)jnum(a, "max_size", 0),
-                                                          (uint16_t)jnum(a, "width", 0), (uint16_t)jnum(a, "height", 0)};
+                                                          (uint16_t)jnum(a, "width", 0), (uint16_t)jnum(a, "height", 0),
+                                                          (uint32_t)jnum(a, "budget", 0), (uint16_t)jnum(a, "max_count", 0)};
     }
     const cJSON *disp = cJSON_GetObjectItemCaseSensitive(board, "display");
     const cJSON *fw = cJSON_GetObjectItemCaseSensitive(board, "firmware");

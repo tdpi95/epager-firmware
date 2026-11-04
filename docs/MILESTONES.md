@@ -19,7 +19,7 @@ Work on one approved milestone at a time. Each completed milestone has notes rec
 | M6a | LittleFS asset sink + app icons | done (host-verified); LCD upload/drawing observed 2026-10-17; remaining device cases open | [Notes and updates](milestone-notes/M6a.md), checklist 76 |
 | M6c | Firmware update over Wi-Fi from GitHub Releases (no iOS app): daily check, Install / Remind later / Skip | **done on the Paper 2026-11-03 (contract 0.14.0, portable logic, Wi-Fi task, screens, hardware acceptance); LCD board and the visual check of the e-paper open** | [Plan](wifi-ota-plan.md), [M6c notes](milestone-notes/M6c.md) |
 | M7 | Complete hardware verification | planned for completion; bring-up and later sessions have already recorded partial evidence | [Checklist](hw-checklist.md) |
-| M8 | Installable clock faces: format, renderer, settings, developer tools, GitHub gallery (contract 0.15.0) | in progress: plan approved 2026-11-04 (D113); **M8a done (host-verified) 2026-11-04**, awaiting review; M8b (firmware) and M8c (tools, gallery) not started | [Plan](clock-faces-plan.md), [M8a notes](milestone-notes/M8a.md), §M8 below |
+| M8 | Installable clock faces: format, renderer, settings, developer tools, GitHub gallery (contract 0.15.0) | in progress: plan approved 2026-11-04 (D113); **M8a done (host-verified) 2026-11-04**; **M8b done (host-verified, both images build) 2026-11-04**, awaiting review; M8c (tools, gallery) not started | [Plan](clock-faces-plan.md), [M8a notes](milestone-notes/M8a.md), [M8b notes](milestone-notes/M8b.md), §M8 below |
 | P1a | LCD board bring-up | done (hw-verified) 2026-10-13, awaiting review; battery characterization and long-idle touch carried forward | [Notes](milestone-notes/P1a.md), checklist 21–28 |
 | P1b | LCD colour UI, simulator, controls, weather and settings (0.8.0/0.9.0) | in progress; approved 2026-10-14; implemented features still need remaining hardware acceptance and closing notes | §P1b below, checklist 14, 27, 29–38, 54–55 |
 | v2 | Wi-Fi transfer fast path | not scheduled; only when requested | §v2 below |
@@ -246,12 +246,12 @@ The case stays closed. **Any LCD flash, including a probe or stock restore, requ
 
 **Goal:** users choose, customise and install clock faces (built-in, from a GitHub gallery, or from a file) through the phone apps; other developers build faces with our tools and submit them to the gallery.
 
-**Status:** in progress; [plan](clock-faces-plan.md) approved 2026-11-04 (D113) with its defaults. **M8a is done on the host (2026-11-04, [notes](milestone-notes/M8a.md)) and stops for review.** M8b and M8c are not started. User decisions: the name `clock_face`, image digit sets, a GitHub gallery with developer submissions, per-face options, side-loading without the gallery, no hotspot upload (an iOS app will follow), the notification count is a field faces place themselves and the firmware badge shows on built-in faces only.
+**Status:** in progress; [plan](clock-faces-plan.md) approved 2026-11-04 (D113) with its defaults. **M8a is done on the host (2026-11-04, [notes](milestone-notes/M8a.md)); M8b is done on the host and in the builds (2026-11-04, [notes](milestone-notes/M8b.md)) and stops for review.** M8c is not started. User decisions: the name `clock_face`, image digit sets, a GitHub gallery with developer submissions, per-face options, side-loading without the gallery, no hotspot upload (an iOS app will follow), the notification count is a field faces place themselves and the firmware badge shows on built-in faces only.
 
 **Parts (each ends with notes and a stop for review):**
 
 - **M8a, host only (done, [notes](milestone-notes/M8a.md)):** contract 0.15.0 (`clock_face` asset type, `clock_face_v1` format, `ui.clock_face_id`, `ui.clock_face_opts`, asset `origin`, gallery schema, vectors); portable `components/clock_face` parser and evaluator with fuzzing; `ui_face.c` renderer with Classic as the fallback; built-in faces; fake-board commands and golden images.
-- **M8b, firmware:** `asset_support`, budgets, per-face option files, delete/replace of the active face, Settings pages on both layouts; hardware acceptance as checklist item 85 (the LCD board only after the user's go-ahead).
+- **M8b, firmware (done on the host and in the builds, [notes](milestone-notes/M8b.md)):** `asset_support`, budgets and the face check at `XFER_FINISH`, `origin` stored and listed, per-face option files, delete of the face in use, the Clock face pages on both layouts, `CONFIG_EPAGER_FEATURE_CLOCK_FACES`, the 128 KB PSRAM pool; **hardware acceptance (checklist item 85, the LCD board only after the user's go-ahead) is not done.**
 - **M8c, tools and gallery:** the `epager-face` command-line tool, the developer guide `docs/clock-faces.md`, the gallery repository with its CI and first release (a new public repository: the user's go-ahead first).
 
 **Acceptance:** as listed per step in the plan. Host results do not establish upload time, memory headroom, e-paper ghosting or battery cost on the boards. The phone apps' gallery and install screens are outside this repository.
@@ -277,6 +277,7 @@ One file per completed milestone/subpart under `docs/milestone-notes/`: delivere
 - [M6a: Asset sink and app icons (2026-10-17, with later fixes/results)](milestone-notes/M6a.md)
 - [M6b: Firmware OTA sink, self-check and rollback (2026-11-03)](milestone-notes/M6b.md)
 - [M8a: Clock faces, contract 0.15.0, parser, renderer, built-in faces, host only (2026-11-04)](milestone-notes/M8a.md)
+- [M8b: Clock faces on the board: install, choose, customise, host-verified (2026-11-04)](milestone-notes/M8b.md)
 
 P1b, M6 as a whole and M7 have no closing note yet; their remaining work is listed above.
 

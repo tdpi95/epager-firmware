@@ -117,8 +117,8 @@ static void on_ota(void *ctx, const xfer_ota_event_t *ev) { ((xcore_t *)ctx)->ot
 
 static void setup_params(xcore_t *x)
 {
-    x->assets[0] = (xfer_asset_support_t){PROTO_ASSET_TYPE_THEME, PROTO_ASSET_FORMAT_THEME_V1, 512, 0, 0};
-    x->assets[1] = (xfer_asset_support_t){PROTO_ASSET_TYPE_BACKGROUND, PROTO_ASSET_FORMAT_MONO1, 5016, 0, 0};
+    x->assets[0] = (xfer_asset_support_t){PROTO_ASSET_TYPE_THEME, PROTO_ASSET_FORMAT_THEME_V1, 512, 0, 0, 0, 0};
+    x->assets[1] = (xfer_asset_support_t){PROTO_ASSET_TYPE_BACKGROUND, PROTO_ASSET_FORMAT_MONO1, 5016, 0, 0, 0, 0};
     x->params = (core_params_t){
         .device_name = "ePager-1A2B", .board_id = "host_test_board", .firmware_version = x->version,
         .variant = PROTO_VARIANT_PAPER, .display_type = PROTO_DISPLAY_TYPE_EPAPER_BW, .color_depth = 1,

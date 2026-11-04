@@ -35,7 +35,7 @@ ALLOWED: dict[str, str] = {
     "LV_BUILD_EXAMPLES": "the host build compiles only src/, the firmware turns examples off in sdkconfig",
     "LV_BUILD_DEMOS": "same as LV_BUILD_EXAMPLES",
     "LV_FS_DEFAULT_DRIVER_LETTER": "'\\0' vs 0: the same value (no default drive letter)",
-    "LV_MEM_SIZE": "the host pool is larger so tests can draw clock faces; the firmware's is decided in M8b (docs/clock-faces-plan.md)",
+    "LV_ATTRIBUTE_LARGE_RAM_ARRAY": "the firmware puts the 128 KB object pool in PSRAM (EXT_RAM_BSS_ATTR, D117); the host has no such section",
 }
 
 PROBE = '#include "lvgl.h"\n'

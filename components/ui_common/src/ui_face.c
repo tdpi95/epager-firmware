@@ -473,14 +473,48 @@ static uint8_t *read_installed(const char *id, size_t max, size_t *len)
     return buf;
 }
 
+static cf_limits_t limits_for(uint16_t w, uint16_t h, bool colour)
+{
+    return (cf_limits_t){w, h, colour ? FILE_MAX_COLOUR : FILE_MAX_MONO,
+                         colour ? (1u << PROTO_ASSET_FORMAT_MONO1 | 1u << PROTO_ASSET_FORMAT_RGB565 |
+                                   1u << PROTO_ASSET_FORMAT_RGB565A8)
+                                : 1u << PROTO_ASSET_FORMAT_MONO1,
+                         colour};
+}
+
+/* The XFER_FINISH check of a face file that is stored as `blob_name`: the whole file is parsed under the board's rules.
+ * Needs the file in memory once (PSRAM on the boards) and no UI state: it runs on the transfer's task. */
+static UI_EXT_BSS cf_face_t check_face;
+
+proto_status_t ui_face_check(const blob_storage_t *b, const char *blob_name, uint32_t size, const char *id, size_t id_len,
+                             uint16_t width, uint16_t height, bool colour)
+{
+    const cf_limits_t lim = limits_for(width, height, colour);
+    char want[CF_NAME_MAX + 1];
+    if (id_len > CF_NAME_MAX || size == 0) {
+        return PROTO_IMAGE_INVALID;
+    }
+    memcpy(want, id, id_len);
+    want[id_len] = '\0';
+    if (size > lim.max_file) {
+        return PROTO_TOO_LARGE;
+    }
+    uint8_t *buf = big_alloc(size);
+    if (!buf) {
+        return PROTO_NO_SPACE;
+    }
+    proto_status_t st = PROTO_INTERNAL;
+    if (b->read(b->ctx, blob_name, 0, buf, size) == BLOB_OK) {
+        st = cf_parse(buf, size, &lim, want, PROTO_CONTRACT_VERSION_PACKED, &check_face, NULL);
+    }
+    free(buf);
+    return st;
+}
+
 static bool load(const char *id)
 {
     const bool colour = colour_layout();
-    const cf_limits_t lim = {ui.info.width, ui.info.height, colour ? FILE_MAX_COLOUR : FILE_MAX_MONO,
-                             colour ? (1u << PROTO_ASSET_FORMAT_MONO1 | 1u << PROTO_ASSET_FORMAT_RGB565 |
-                                       1u << PROTO_ASSET_FORMAT_RGB565A8)
-                                    : 1u << PROTO_ASSET_FORMAT_MONO1,
-                             colour};
+    const cf_limits_t lim = limits_for(ui.info.width, ui.info.height, colour);
     const ui_builtin_face_t *b = find_builtin(id);
     const uint8_t *data;
     uint8_t *owned = NULL;
@@ -505,6 +539,116 @@ static bool load(const char *id)
     fc.builtin = b != NULL;
     fc.update_drawn = cf_draws_source(&face, PROTO_FACE_SOURCE_UPDATE_AVAILABLE);
     return build_objects();
+}
+
+/* ---------------------------------------------------------------- the settings pages' view of the faces */
+
+#define NAME_HEAD 512u /* bytes of a face file that hold its names */
+
+static void entry_names(ui_face_entry_t *e, const uint8_t *head, size_t len)
+{
+    char names[2][CF_NAME_MAX + 1];
+    cf_peek_names(head, len, names);
+    snprintf(e->name[0], sizeof(e->name[0]), "%s", names[0]);
+    snprintf(e->name[1], sizeof(e->name[1]), "%s", names[1]);
+}
+
+size_t ui_faces_collect(ui_face_entry_t *out, size_t max)
+{
+    size_t n = 0;
+    memset(out, 0, max * sizeof(*out));
+    if (max) {
+        out[n++].builtin = true; /* Classic: id "", its name is a string of the UI */
+    }
+    const ui_builtin_face_t *list = NULL;
+    size_t count = 0;
+#if UI_HAS_COLOUR
+    if (colour_layout()) {
+        list = ui_builtin_faces_colour;
+        count = ui_builtin_faces_colour_count;
+    }
+#endif
+#if UI_HAS_MONO
+    if (!colour_layout()) {
+        list = ui_builtin_faces_mono;
+        count = ui_builtin_faces_mono_count;
+    }
+#endif
+    for (size_t i = 0; i < count && n < max; i++, n++) {
+        snprintf(out[n].id, sizeof(out[n].id), "%s", list[i].id);
+        out[n].builtin = true;
+        entry_names(&out[n], list[i].data, list[i].len);
+    }
+    const blob_storage_t *b = ui.p.blob;
+    char name[BLOB_NAME_MAX + 1], meta[BLOB_NAME_MAX + 1];
+    uint32_t size, k = 0;
+    while (b && n < max && b->list(b->ctx, k++, name, sizeof(name), &size) == BLOB_OK) {
+        const size_t len = strlen(name);
+        if (strncmp(name, "6_", 2) != 0 || len < 3 || name[len - 1] == '~' || name[len - 1] == '@' || len - 2 > CF_NAME_MAX) {
+            continue; /* not a face (the type is the number before the underscore) */
+        }
+        memcpy(out[n].id, name + 2, len - 2); /* <= CF_NAME_MAX, checked above; the entry is zeroed */
+        uint8_t head[NAME_HEAD];
+        const size_t h = size < NAME_HEAD ? size : NAME_HEAD;
+        if (b->read(b->ctx, name, 0, head, h) == BLOB_OK) {
+            entry_names(&out[n], head, h);
+        }
+        uint8_t m[XFER_VERSION_MAX + 2];
+        uint32_t msize = 0;
+        memcpy(meta, name, len); /* len <= CF_NAME_MAX + 2: room for the suffix */
+        meta[len] = '@';
+        meta[len + 1] = '\0';
+        if (b->stat(b->ctx, meta, &msize) == BLOB_OK && msize >= 2 && msize <= sizeof(m) &&
+            b->read(b->ctx, meta, 0, m, msize) == BLOB_OK && m[msize - 2] == 0) { /* version NUL origin */
+            out[n].local = m[msize - 1] == PROTO_ASSET_ORIGIN_LOCAL;
+        }
+        n++;
+    }
+    return n;
+}
+
+/* The settings pages ask while another screen covers the clock: the face is (re)loaded now if the selection changed. */
+void ui_face_list(void (*each)(void *ctx, const char *id, const char *name, bool builtin, bool local, bool active),
+                  void *ctx)
+{
+    static ui_face_entry_t list[UI_FACES_MAX]; /* too big for a task's stack */
+    const size_t n = ui_faces_collect(list, UI_FACES_MAX);
+    bool found = false;
+    for (size_t i = 0; i < n; i++) {
+        found |= strcmp(list[i].id, ui.cfg.clock_face_id) == 0;
+    }
+    for (size_t i = 0; i < n; i++) {
+        const bool active = found ? strcmp(list[i].id, ui.cfg.clock_face_id) == 0 : i == 0; /* not installed: Classic */
+        each(ctx, list[i].id, list[i].name[0], list[i].builtin, list[i].local, active);
+    }
+}
+
+size_t ui_face_option_count(void)
+{
+    ui_face_sync();
+    return fc.active ? face.n_options : 0;
+}
+
+bool ui_face_option_row(size_t i, const char **label, char *value, size_t cap, uint8_t *id, uint8_t *next)
+{
+    ui_face_sync();
+    if (!fc.active || i >= face.n_options) {
+        return false;
+    }
+    const cf_option_t *o = &face.option[i];
+    const bool vi = ui.cfg.language == PROTO_LANGUAGE_VI;
+    const uint8_t range = cf_option_range(o), v = fc.values[i];
+    *label = vi && o->label[1][0] ? o->label[1] : o->label[0];
+    if (o->type == PROTO_FACE_OPTION_TYPE_TOGGLE) {
+        snprintf(value, cap, "%s", v ? ui_strings()->on : ui_strings()->off_value);
+    } else if (v < o->n_choices && (o->choice[v].label[vi][0] || o->choice[v].label[0][0])) {
+        snprintf(value, cap, "%s", vi && o->choice[v].label[1][0] ? o->choice[v].label[1] : o->choice[v].label[0]);
+    } else {
+        snprintf(value, cap, "%u", (unsigned)v + 1u);
+    }
+    *id = o->id;
+    *next = range ? (uint8_t)((v + 1u) % range) : 0;
+    return true;
 }
 
 void ui_face_sync(void)

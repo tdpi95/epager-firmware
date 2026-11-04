@@ -29,6 +29,7 @@ typedef enum {
     ROW_PHONES,
     ROW_NETWORKS,
     ROW_UPDATE,
+    ROW_FACE,
     ROW_ABOUT,
 } row_t;
 
@@ -54,6 +55,7 @@ static const item_t ITEMS[] = {
     {ROW_PHONES, 0, 0, false, false},
     {ROW_NETWORKS, 0, 0, true, false},
     {ROW_UPDATE, 0, 0, true, true},
+    {ROW_FACE, 0, 0, false, false}, /* before About, so the rows above keep their places */
     {ROW_ABOUT, 0, 0, false, false},
 };
 
@@ -68,7 +70,8 @@ size_t ui_settings_rows_shown(void) { return touch_list() ? UI_TOUCH_ROWS : UI_S
 static const item_t *item_at(size_t i)
 {
     for (size_t k = 0; k < sizeof(ITEMS) / sizeof(ITEMS[0]); k++) {
-        if ((ITEMS[k].needs_wifi && !ui.p.wifi_setup) || (ITEMS[k].needs_update && !ui.p.update)) {
+        if ((ITEMS[k].needs_wifi && !ui.p.wifi_setup) || (ITEMS[k].needs_update && !ui.p.update) ||
+            (ITEMS[k].row == ROW_FACE && ui.p.no_faces)) {
             continue;
         }
         if (i-- == 0) {
@@ -206,6 +209,157 @@ static ui_action_t upd_select(void)
     return UI_ACTION_NONE;
 }
 
+/* ---------------------------------------------------------------- the Clock face pages (M8b) */
+
+/* The list: Classic, the built-in faces, the installed ones. A face's page: its status, Use, then (the active face) its
+ * options, then Delete (installed faces). Selecting an option row moves it to the next value. */
+typedef enum { FR_STATUS, FR_USE, FR_OPTION, FR_DELETE } face_row_t;
+#define FACE_ROWS_MAX (3u + 8u)
+
+static bool face_is_active(size_t i)
+{
+    const char *want = ui.cfg.clock_face_id;
+    for (size_t k = 0; k < ui.n_faces; k++) {
+        if (strcmp(ui.faces[k].id, want) == 0) {
+            return k == i;
+        }
+    }
+    return i == 0; /* an id that is not installed shows Classic */
+}
+
+static const char *face_name(const ui_face_entry_t *e)
+{
+    const bool vi = ui.cfg.language == PROTO_LANGUAGE_VI;
+    if (e->id[0] == '\0') {
+        return ui_strings()->face_classic;
+    }
+    return vi && e->name[1][0] ? e->name[1] : e->name[0][0] ? e->name[0] : e->id;
+}
+
+static void faces_refresh(void)
+{
+    ui.n_faces = ui_faces_collect(ui.faces, UI_FACES_MAX);
+}
+
+/* The rows of the page of face `face_sel`: option rows only for the face on screen. */
+static size_t face_rows(face_row_t out[FACE_ROWS_MAX])
+{
+    size_t n = 0;
+    const bool active = face_is_active(ui.face_sel);
+    out[n++] = FR_STATUS;
+    if (!active) {
+        out[n++] = FR_USE;
+    } else {
+        for (size_t i = 0; i < ui_face_option_count() && n < FACE_ROWS_MAX - 1u; i++) {
+            out[n++] = FR_OPTION;
+        }
+    }
+    if (!ui.faces[ui.face_sel].builtin) {
+        out[n++] = FR_DELETE;
+    }
+    return n;
+}
+
+static void faces_row(size_t i, const char **name, char *value, size_t cap)
+{
+    const ui_strings_t *s = ui_strings();
+    if (i >= ui.n_faces) {
+        return;
+    }
+    *name = face_name(&ui.faces[i]);
+    snprintf(value, cap, "%s", face_is_active(i) ? s->face_active : ui.faces[i].local ? s->face_file : "");
+}
+
+static void face_row(size_t i, const char **name, char *value, size_t cap)
+{
+    const ui_strings_t *s = ui_strings();
+    face_row_t rows[FACE_ROWS_MAX];
+    const size_t n = face_rows(rows);
+    if (i >= n) {
+        return;
+    }
+    const ui_face_entry_t *e = &ui.faces[ui.face_sel];
+    switch (rows[i]) {
+    case FR_STATUS:
+        *name = face_name(e);
+        snprintf(value, cap, "%s", face_is_active(ui.face_sel) ? s->face_active : e->local ? s->face_file : "");
+        break;
+    case FR_USE: *name = s->face_use; break;
+    case FR_OPTION: {
+        uint8_t id, next;
+        size_t k = 0; /* the option row's number among the option rows */
+        for (size_t j = 0; j < i; j++) {
+            k += rows[j] == FR_OPTION;
+        }
+        (void)ui_face_option_row(k, name, value, cap, &id, &next);
+        break;
+    }
+    case FR_DELETE:
+        *name = s->face_delete;
+        snprintf(value, cap, "%s", ui.set_confirm && i == ui.set_cur ? s->face_delete_ask : "");
+        break;
+    }
+}
+
+static ui_action_t face_select(void)
+{
+    face_row_t rows[FACE_ROWS_MAX];
+    const size_t n = face_rows(rows);
+    if (ui.set_cur >= n) {
+        return UI_ACTION_NONE;
+    }
+    switch (rows[ui.set_cur]) {
+    case FR_USE:
+        ui_emit(UI_ACTION_FACE_SELECT, (uint32_t)ui.face_sel);
+        ui_settings_back(); /* the list shows the check where the firmware has moved it */
+        break;
+    case FR_OPTION: {
+        const char *label;
+        char value[2];
+        uint8_t id, next;
+        size_t k = 0;
+        for (size_t j = 0; j < ui.set_cur; j++) {
+            k += rows[j] == FR_OPTION;
+        }
+        if (ui_face_option_row(k, &label, value, sizeof(value), &id, &next)) {
+            ui_emit(UI_ACTION_FACE_OPTION, (uint32_t)id << 8 | next);
+        }
+        break;
+    }
+    case FR_DELETE:
+        ui.model_dirty = true;
+        if (!ui.set_confirm) {
+            ui.set_confirm = true;
+        } else {
+            ui.set_confirm = false;
+            ui_emit(UI_ACTION_FACE_DELETE, (uint32_t)ui.face_sel);
+            ui_settings_back();
+        }
+        break;
+    default: break;
+    }
+    return UI_ACTION_NONE;
+}
+
+const char *ui_face_list_id(size_t index) { return index < ui.n_faces ? ui.faces[index].id : ""; }
+
+/* The installed faces changed (a phone installed or deleted one): the list is read again; a face's page closes, its index
+ * may mean another face now. */
+void ui_settings_faces_changed(void)
+{
+    if (!ui.settings || (ui.set_page != UI_PAGE_FACES && ui.set_page != UI_PAGE_FACE)) {
+        return;
+    }
+    faces_refresh();
+    if (ui.set_page == UI_PAGE_FACE) {
+        ui.set_page = UI_PAGE_FACES;
+        ui.set_confirm = false;
+        ui.set_cur = ui.set_faces_cur;
+    }
+    ui_settings_clamp();
+    ui.model_dirty = true;
+}
+
 /* An empty list still has one row that says so. */
 static size_t list_count(uint8_t n) { return n ? n : 1u; }
 
@@ -216,6 +370,11 @@ size_t ui_settings_count(void)
     case UI_PAGE_NETWORKS: return list_count(ui.lists.n_networks);
     case UI_PAGE_ABOUT: return ABOUT_ROWS;
     case UI_PAGE_UPDATE: return upd_count();
+    case UI_PAGE_FACES: return ui.n_faces;
+    case UI_PAGE_FACE: {
+        face_row_t rows[FACE_ROWS_MAX];
+        return face_rows(rows);
+    }
     default: return main_count();
     }
 }
@@ -228,6 +387,8 @@ const char *ui_settings_title(void)
     case UI_PAGE_NETWORKS: return s->set_networks;
     case UI_PAGE_ABOUT: return s->set_about;
     case UI_PAGE_UPDATE: return s->set_update;
+    case UI_PAGE_FACES: return s->set_face;
+    case UI_PAGE_FACE: return face_name(&ui.faces[ui.face_sel < ui.n_faces ? ui.face_sel : 0]);
     default: return s->settings;
     }
 }
@@ -277,6 +438,7 @@ static void main_row(size_t i, const char **name, char *value, size_t cap)
     case ROW_NETWORKS: *name = s->set_networks; text = ">"; break;
     case ROW_UPDATE: *name = s->set_update; text = ui.upd.mark ? ui.upd.version : ">"; break; /* the version says there is one */
     case ROW_ABOUT: *name = s->set_about; text = ">"; break;
+    case ROW_FACE: *name = s->set_face; text = ">"; break;
     }
     snprintf(value, cap, "%s", text);
 }
@@ -334,6 +496,12 @@ void ui_settings_row(size_t i, const char **name, char *value, size_t cap)
     case UI_PAGE_UPDATE:
         upd_row(i, name, value, cap);
         break;
+    case UI_PAGE_FACES:
+        faces_row(i, name, value, cap);
+        break;
+    case UI_PAGE_FACE:
+        face_row(i, name, value, cap);
+        break;
     default:
         main_row(i, name, value, cap);
         break;
@@ -386,8 +554,14 @@ void ui_settings_back(void)
         ui.upd_prompt = false;
         return;
     }
-    ui.set_page = UI_PAGE_MAIN;
-    ui.set_cur = ui.set_main_cur;
+    if (ui.set_page == UI_PAGE_FACE) { /* a face's page: back to the list of faces, on its row */
+        faces_refresh();
+        ui.set_page = UI_PAGE_FACES;
+        ui.set_cur = ui.set_faces_cur < ui.n_faces ? ui.set_faces_cur : 0;
+    } else {
+        ui.set_page = UI_PAGE_MAIN;
+        ui.set_cur = ui.set_main_cur;
+    }
     ui.set_top = touch_list() ? ui.set_cur - ui.set_cur % UI_TOUCH_ROWS : 0; /* the page the row is on */
     fix_window();
 }
@@ -447,6 +621,20 @@ ui_action_t ui_settings_select(void)
     if (ui.set_page == UI_PAGE_UPDATE) {
         return upd_select();
     }
+    if (ui.set_page == UI_PAGE_FACES) {
+        if (ui.set_cur < ui.n_faces) {
+            ui.set_faces_cur = ui.set_cur;
+            ui.face_sel = ui.set_cur;
+            ui.set_page = UI_PAGE_FACE;
+            ui.set_cur = ui.set_top = 0;
+            ui.set_confirm = false;
+            ui.model_dirty = true;
+        }
+        return UI_ACTION_NONE;
+    }
+    if (ui.set_page == UI_PAGE_FACE) {
+        return face_select();
+    }
     const item_t *it = item_at(ui.set_cur);
     if (it == NULL) {
         return UI_ACTION_NONE;
@@ -465,6 +653,14 @@ ui_action_t ui_settings_select(void)
     case ROW_PHONES: open_page(UI_PAGE_PHONES); return UI_ACTION_NONE;
     case ROW_NETWORKS: open_page(UI_PAGE_NETWORKS); return UI_ACTION_NONE;
     case ROW_ABOUT: open_page(UI_PAGE_ABOUT); return UI_ACTION_NONE;
+    case ROW_FACE:
+        ui.set_main_cur = ui.set_cur;
+        faces_refresh();
+        ui.set_page = UI_PAGE_FACES;
+        ui.set_cur = ui.set_top = 0;
+        ui.set_confirm = false;
+        ui.model_dirty = true;
+        return UI_ACTION_NONE;
     case ROW_UPDATE:
         ui.upd_prompt = false;
         open_page(UI_PAGE_UPDATE);

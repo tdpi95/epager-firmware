@@ -604,6 +604,86 @@ static void test_apps_flushed_periodically(void)
     TEST_ASSERT_GREATER_THAN_UINT32(before, x->kv.mutations);
 }
 
+/* ---------------------------------------------------------------- clock faces (M8b): option files and the fallback */
+
+static void put_blob(const char *name)
+{
+    static const uint8_t body[20] = {1};
+    TEST_ASSERT_EQUAL_INT(BLOB_OK, x->blob.iface.write(x->blob.iface.ctx, name, 0, body, sizeof(body)));
+}
+
+static bool has_blob(const char *name)
+{
+    uint32_t size;
+    return x->blob.iface.stat(x->blob.iface.ctx, name, &size) == BLOB_OK;
+}
+
+static size_t face_opts(uint8_t out[32])
+{
+    const uint8_t *v;
+    const size_t n = cfg_get_str(&x->core.cfg, PROTO_CFG_UI_CLOCK_FACE_OPTS, &v);
+    memcpy(out, v, n);
+    return n;
+}
+
+static void test_face_option_values_follow_the_face(void)
+{
+    uint8_t o[32];
+    put_blob("6_me.a");
+    put_blob("6_me.b");
+    TEST_ASSERT_EQUAL_INT(PROTO_OK, core_face_select(&x->core, "me.a"));
+    TEST_ASSERT_EQUAL_INT(PROTO_OK, core_face_option(&x->core, 2, 0));
+    TEST_ASSERT_EQUAL_INT(PROTO_OK, core_face_option(&x->core, 1, 3));
+    TEST_ASSERT_EQUAL_size_t(4, face_opts(o));
+    TEST_ASSERT_EQUAL_HEX8_ARRAY(((uint8_t[]){2, 0, 1, 3}), o, 4);
+    TEST_ASSERT_TRUE(has_blob("opt_me.a"));
+    /* another face starts with its defaults, and keeps its own values */
+    TEST_ASSERT_EQUAL_INT(PROTO_OK, core_face_select(&x->core, "me.b"));
+    TEST_ASSERT_EQUAL_size_t(0, face_opts(o));
+    TEST_ASSERT_FALSE(has_blob("opt_me.b"));
+    TEST_ASSERT_EQUAL_INT(PROTO_OK, core_face_option(&x->core, 2, 1));
+    TEST_ASSERT_TRUE(has_blob("opt_me.b"));
+    TEST_ASSERT_EQUAL_INT(PROTO_OK, core_face_select(&x->core, "me.a"));
+    TEST_ASSERT_EQUAL_size_t(4, face_opts(o));
+    TEST_ASSERT_EQUAL_HEX8_ARRAY(((uint8_t[]){2, 0, 1, 3}), o, 4);
+    /* a change of an option replaces its pair; Classic has no values and no file */
+    TEST_ASSERT_EQUAL_INT(PROTO_OK, core_face_option(&x->core, 2, 1));
+    TEST_ASSERT_EQUAL_size_t(4, face_opts(o));
+    TEST_ASSERT_EQUAL_HEX8_ARRAY(((uint8_t[]){1, 3, 2, 1}), o, 4);
+    TEST_ASSERT_EQUAL_INT(PROTO_OK, core_face_select(&x->core, ""));
+    TEST_ASSERT_EQUAL_size_t(0, face_opts(o));
+    /* a write of both keys in one CONFIG_SET: the values given win over the new face's stored ones */
+    xcore_send_json(x, CORE_CHR_CONFIG, "{\"type\":\"CONFIG_SET\",\"req_id\":1,\"fields\":{\"entry\":["
+                    "{\"key\":67,\"value\":\"6d652e62\"},{\"key\":68,\"value\":\"0900\"}]}}");
+    TEST_ASSERT_EQUAL_size_t(2, face_opts(o));
+    TEST_ASSERT_EQUAL_HEX8_ARRAY(((uint8_t[]){9, 0}), o, 2);
+    TEST_ASSERT_TRUE(has_blob("opt_me.b"));
+}
+
+static void test_deleting_a_face_takes_its_options_and_the_selection(void)
+{
+    const uint8_t *v;
+    uint8_t o[32];
+    put_blob("6_me.a");
+    put_blob("6_me.b");
+    (void)core_face_select(&x->core, "me.b");
+    (void)core_face_option(&x->core, 2, 1);
+    (void)core_face_select(&x->core, "me.a");
+    (void)core_face_option(&x->core, 2, 0);
+    TEST_ASSERT_TRUE(has_blob("opt_me.a") && has_blob("opt_me.b"));
+    /* a face that is not selected goes with its file; the selection stays */
+    TEST_ASSERT_EQUAL_INT(PROTO_OK, core_face_delete(&x->core, "me.b"));
+    TEST_ASSERT_FALSE(has_blob("6_me.b") || has_blob("opt_me.b"));
+    TEST_ASSERT_EQUAL_size_t(4, cfg_get_str(&x->core.cfg, PROTO_CFG_UI_CLOCK_FACE_ID, &v)); /* "me.a" */
+    TEST_ASSERT_TRUE(has_blob("opt_me.a"));
+    /* the selected face: Classic is selected again, with no values */
+    TEST_ASSERT_EQUAL_INT(PROTO_OK, core_face_delete(&x->core, "me.a"));
+    TEST_ASSERT_FALSE(has_blob("6_me.a") || has_blob("opt_me.a"));
+    TEST_ASSERT_EQUAL_size_t(0, cfg_get_str(&x->core.cfg, PROTO_CFG_UI_CLOCK_FACE_ID, &v));
+    TEST_ASSERT_EQUAL_size_t(0, face_opts(o));
+    TEST_ASSERT_EQUAL_INT(PROTO_NOT_FOUND, core_face_delete(&x->core, "me.a"));
+}
+
 int main(void)
 {
     UNITY_BEGIN();
@@ -631,6 +711,8 @@ int main(void)
     RUN_TEST(test_read_only_and_unknown_characteristics);
     RUN_TEST(test_mtu_and_max_chunk);
     RUN_TEST(test_asset_transfer_with_resume);
+    RUN_TEST(test_face_option_values_follow_the_face);
+    RUN_TEST(test_deleting_a_face_takes_its_options_and_the_selection);
     RUN_TEST(test_ota_through_core);
     RUN_TEST(test_ota_verify_timeout);
     RUN_TEST(test_apps_flushed_periodically);

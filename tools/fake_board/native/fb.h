@@ -83,6 +83,7 @@ FB_API void fb_set_climate(int present, int readable, int16_t centi_c, uint16_t 
 FB_API void fb_set_pairing(int on);
 FB_API void fb_set_bonded(uint8_t n);
 FB_API void fb_set_storage_total(uint32_t total);
+FB_API int fb_blob_put(const char *name, const uint8_t *data, size_t len); /* past the transfer checks */
 FB_API void fb_storage_budget(int32_t writes); /* < 0: unlimited; else storage fails after n more writes */
 FB_API int fb_corrupt_transfer(void);          /* flip a byte of the incomplete transfer's data */
 FB_API void fb_set_fw_image_status(uint8_t status);

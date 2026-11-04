@@ -196,7 +196,9 @@ def test_console_face_commands_on_the_paper(fb_libs, tmp_path: Path) -> None:
     run("face select me.mine")  # its option comes back
     assert "Sunday" not in b.screen_text()
     run("face delete me.mine")
-    assert b.clock_face_shown() == "" and b.clock_face_errors() == 1  # deleted while shown: Classic
+    # deleted while shown: the board goes back to Classic by itself, the key says so and the option file is gone
+    assert b.clock_face_shown() == "" and b.clock_face_errors() == 0
+    assert loopback.config_get_raw(b, "ui.clock_face_opts") == b""
     run("face select")
     assert b.clock_face_shown() == "" and "classic" in lines[-1]
 
@@ -215,3 +217,32 @@ def test_lcd_scene_faces_are_installable(fb_libs) -> None:
     loopback.install_clock_face(b, "me.big", sample_faces.big_variant("lcd", "me.big"))
     scenes_lcd.select_face(b, "me.big")
     assert b.clock_face_shown() == "me.big"
+
+
+# --------------------------------------------------------------------------- install, choose, customise (M8b)
+
+def test_a_bad_face_is_refused_at_finish_and_leaves_nothing(fb_libs) -> None:
+    b = scenes.face_board()
+    with pytest.raises(loopback.LoopbackError, match="IMAGE_INVALID"):
+        loopback.install_clock_face(b, "me.bad", sample_faces.broken("paper"), want="OK")
+    with pytest.raises(loopback.LoopbackError, match="IMAGE_INVALID"):  # a face made for the LCD's screen
+        loopback.install_clock_face(b, "me.lcd", sample_faces.big_variant("lcd", "me.lcd"), want="OK")
+    with pytest.raises(loopback.LoopbackError, match="IMAGE_INVALID"):  # the id inside is not the asset id
+        loopback.install_clock_face(b, "me.other", sample_faces.big_variant("paper", "me.mine"), want="OK")
+    assert loopback.asset_list(b, loopback.ASSET_TYPE_CLOCK_FACE) == []
+
+
+def test_origin_is_listed_and_the_budget_counts_faces(fb_libs) -> None:
+    b = scenes.face_board()
+    loopback.install_clock_face(b, "me.a", sample_faces.big_variant("paper", "me.a"), origin="gallery")
+    loopback.install_clock_face(b, "me.b", sample_faces.big_variant("paper", "me.b"), origin="local")
+    loopback.install_clock_face(b, "me.c", sample_faces.big_variant("paper", "me.c"))
+    items = {a["id"]: a.get("origin") for a in loopback.asset_list(b, loopback.ASSET_TYPE_CLOCK_FACE)}
+    assert items == {"me.a": 1, "me.b": 2, "me.c": None}
+    for i in range(13):  # 16 in all
+        loopback.install_clock_face(b, f"me.f{i:02d}", sample_faces.big_variant("paper", f"me.f{i:02d}"))
+    with pytest.raises(loopback.LoopbackError, match="NO_SPACE"):
+        loopback.install_clock_face(b, "me.17", sample_faces.big_variant("paper", "me.17"))
+    loopback.install_clock_face(b, "me.a", sample_faces.big_variant("paper", "me.a"))  # a replacement is not a new face
+    loopback.delete_clock_face(b, "me.f00")
+    loopback.install_clock_face(b, "me.17", sample_faces.big_variant("paper", "me.17"))

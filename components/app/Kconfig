@@ -1,5 +1,14 @@
 menu "ePager app"
 
+    config EPAGER_FEATURE_CLOCK_FACES
+        bool "Install and choose clock faces (M8b)"
+        default y
+        help
+            PLAN D113: the board advertises the clock_face asset type, checks a face file at the end of its upload,
+            keeps the faces and their option values on the assets partition, and the settings list has the Clock face
+            pages. Off: the board keeps Classic and the built-in faces cannot be chosen from the settings (the face
+            renderer itself stays in the image).
+
     config EPAGER_DEBUG_CONSOLE
         bool "Debug console on the USB serial port (DEBUG ONLY)"
         default n

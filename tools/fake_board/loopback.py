@@ -69,14 +69,18 @@ class _Session:
         raise LoopbackError(f"{type_name}: no response")
 
 
-def install_asset(board: FakeBoard, asset_type: int, ident: str, data: bytes, want: str = "OK") -> None:
+def install_asset(board: FakeBoard, asset_type: int, ident: str, data: bytes, want: str = "OK",
+                  origin: str | None = None) -> None:
     """Upload `data` (an asset file) as asset `ident` of `asset_type` with the transfer protocol, in
     chunks of the board's `max_chunk`. `want` is the expected status of XFER_FINISH; anything else
     raises LoopbackError."""
     s = _Session(board)
     try:
-        b = s.request("XFER_BEGIN", {"kind": KIND_ASSET, "asset_type": asset_type, "id": ident, "size": len(data),
-                                     "crc32": zlib.crc32(data), "sha256": hashlib.sha256(data).hexdigest()})
+        begin = {"kind": KIND_ASSET, "asset_type": asset_type, "id": ident, "size": len(data),
+                 "crc32": zlib.crc32(data), "sha256": hashlib.sha256(data).hexdigest()}
+        if origin is not None:
+            begin["origin"] = {"unknown": 0, "gallery": 1, "local": 2}[origin]
+        b = s.request("XFER_BEGIN", begin)
         for off in range(0, len(data), b["max_chunk"]):  # chunks are single-segment writes
             piece = data[off:off + b["max_chunk"]]
             chunk = codec.encode_message(REG, {"type": "XFER_CHUNK", "req_id": 0,
@@ -110,9 +114,14 @@ def delete_app_icon(board: FakeBoard, app_id: str) -> None:
 ASSET_TYPE_CLOCK_FACE = 6
 
 
-def install_clock_face(board: FakeBoard, ident: str, data: bytes, want: str = "OK") -> None:
+def install_clock_face(board: FakeBoard, ident: str, data: bytes, want: str = "OK", origin: str | None = None) -> None:
     """Install a clock face file (a clock_face_v1 asset) under `ident` through the transfer protocol."""
-    install_asset(board, ASSET_TYPE_CLOCK_FACE, ident, data, want)
+    install_asset(board, ASSET_TYPE_CLOCK_FACE, ident, data, want, origin)
+
+
+def put_clock_face_unchecked(board: FakeBoard, ident: str, data: bytes) -> None:
+    """Store a face file without the checks of XFER_FINISH: what the renderer sees after the flash went bad."""
+    board.blob_put(f"{ASSET_TYPE_CLOCK_FACE}_{ident}", data)
 
 
 def delete_clock_face(board: FakeBoard, ident: str) -> None:
@@ -158,6 +167,17 @@ def config_set(board: FakeBoard, values: dict[str, object]) -> None:
         s.request("CONFIG_SET", {"entry": entries}, char=CHAR_CONFIG)
     finally:
         s.close()
+
+
+def config_get_raw(board: FakeBoard, name: str) -> bytes:
+    """CONFIG_GET of one registry key: its value as the wire bytes (a `bytes` key such as ui.clock_face_opts)."""
+    key = next(k for k in REG.config_keys if k["name"] == name)
+    s = _Session(board)
+    try:
+        f = s.request("CONFIG_GET", {"key": [key["id"]]}, char=CHAR_CONFIG)
+    finally:
+        s.close()
+    return bytes.fromhex(f["entry"][0]["value"])
 
 
 def wifi_set(board: FakeBoard, ssid: str | None = None, password: str | None = None, forget: bool = False,

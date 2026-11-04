@@ -188,7 +188,7 @@ def scene_face_fallback() -> Frames:
     select_face(b, "no.such.face")
     out: Frames = [("face_missing_classic", b.panel())]
     assert (b.clock_face_shown(), b.clock_face_errors()) == ("", 1)
-    loopback.install_clock_face(b, "bad.file", sample_faces.broken("paper"))
+    loopback.put_clock_face_unchecked(b, "bad.file", sample_faces.broken("paper"))
     select_face(b, "bad.file")
     out.append(("face_damaged_classic", b.panel()))
     assert (b.clock_face_shown(), b.clock_face_errors()) == ("", 2)
@@ -234,6 +234,31 @@ def scene_settings() -> Frames:
     b.button(BTN_BOOT, long_press=True)
     settle(b)
     out.append(("settings_phones", b.panel()))
+    return out
+
+
+def scene_settings_faces() -> Frames:
+    """The Clock face pages (M8b): the list with the face in use and a face from a file, a face that is not in use
+    (Use this face), then the face in use with its options and the one installed from a file with Delete."""
+    b = face_board()
+    loopback.install_clock_face(b, "me.mine", sample_faces.big_variant("paper", "me.mine"), origin="local")
+    b.button(BTN_PWR)  # the clock: open the settings
+    b.button(BTN_BOOT)  # up from the first row: About
+    b.button(BTN_BOOT)  # Clock face
+    b.button(BTN_BOOT, long_press=True)
+    settle(b)
+    out: Frames = [("settings_faces", b.panel())]
+    b.button(BTN_PWR)  # down to Big
+    b.button(BTN_BOOT, long_press=True)
+    settle(b)
+    out.append(("settings_face_use", b.panel()))
+    b.button(BTN_PWR)  # Use this face: Big is chosen, the list shows it
+    b.button(BTN_BOOT, long_press=True)
+    settle(b)
+    out.append(("settings_faces_big_in_use", b.panel()))
+    b.button(BTN_BOOT, long_press=True)  # the page of the face in use: its options
+    settle(b)
+    out.append(("settings_face_options", b.panel()))
     return out
 
 
@@ -429,6 +454,7 @@ SCENES: dict[str, Callable[[], Frames]] = {
     "face_minimal": scene_face_minimal,
     "face_firmware_parts": scene_face_firmware_parts,
     "face_fallback": scene_face_fallback,
+    "settings_faces": scene_settings_faces,
     "notice": scene_notice,
     "wifi_setup": scene_wifi_setup,
     "rotation": scene_rotation,

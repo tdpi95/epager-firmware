@@ -54,6 +54,9 @@ typedef enum {
     UI_ACTION_UPDATE_LATER,      /* "Remind later" */
     UI_ACTION_UPDATE_SKIP,       /* "Skip this version" */
     UI_ACTION_UPDATE_CANCEL,     /* "Cancel" while the image downloads */
+    UI_ACTION_FACE_SELECT,       /* the Clock face pages: use face number `arg` of the list (ui_face_list_id; 0 = Classic) */
+    UI_ACTION_FACE_OPTION,       /* arg = (option id << 8) | value: the active face's option moves to that value */
+    UI_ACTION_FACE_DELETE,       /* delete the installed face number `arg` of the list */
 } ui_action_t;
 
 /* The firmware update, as the firmware reports it (ui_set_update). */
@@ -154,6 +157,7 @@ typedef struct {
     uint16_t cards_timeout_s;
     bool wifi_setup;                /* the pairing screen offers "Wi-Fi setup" (boards with Wi-Fi: a button, or short BOOT) */
     bool update;                    /* the settings list has the firmware update rows (boards with Wi-Fi updates) */
+    bool no_faces;                  /* the settings list has no Clock face row (CONFIG_EPAGER_FEATURE_CLOCK_FACES off) */
 } ui_params_t;
 
 typedef struct {
@@ -240,6 +244,19 @@ ui_notice_t ui_current_notice(void);
 void ui_on_notification(const npipe_notif_t *n);
 /* An asset was installed or deleted (core on_asset): app icons are looked up again at the next render. */
 void ui_assets_changed(uint8_t asset_type);
+/* The id of face number `index` of the Clock face list ("" = Classic, also for an index past the end). Valid when the UI
+ * reports UI_ACTION_FACE_SELECT or _DELETE, from the callback. */
+const char *ui_face_list_id(size_t index);
+/* Every face of the Clock face list as the settings pages would show it now (Classic with id "", the built-in faces, the
+ * installed ones), for the debug console and tools: `each` gets the id, the English name and whether it is built in, from
+ * a file and in use. Does not touch the open settings page. */
+void ui_face_list(void (*each)(void *ctx, const char *id, const char *name, bool builtin, bool local, bool active),
+                  void *ctx);
+/* The XFER_FINISH check of a clock face file stored in `b` as `blob_name` (core_params_t.check_asset): the whole file is
+ * parsed under the board's rules (screen size, image formats, limits) and its id must equal the asset id. PROTO_OK,
+ * PROTO_IMAGE_INVALID, PROTO_TOO_LARGE or PROTO_NO_SPACE (no memory for the file). Does not use the UI's state. */
+proto_status_t ui_face_check(const blob_storage_t *b, const char *blob_name, uint32_t size, const char *id, size_t id_len,
+                             uint16_t width, uint16_t height, bool colour);
 /* The id of the clock face the idle screen draws now, "" when it is Classic (tests and tools). */
 const char *ui_clock_face_shown(void);
 /* How many times a selected face could not be shown (missing, wrong size, damaged, too big for memory). */

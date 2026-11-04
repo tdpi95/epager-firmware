@@ -15,6 +15,8 @@
  *   batlog [clear]                 print the battery log | delete it (CONFIG_EPAGER_BATTERY_LOG)
  *   ab ...                         switches for A/B drain tests (app_ab.c, PLAN D106)
  *   update [status|check|install|cancel|later|skip|due|url URL|interval MIN|drop KIB|auto 0|1]   firmware updates over Wi-Fi (M6c)
+ *   face [list|select ID|opt N V|delete ID]   clock faces (M8b): the list, choose one (select with no ID = Classic), set option N
+ *                                  of the face in use to V, delete an installed face
  *   tasks                          the busiest tasks since boot (CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS)
  *   pm                             the power manager's lock and mode table (CONFIG_PM_PROFILING; over USB the chip never sleeps)
  * The password typed for `wifi` is echoed by the console: development only, like the rest.
@@ -146,6 +148,20 @@ static int cmd_update(int argc, char **argv)
     return send(&c);
 }
 
+static int cmd_face(int argc, char **argv)
+{
+    app_console_cmd_t c = {.kind = APP_CMD_FACE};
+    strlcpy(c.title, argc > 1 ? argv[1] : "list", sizeof(c.title));
+    if (argc > 2) {
+        strlcpy(c.body, argv[2], sizeof(c.body));
+        c.value = (uint16_t)strtoul(argv[2], NULL, 10);
+    }
+    if (argc > 3) {
+        c.size = (uint8_t)strtoul(argv[3], NULL, 10); /* opt N V: V */
+    }
+    return send(&c);
+}
+
 static int cmd_weather(int argc, char **argv)
 {
     if (argc < 2) {
@@ -269,6 +285,7 @@ void app_console_start(void)
          .func = cmd_wifi},
         {.command = "weather", .help = "weather CITY... | ip | on | off | now", .func = cmd_weather},
         {.command = "update", .help = "update [status|check|install|cancel|later|skip|due|url URL|interval MIN|drop KIB|auto 0|1]: firmware updates over Wi-Fi", .func = cmd_update},
+        {.command = "face", .help = "face [list|select ID|opt N V|delete ID]: clock faces", .func = cmd_face},
         {.command = "setup", .help = "setup on|off: the Wi-Fi setup hotspot", .func = cmd_setup},
         {.command = "batlog", .help = "batlog [clear]: print the battery log | delete it", .func = cmd_batlog},
         {.command = "loop", .help = "loop: the main loop passes and where their time goes, since the last 5-minute report", .func = cmd_loop},

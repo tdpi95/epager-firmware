@@ -191,6 +191,102 @@ static void cb_set_time(void *ctx, uint32_t utc_s)
     }
 }
 
+/* ---------------------------------------------------------------- clock face option values (M8b)
+ * Each face keeps its own option values in the file "opt_<id>" next to the assets (PLAN D113): selecting a face loads
+ * them into ui.clock_face_opts, a write of that key stores them, and a face that is deleted takes its file along. */
+
+static bool face_opt_name(const uint8_t *id, size_t len, char suffix, char out[BLOB_NAME_MAX + 1])
+{
+    if (len == 0 || len > XFER_ID_MAX) {
+        return false;
+    }
+    memcpy(out, "opt_", 4);
+    memcpy(out + 4, id, len);
+    out[4 + len] = suffix;
+    out[4 + len + (suffix ? 1 : 0)] = '\0';
+    return true;
+}
+
+/* The active face's option values go to its file (an empty value removes it). */
+static void face_opts_store(core_t *c)
+{
+    const blob_storage_t *b = c->p.blob;
+    const uint8_t *id, *opts;
+    char name[BLOB_NAME_MAX + 1], temp[BLOB_NAME_MAX + 1];
+    const size_t id_len = cfg_get_str(&c->cfg, PROTO_CFG_UI_CLOCK_FACE_ID, &id);
+    const size_t n = cfg_get_str(&c->cfg, PROTO_CFG_UI_CLOCK_FACE_OPTS, &opts);
+    if (!b || !face_opt_name(id, id_len, 0, name) || !face_opt_name(id, id_len, '~', temp)) {
+        return;
+    }
+    if (n == 0) {
+        (void)b->remove(b->ctx, name);
+    } else if (b->remove(b->ctx, temp) == BLOB_OK && b->write(b->ctx, temp, 0, opts, n) == BLOB_OK &&
+               b->flush(b->ctx, temp) == BLOB_OK) {
+        (void)b->rename(b->ctx, temp, name);
+    }
+}
+
+/* ui.clock_face_id changed: the new face's stored values become the active ones (none stored: the defaults). */
+static void face_opts_load(core_t *c)
+{
+    const blob_storage_t *b = c->p.blob;
+    const uint8_t *id;
+    uint8_t v[32]; /* the key's maximum length */
+    uint32_t size = 0;
+    char name[BLOB_NAME_MAX + 1];
+    const size_t id_len = cfg_get_str(&c->cfg, PROTO_CFG_UI_CLOCK_FACE_ID, &id);
+    size_t n = 0;
+    if (b && face_opt_name(id, id_len, 0, name) && b->stat(b->ctx, name, &size) == BLOB_OK && size <= sizeof(v) &&
+        b->read(b->ctx, name, 0, v, size) == BLOB_OK) {
+        n = size;
+    }
+    (void)core_config_set(c, PROTO_CFG_UI_CLOCK_FACE_OPTS, v, n);
+}
+
+static void face_config_changed(core_t *c, const uint16_t *keys, size_t n_keys)
+{
+    bool id = false, opts = false;
+    for (size_t i = 0; i < n_keys; i++) {
+        id |= keys[i] == PROTO_CFG_UI_CLOCK_FACE_ID;
+        opts |= keys[i] == PROTO_CFG_UI_CLOCK_FACE_OPTS;
+    }
+    if (opts) {
+        face_opts_store(c); /* an explicit write wins over the new face's stored values */
+    } else if (id) {
+        face_opts_load(c);
+    }
+}
+
+/* A face was installed or deleted: drop the option files of faces that are gone and, when the active face is gone,
+ * go back to Classic (the face id key is cleared, the phone sees it). */
+static void face_assets_changed(core_t *c)
+{
+    const blob_storage_t *b = c->p.blob;
+    if (!b) {
+        return;
+    }
+    char name[BLOB_NAME_MAX + 1], face[BLOB_NAME_MAX + 1];
+    uint8_t v[1] = {0};
+    uint32_t i = 0, size;
+    while (b->list(b->ctx, i++, name, sizeof(name), &size) == BLOB_OK) {
+        if (strncmp(name, "opt_", 4) != 0 || name[strlen(name) - 1] == '~') {
+            continue;
+        }
+        xfer_asset_blob_name(PROTO_ASSET_TYPE_CLOCK_FACE, name + 4, strlen(name + 4), face);
+        if (b->stat(b->ctx, face, &size) == BLOB_NOT_FOUND && b->remove(b->ctx, name) == BLOB_OK) {
+            i = 0; /* the listing order may have changed */
+        }
+    }
+    const uint8_t *id;
+    const size_t id_len = cfg_get_str(&c->cfg, PROTO_CFG_UI_CLOCK_FACE_ID, &id);
+    if (id_len) {
+        xfer_asset_blob_name(PROTO_ASSET_TYPE_CLOCK_FACE, (const char *)id, id_len, face);
+        if (b->stat(b->ctx, face, &size) == BLOB_NOT_FOUND) {
+            (void)core_config_set(c, PROTO_CFG_UI_CLOCK_FACE_ID, v, 0);
+        }
+    }
+}
+
 static void cb_config_changed(void *ctx, uint32_t revision, const uint16_t *keys, size_t n_keys)
 {
     core_t *c = ctx;
@@ -201,6 +297,7 @@ static void cb_config_changed(void *ctx, uint32_t revision, const uint16_t *keys
     if (proto_writer_ok(&w)) {
         event(c, CORE_CHR_CONFIG, b, w.len);
     }
+    face_config_changed(c, keys, n_keys);
     if (c->p.on_config) {
         c->p.on_config(c->p.ctx, keys, n_keys);
     }
@@ -241,6 +338,32 @@ proto_status_t core_config_set(core_t *c, uint16_t key, const uint8_t *val, size
 
 proto_status_t core_config_set_u8(core_t *c, uint16_t key, uint8_t value) { return core_config_set(c, key, &value, 1); }
 
+proto_status_t core_face_select(core_t *c, const char *id)
+{
+    return core_config_set(c, PROTO_CFG_UI_CLOCK_FACE_ID, (const uint8_t *)id, strlen(id));
+}
+
+proto_status_t core_face_option(core_t *c, uint8_t option, uint8_t value)
+{
+    const uint8_t *old;
+    uint8_t pairs[32];
+    size_t n = 0, old_len = cfg_get_str(&c->cfg, PROTO_CFG_UI_CLOCK_FACE_OPTS, &old);
+    for (size_t i = 0; i + 1 < old_len && n + 2 <= sizeof(pairs) - 2; i += 2) { /* keep the others, room for this one */
+        if (old[i] != option) {
+            pairs[n++] = old[i];
+            pairs[n++] = old[i + 1];
+        }
+    }
+    pairs[n++] = option;
+    pairs[n++] = value;
+    return core_config_set(c, PROTO_CFG_UI_CLOCK_FACE_OPTS, pairs, n);
+}
+
+proto_status_t core_face_delete(core_t *c, const char *id)
+{
+    return xfer_asset_remove(&c->xfer, PROTO_ASSET_TYPE_CLOCK_FACE, id, strlen(id));
+}
+
 bool core_dismiss(core_t *c, uint32_t id)
 {
     npipe_dismissed_t d;
@@ -277,9 +400,19 @@ static bool cb_renderable(uint32_t cp, void *ctx)
 static void cb_asset(void *ctx, uint8_t asset_type)
 {
     core_t *c = ctx;
+    if (asset_type == PROTO_ASSET_TYPE_CLOCK_FACE) {
+        face_assets_changed(c);
+    }
     if (c->p.on_asset) {
         c->p.on_asset(c->p.ctx, asset_type);
     }
+}
+
+static proto_status_t cb_check_asset(void *ctx, uint8_t asset_type, const char *id, size_t id_len, const char *blob_name,
+                                     uint32_t size)
+{
+    core_t *c = ctx;
+    return c->p.check_asset ? c->p.check_asset(c->p.ctx, asset_type, id, id_len, blob_name, size) : PROTO_OK;
 }
 
 static void cb_xfer_emit(void *ctx, const uint8_t *msg, size_t len) { event(ctx, CORE_CHR_TRANSFER, msg, len); }
@@ -359,7 +492,7 @@ void core_init(core_t *c, const core_params_t *p)
                         .display_w = p->display_w, .display_h = p->display_h, .fw = p->fw,
                         .ota = p->fw ? &c->ota : NULL, .max_chunk = core_max_chunk(c->mtu),
                         .ack_window = p->ack_window, .journal_every = p->journal_every, .emit = cb_xfer_emit,
-                        .on_asset = cb_asset, .ctx = c};
+                        .on_asset = cb_asset, .check_asset = cb_check_asset, .ctx = c};
     xfer_init(&c->xfer, &xp);
 
     uint32_t rtc = 0;

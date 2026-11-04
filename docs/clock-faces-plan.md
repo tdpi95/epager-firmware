@@ -1,6 +1,6 @@
 # Plan: installable clock faces (M8)
 
-**Status: approved 2026-11-04 (D113), with the open defaults below as written. M8a (contract 0.15.0, parser, renderer, built-in faces) is done on the host (2026-11-04); M8b is next. Where the code differs from this text, [the M8a notes](milestone-notes/M8a.md) and `contracts/asset-formats.md` are right.**
+**Status: approved 2026-11-04 (D113), with the open defaults below as written. M8a (contract 0.15.0, parser, renderer, built-in faces) and M8b (install, choose, customise on the board) are done on the host and in the builds (2026-11-04); M8c is next. Where the code differs from this text, [the M8a notes](milestone-notes/M8a.md), [the M8b notes](milestone-notes/M8b.md) and `contracts/asset-formats.md` are right.**
 
 **User decisions, 2026-11-04:**
 - The feature is called **clock face** (`clock_face` in the contract and code): the board is a desk display, not a watch, and the UI already calls its idle screen the clock screen.
@@ -180,3 +180,11 @@ Three sub-milestones, each ending with notes and a stop for review, like M6a-c.
 - **`mono1` in a face is a mask:** its black pixels are ink and take the element's colour (on both boards); `rgb565` and `rgb565a8` are drawn as they are.
 - **Renderer:** the file is read into a buffer, parsed, its images are copied into aligned buffers outside LVGL's pool and the file buffer is freed; a face that needs more LVGL objects than the pool has falls back to Classic. **The Paper's idle screen leaves about 5 KB of the 48 KB pool: faces need M8b's decision** (pool size or PSRAM, checklist 85).
 - **Not in M8a (M8b):** the transfer layer storing and listing `origin`, the `XFER_FINISH` check of a face file (`cf_parse` as the asset check), `asset_support` for `clock_face`, budgets, the option files, `app.c` glue. The `epager-face` tool has `build` and `check` only (as `python -m clock_face`), the rest is M8c.
+
+## As built in M8b (differences from the text above)
+
+- **Limits:** the budget and the count are fields of `xfer_asset_support_t` (local, not advertised); the face check is a hook (`check_asset`) that parses the whole file with `cf_parse` at `XFER_FINISH`.
+- **Option files** are `opt_<id>` (an asset name starts with a number); the bookkeeping is in `core.c`, shared by the firmware, the fake board and the console. Deleting the face in use clears `ui.clock_face_id`.
+- **Origin** is stored in the version file as `version [NUL origin]`.
+- **Pages:** Settings → Clock face (the row before About) lists Classic, the built-in faces and the installed ones; a face's page has Use this face, the options (the face in use only) and Delete (installed faces). There is no separate `Customize` page. Installed faces are listed by the name in the file head.
+- **Pool:** 128 KB of PSRAM (D122); the plan's "images in PSRAM" were already so.

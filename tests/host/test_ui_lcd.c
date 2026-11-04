@@ -645,9 +645,9 @@ static void test_settings_open_pages_and_back(void)
     SWIPE_UP(); /* the next page: nine rows, four a page */
     TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n2/3\nHide numbers\nOff\nRotation\n0\xC2\xB0\nPairing mode\nPaired phones\n>\n"));
     SWIPE_UP();
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n3/3\nAbout\n>\n"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n3/3\nClock face\n>\nAbout\n>\n"));
     SWIPE_UP(); /* the last page stays */
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n3/3\nAbout\n"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n3/3\nClock face\n"));
     SWIPE_DOWN();
     TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n2/3\n"));
     SWIPE_DOWN();
@@ -706,6 +706,32 @@ static void test_settings_tap_changes_a_value(void)
     TEST_ASSERT_EQUAL_UINT32(n, n_actions);
 }
 
+/* The Clock face pages by touch: the list (Classic, the built-in faces), a face's page, Use. */
+static void test_settings_clock_face_pages(void)
+{
+    reinit(false);
+    SWIPE_UP(); /* opens the list */
+    SWIPE_UP();
+    SWIPE_UP();
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n3/3\nClock face\n>\nAbout\n>\n"));
+    TAP_ROW(0);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Clock face\nClassic\nIn use\nBig\nNight\n"));
+    TAP_ROW(1); /* a built-in face: its page has Use this face and no Delete */
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Big\nBig\nUse this face\n"));
+    TEST_ASSERT_NULL(strstr(text(), "Delete"));
+    const uint32_t n = n_actions;
+    TAP_ROW(1);
+    TEST_ASSERT_EQUAL_UINT32(n + 1, n_actions);
+    TEST_ASSERT_EQUAL_INT(UI_ACTION_FACE_SELECT, last_action);
+    TEST_ASSERT_EQUAL_UINT32(1, last_arg);
+    TEST_ASSERT_EQUAL_STRING("epager.big", ui_face_list_id(1));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Clock face\nClassic\nIn use\n")); /* back on the list */
+    SWIPE_BACK(); /* to the settings, then the clock */
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings"));
+    SWIPE_BACK();
+    TEST_ASSERT_NULL(strstr(text(), "Settings"));
+}
+
 static void test_settings_pairing_and_pages(void)
 {
     run(20);
@@ -755,12 +781,12 @@ static void test_settings_pairing_and_pages(void)
     SWIPE_BACK(); /* back to the list, on the page of the row that opened it */
     TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n2/3\nHide numbers\n"));
     SWIPE_UP();
-    TAP_ROW(0); /* About */
+    TAP_ROW(1); /* About (after Clock face) */
     TEST_ASSERT_NOT_NULL(strstr(text(), "About\n1/2\nFirmware\n1.2.3\nDevice\nePager-1A2B\nBoard\nxiaozhi_3st\nBattery\n"));
     TAP_ROW(0); /* read-only */
     TEST_ASSERT_NOT_NULL(strstr(text(), "About\n"));
     SWIPE_BACK();
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n3/3\nAbout\n"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n3/3\nClock face\n>\nAbout\n"));
     SWIPE_BACK();
     TEST_ASSERT_NULL(strstr(text(), "Settings"));
 }
@@ -796,11 +822,11 @@ static void test_settings_with_wifi(void)
     reinit(true);
     SWIPE_UP();
     SWIPE_UP();
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n2/3\nHide numbers\nOff\nRotation\n0\xC2\xB0\nWeather\nOff\nPairing mode\n"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n2/4\nHide numbers\nOff\nRotation\n0\xC2\xB0\nWeather\nOff\nPairing mode\n"));
     TAP_ROW(2); /* Weather */
     TEST_ASSERT_EQUAL_UINT32((uint32_t)PROTO_CFG_WEATHER_ENABLED << 8 | 1u, last_arg);
     SWIPE_UP();
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n3/3\nWi-Fi setup\nPaired phones\n>\nWi-Fi networks\n>\nAbout\n>\n"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n3/4\nWi-Fi setup\nPaired phones\n>\nWi-Fi networks\n>\nClock face\n>\n"));
     TAP_ROW(0);
     TEST_ASSERT_EQUAL_INT(UI_ACTION_WIFI_SETUP, last_action);
     ui_wifi_setup_t s = {.state = UI_SETUP_WAITING};
@@ -816,7 +842,7 @@ static void test_settings_with_wifi(void)
     s.state = UI_SETUP_OFF;
     ui_set_wifi_setup(&s);
     run(20);
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n3/3\nWi-Fi setup\n"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n3/4\nWi-Fi setup\n"));
 }
 
 /* ---------------------------------------------------------------- firmware update (docs/wifi-ota-plan.md) */
@@ -849,7 +875,7 @@ static void test_update_page_and_rows(void)
     SWIPE_UP();
     SWIPE_UP();
     SWIPE_UP();
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n4/4\nSoftware update\n>\nAbout\n>\n"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n4/4\nSoftware update\n>\nClock face\n>\nAbout\n>\n"));
     SWIPE_BACK();
     SWIPE_UP();
     SWIPE_UP();
@@ -1232,6 +1258,7 @@ int main(void)
     RUN_TEST(test_waking_touch_does_nothing_else);
     RUN_TEST(test_settings_open_pages_and_back);
     RUN_TEST(test_settings_tap_changes_a_value);
+    RUN_TEST(test_settings_clock_face_pages);
     RUN_TEST(test_settings_pairing_and_pages);
     RUN_TEST(test_settings_closes);
     RUN_TEST(test_settings_with_wifi);

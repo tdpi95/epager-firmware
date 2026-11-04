@@ -101,7 +101,11 @@ static EXT_RAM_BSS_ATTR core_t core;
 static EXT_RAM_BSS_ATTR ancs_sm_t ancs;
 static core_params_t params;
 static blob_fs_t blob_fs;                      /* the assets partition as blob_storage (transfer, UI icon lookup) */
-static xfer_asset_support_t asset_support[1]; /* app icons only: the other asset types have no reader yet */
+static xfer_asset_support_t asset_support[2]; /* app icons, and clock faces (M8b); the other asset types have no reader yet */
+#if CONFIG_EPAGER_FEATURE_CLOCK_FACES
+static uint16_t face_w, face_h; /* the screen a clock face must be made for */
+static bool face_colour;
+#endif
 static char firmware_version[32];
 static QueueHandle_t keys;
 static TaskHandle_t main_task;   /* the BLE host task, keys and the wake-up interrupt notify it */
@@ -320,6 +324,18 @@ static void on_asset(void *ctx, uint8_t asset_type)
     ui_assets_changed(asset_type); /* a card on screen picks up an icon installed or removed now */
 }
 
+#if CONFIG_EPAGER_FEATURE_CLOCK_FACES
+/* XFER_FINISH of a clock face: the whole file is parsed under the board's rules (ui_face.c). */
+static proto_status_t on_check_asset(void *ctx, uint8_t asset_type, const char *id, size_t id_len, const char *blob_name,
+                                     uint32_t size)
+{
+    (void)ctx;
+    return asset_type == PROTO_ASSET_TYPE_CLOCK_FACE
+               ? ui_face_check(&blob_fs.iface, blob_name, size, id, id_len, face_w, face_h, face_colour)
+               : PROTO_OK;
+}
+#endif
+
 #if CONFIG_EPAGER_FEATURE_OTA
 /* What the OTA state machine asks the platform for (xfer_ota.h). Runs on the main task. */
 static void on_ota(void *ctx, const xfer_ota_event_t *ev)
@@ -492,6 +508,12 @@ static void sync_ui_config(void)
                      .orientation = (uint8_t)cfg_get_int(c, PROTO_CFG_DISPLAY_ORIENTATION),
                      .weather_enabled = cfg_get_int(c, PROTO_CFG_WEATHER_ENABLED) != 0,
                      .update_auto_check = cfg_get_int(c, PROTO_CFG_UPDATE_AUTO_CHECK) != 0};
+    const uint8_t *str;
+    size_t n = cfg_get_str(c, PROTO_CFG_UI_CLOCK_FACE_ID, &str);
+    memcpy(u.clock_face_id, str, n < sizeof(u.clock_face_id) - 1 ? n : sizeof(u.clock_face_id) - 1);
+    n = cfg_get_str(c, PROTO_CFG_UI_CLOCK_FACE_OPTS, &str);
+    u.clock_face_opts_len = (uint8_t)(n < sizeof(u.clock_face_opts) ? n : sizeof(u.clock_face_opts));
+    memcpy(u.clock_face_opts, str, u.clock_face_opts_len);
     ui_set_config(&u);
 }
 
@@ -692,6 +714,29 @@ static void update_apply_net(const net_status_t *s)
 }
 
 /* The debug console's `update` command (main loop). */
+#if CONFIG_EPAGER_FEATURE_CLOCK_FACES
+static void print_face(void *ctx, const char *id, const char *name, bool builtin, bool local, bool active)
+{
+    (void)ctx;
+    ESP_LOGI(TAG, "face %c %-24s %s%s%s", active ? '*' : ' ', id[0] ? id : "(classic)", name, builtin ? " [built in]" : "",
+             local ? " [from a file]" : "");
+}
+
+/* The console's `face` command: list, select ID, opt N V, delete ID (the settings pages' actions without the screen). */
+static void face_command(const char *word, const char *id, uint8_t option, uint8_t value)
+{
+    if (strcmp(word, "select") == 0) {
+        ESP_LOGI(TAG, "console: face select '%s' -> status %d", id, core_face_select(&core, id));
+    } else if (strcmp(word, "opt") == 0) {
+        ESP_LOGI(TAG, "console: face option %u = %u -> status %d", option, value, core_face_option(&core, option, value));
+    } else if (strcmp(word, "delete") == 0) {
+        ESP_LOGI(TAG, "console: face delete '%s' -> status %d", id, core_face_delete(&core, id));
+    } else {
+        ui_face_list(print_face, NULL);
+    }
+}
+#endif
+
 static void update_command(const char *word, const char *arg, uint16_t number)
 {
     if (!upd_ready) {
@@ -928,6 +973,17 @@ static void on_ui_action(void *ctx, ui_action_t a, uint32_t arg)
     case UI_ACTION_POWER_TOGGLE:
         start_power_off();
         break;
+#if CONFIG_EPAGER_FEATURE_CLOCK_FACES
+    case UI_ACTION_FACE_SELECT:
+        (void)core_face_select(&core, ui_face_list_id(arg));
+        break;
+    case UI_ACTION_FACE_OPTION:
+        (void)core_face_option(&core, (uint8_t)(arg >> 8), (uint8_t)arg);
+        break;
+    case UI_ACTION_FACE_DELETE:
+        (void)core_face_delete(&core, ui_face_list_id(arg));
+        break;
+#endif
 #if CONFIG_EPAGER_FEATURE_WIFI_OTA
     case UI_ACTION_UPDATE_CHECK:
     case UI_ACTION_UPDATE_INSTALL:
@@ -1071,13 +1127,25 @@ static bool init_core_and_ui(bool kv_nvs_ok, bool assets_ok)
         blob_fs_set_trace(&blob_fs, assets_trace, NULL);
         /* The size and format come from the display: asset-formats.md "App icons" (Paper 24x24 mono1, LCD 32x32 rgb565a8). */
         asset_support[0] = di.color_depth > 1
-                               ? (xfer_asset_support_t){PROTO_ASSET_TYPE_APP_ICON, PROTO_ASSET_FORMAT_RGB565A8, 3088, 32, 32}
-                               : (xfer_asset_support_t){PROTO_ASSET_TYPE_APP_ICON, PROTO_ASSET_FORMAT_MONO1, 88, 24, 24};
+                               ? (xfer_asset_support_t){PROTO_ASSET_TYPE_APP_ICON, PROTO_ASSET_FORMAT_RGB565A8, 3088, 32, 32, 0, 0}
+                               : (xfer_asset_support_t){PROTO_ASSET_TYPE_APP_ICON, PROTO_ASSET_FORMAT_MONO1, 88, 24, 24, 0, 0};
         params.blob = &blob_fs.iface;
         params.assets = asset_support;
         params.n_assets = 1;
         params.features |= PROTO_FEATURES_ASSETS;
         params.on_asset = on_asset;
+#if CONFIG_EPAGER_FEATURE_CLOCK_FACES
+        /* asset-formats.md "Clock faces": file size Paper 64 KiB / LCD 1 MiB, budget 1 MiB / 4 MiB, 16 faces */
+        face_w = di.width;
+        face_h = di.height;
+        face_colour = di.color_depth > 1;
+        asset_support[params.n_assets++] =
+            face_colour ? (xfer_asset_support_t){PROTO_ASSET_TYPE_CLOCK_FACE, PROTO_ASSET_FORMAT_CLOCK_FACE_V1, 1048576u, 0, 0,
+                                                 4194304u, 16}
+                        : (xfer_asset_support_t){PROTO_ASSET_TYPE_CLOCK_FACE, PROTO_ASSET_FORMAT_CLOCK_FACE_V1, 65536u, 0, 0,
+                                                 1048576u, 16};
+        params.check_asset = on_check_asset;
+#endif
     } else {
         ESP_LOGW(TAG, "no asset storage: cards show the built-in icons");
     }
@@ -1112,6 +1180,9 @@ static bool init_core_and_ui(bool kv_nvs_ok, bool assets_ok)
     up.cards_timeout_s = UI_CARDS_TIMEOUT_S; /* a minute without a key, a touch or a notification: the clock (D80) */
 #if CONFIG_EPAGER_FEATURE_WIFI
     up.wifi_setup = true; /* the pairing screen offers it: a button on touch screens, short BOOT on the Paper */
+#endif
+#if !CONFIG_EPAGER_FEATURE_CLOCK_FACES
+    up.no_faces = true;
 #endif
 #if CONFIG_EPAGER_FEATURE_WIFI_OTA
     up.update = params.fw != NULL; /* the Software update rows need a second OTA slot */
@@ -1200,6 +1271,13 @@ void app_console_apply(const app_console_cmd_t *cmd)
         if (ble_ok) {
             blec_forget_bonds(); /* BLEC_EV_BONDS(0) follows and opens pairing mode */
         }
+        break;
+    case APP_CMD_FACE:
+#if CONFIG_EPAGER_FEATURE_CLOCK_FACES
+        face_command(cmd->title, cmd->body, (uint8_t)cmd->value, cmd->size);
+#else
+        ESP_LOGI(TAG, "console: no clock faces in this build");
+#endif
         break;
     case APP_CMD_CONFIG: {
         const uint8_t v[2] = {(uint8_t)cmd->value, (uint8_t)(cmd->value >> 8)}; /* little-endian, the wire */

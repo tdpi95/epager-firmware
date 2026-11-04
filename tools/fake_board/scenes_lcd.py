@@ -199,10 +199,10 @@ def scene_face_fallback() -> Frames:
     select_face(b, "no.such.face")
     out: Frames = [("face_missing_classic", rgb(b))]
     assert (b.clock_face_shown(), b.clock_face_errors()) == ("", 1)
-    loopback.install_clock_face(b, "bad.file", sample_faces.broken("lcd"))
+    loopback.put_clock_face_unchecked(b, "bad.file", sample_faces.broken("lcd"))
     select_face(b, "bad.file")
     out.append(("face_damaged_classic", rgb(b)))
-    loopback.install_clock_face(b, "paper.big", sample_faces.big_variant("paper", "paper.big"))
+    loopback.put_clock_face_unchecked(b, "paper.big", sample_faces.big_variant("paper", "paper.big"))
     select_face(b, "paper.big")  # made for 200x200
     out.append(("face_wrong_screen_classic", rgb(b)))
     assert (b.clock_face_shown(), b.clock_face_errors()) == ("", 3)

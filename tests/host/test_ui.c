@@ -676,7 +676,7 @@ static void test_keys_step_back_to_clock(void)
     TEST_ASSERT_NULL(strstr(text(), "2/2"));
     ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT); /* from the clock short PWR opens the settings (D98) */
     run(2100);
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n1/9\n"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n1/10\n"));
     TEST_ASSERT_NULL(strstr(text(), "First"));
     ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_LONG); /* back to the clock; a new notification opens its card */
     run(2100);
@@ -900,26 +900,26 @@ static void test_settings_navigation(void)
     start_settings(true);
     TEST_ASSERT_EQUAL_INT(UI_ACTION_NONE, ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT)); /* the clock: open the list */
     run(2100);
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n1/12\nClock\n24h\nTemperature\n°C\nLanguage\nEnglish\n"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n1/13\nClock\n24h\nTemperature\n°C\nLanguage\nEnglish\n"));
     TEST_ASSERT_NOT_NULL(strstr(text(), "Message text\nOn\nHide numbers\nOff\nRotation\n0°\nWeather\nOn\n"));
     TEST_ASSERT_NULL(strstr(text(), "Hold")); /* no key hints: the rows fill the panel */
     TEST_ASSERT_TRUE(row_selected(0));
     TEST_ASSERT_FALSE(row_selected(1));
     ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT); /* PWR = down */
     run(2100);
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n2/12\n"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n2/13\n"));
     TEST_ASSERT_TRUE(row_selected(1));
     TEST_ASSERT_FALSE(row_selected(0));
     ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_SHORT); /* BOOT = up */
     ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_SHORT); /* up from the first row wraps to the last, the list scrolls */
     run(2100);
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n12/12\n"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n13/13\n"));
     TEST_ASSERT_NOT_NULL(strstr(text(), "About\n>\n")); /* About is the last row */
     TEST_ASSERT_NULL(strstr(text(), "Clock\n"));
     TEST_ASSERT_TRUE(row_selected(6)); /* the last row is at the bottom of the window */
     ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT); /* down from the last wraps to the first */
     run(2100);
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n1/12\nClock\n"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n1/13\nClock\n"));
     TEST_ASSERT_TRUE(row_selected(0));
     TEST_ASSERT_EQUAL_INT(0, seen_n); /* moving selects nothing */
     /* back: long PWR; long BOOT outside the list does nothing */
@@ -969,7 +969,7 @@ static void open_update_page(void)
     ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT); /* the clock: open the list */
     down(12);                                       /* Software update is the 13th row with Wi-Fi updates */
     run(2100);
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n13/14\n"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n13/15\n"));
     ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_LONG);
     run(2100);
 }
@@ -979,7 +979,7 @@ static void test_update_rows_in_the_settings_list(void)
     start_update();
     ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT);
     run(2100);
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n1/14\n"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n1/15\n"));
     down(7); /* the row after Weather */
     run(2100);
     TEST_ASSERT_NOT_NULL(strstr(text(), "Check updates\nOn\n"));
@@ -990,7 +990,7 @@ static void test_update_rows_in_the_settings_list(void)
     start_settings(true);
     ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT);
     run(2100);
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n1/12\n"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n1/13\n"));
 }
 
 static void test_update_page_follows_the_state(void)
@@ -1053,7 +1053,7 @@ static void test_update_page_follows_the_state(void)
     /* back leads to the list, on the row that opened the page */
     ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_LONG);
     run(2100);
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n13/14\n"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n13/15\n"));
 }
 
 static void test_update_row_shows_the_version_when_one_is_waiting(void)
@@ -1197,7 +1197,7 @@ static void test_settings_select_changes_values(void)
     ui_set_config(&c);
     run(2100);
     TEST_ASSERT_NOT_NULL(strstr(text(), "Clock\n12h\n"));
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n1/12\n")); /* still on the same row */
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n1/13\n")); /* still on the same row */
     ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT);
     ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_LONG);
     TEST_ASSERT_EQUAL_UINT32((uint32_t)PROTO_CFG_UI_TEMP_UNIT << 8 | 1u, seen_arg); /* Celsius -> Fahrenheit */
@@ -1231,7 +1231,7 @@ static void test_settings_actions(void)
         ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT);
     }
     run(2100);
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n8/12\n"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n8/13\n"));
     TEST_ASSERT_EQUAL_INT(UI_ACTION_PAIRING_TOGGLE, ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_LONG));
     run(2100);
     TEST_ASSERT_NULL(strstr(text(), "Settings")); /* pairing is a screen of its own: the list is closed */
@@ -1249,7 +1249,7 @@ static void test_settings_actions(void)
     st.state = UI_SETUP_OFF;
     ui_set_wifi_setup(&st);
     run(2100);
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n9/12\n"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n9/13\n"));
     /* pairing mode that opens by itself (the last phone was forgotten) closes the list */
     ui_status_t status = {.battery_pct = 80, .pairing_mode = true, .ota_pct = -1};
     ui_set_status(&status);
@@ -1259,10 +1259,10 @@ static void test_settings_actions(void)
     start_settings(false);
     ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT);
     run(2100);
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n1/9\n"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n1/10\n"));
     ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_SHORT);
     run(2100);
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n9/9\n"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n10/10\n"));
     TEST_ASSERT_NOT_NULL(strstr(text(), "Pairing mode\n"));
     TEST_ASSERT_NOT_NULL(strstr(text(), "Paired phones\n"));
     TEST_ASSERT_NULL(strstr(text(), "Weather"));
@@ -1289,7 +1289,7 @@ static void test_settings_pages(void)
         ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT);
     }
     run(2100);
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n10/12\n"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n10/13\n"));
     TEST_ASSERT_NOT_NULL(strstr(text(), "Paired phones\n>\n"));
     seen_n = 0;
     TEST_ASSERT_EQUAL_INT(UI_ACTION_NONE, ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_LONG)); /* open the page */
@@ -1320,7 +1320,7 @@ static void test_settings_pages(void)
     /* back to the list, on the row that opened the page */
     ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_LONG);
     run(2100);
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n10/12\n"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n10/13\n"));
     /* the networks */
     ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT);
     ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_LONG);
@@ -1345,7 +1345,8 @@ static void test_settings_pages(void)
     /* About, with the battery from the status */
     ui_status_t status = {.battery_pct = 85, .ota_pct = -1};
     ui_set_status(&status);
-    ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT);
+    ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT); /* Clock face */
+    ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT); /* About */
     ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_LONG);
     run(2100);
     TEST_ASSERT_NOT_NULL(strstr(text(), "About\n1/5\nFirmware\n1.2.3\nDevice\nePager-1A2B\nBoard\ns3_epaper_154\n"));
@@ -1355,7 +1356,7 @@ static void test_settings_pages(void)
     TEST_ASSERT_EQUAL_INT(0, seen_n);
     ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_LONG);
     run(2100);
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n12/12\n"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n13/13\n"));
     TEST_ASSERT_EQUAL_UINT32(0, state().violations);
 }
 
@@ -1369,14 +1370,14 @@ static void test_settings_power_off_timeout_and_notifications(void)
     run(50000);
     ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT); /* down a row */
     run(50000);
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n2/12\n"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n2/13\n"));
     run(11000);
     TEST_ASSERT_NULL(strstr(text(), "Settings"));
     TEST_ASSERT_NOT_NULL(strstr(text(), "14:27"));
     /* the next visit starts at the first row again */
     ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT);
     run(2100);
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n1/12\n"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n1/13\n"));
     /* a notification replaces the list */
     npipe_notif_t a = notif(1, "Zalo", "First", "a");
     ui_on_notification(&a);
@@ -1387,14 +1388,14 @@ static void test_settings_power_off_timeout_and_notifications(void)
     ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT);
     ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT);
     run(2100);
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n1/12\n"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n1/13\n"));
     /* the page in Vietnamese, with the language row naming both languages */
     ui_config_t c = cfg(10);
     c.language = PROTO_LANGUAGE_VI;
     c.weather_enabled = true;
     ui_set_config(&c);
     run(2100);
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Cài đặt\n1/12\nĐồng hồ\n24h\nNhiệt độ\n°C\nNgôn ngữ\nTiếng Việt\n"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Cài đặt\n1/13\nĐồng hồ\n24h\nNhiệt độ\n°C\nNgôn ngữ\nTiếng Việt\n"));
     TEST_ASSERT_EQUAL_UINT32(0, state().violations);
 }
 
@@ -2060,6 +2061,81 @@ static void test_face_hides_under_other_screens(void)
     TEST_ASSERT_NOT_NULL(strstr(text(), "Powered off"));
 }
 
+static void open_face_list(void)
+{
+    ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT); /* the clock: open the list */
+    ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_SHORT); /* up from the first row: About */
+    ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_SHORT); /* Clock face, the row before it */
+    run(2100);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Clock face\n>\n"));
+    ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_LONG);
+    run(2100);
+}
+
+static void test_settings_clock_face_pages(void)
+{
+    start_settings(false);
+    static uint8_t file[FACE_FILE_MAX];
+    install_face(&blob, "test.min", file, vector_face("paper_min", file, sizeof(file)));
+    open_face_list();
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Clock face\n1/4\nClassic\nIn use\nBig\n\nMinimal\n\nMin\n"));
+    /* the page of a face that is not in use: Use this face, no options; the built-in ones cannot be deleted */
+    down(1);
+    seen_n = 0;
+    ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_LONG);
+    run(2100);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Big\n1/2\nBig\n\nUse this face\n"));
+    ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT);
+    ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_LONG);
+    TEST_ASSERT_EQUAL_INT(UI_ACTION_FACE_SELECT, seen_action);
+    TEST_ASSERT_EQUAL_UINT32(1, seen_arg);
+    TEST_ASSERT_EQUAL_STRING("epager.big", ui_face_list_id(1)); /* what the firmware resolves it with */
+    run(2100);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Clock face\n2/4\n")); /* back on the list, on that row */
+    /* the firmware stores the choice: the list moves "In use", the page of the face in use has its options */
+    face_config(face_cfg(), "epager.minimal", NULL, 0);
+    run(2100);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Classic\n\nBig\n\nMinimal\nIn use\n"));
+    down(1);
+    ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_LONG);
+    run(2100);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Minimal\n1/3\nMinimal\nIn use\nStyle\nLight\nDate\nOn\n"));
+    down(1);
+    seen_n = 0;
+    ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_LONG); /* an option row moves to its next value: Light -> Dark */
+    TEST_ASSERT_EQUAL_INT(1, seen_n);
+    TEST_ASSERT_EQUAL_INT(UI_ACTION_FACE_OPTION, seen_action);
+    TEST_ASSERT_EQUAL_UINT32(1u << 8 | 1u, seen_arg);
+    down(1);
+    ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_LONG); /* Date On -> Off */
+    TEST_ASSERT_EQUAL_UINT32(2u << 8 | 0u, seen_arg);
+    ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_LONG); /* back to the list */
+    run(2100);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Clock face\n3/4\n"));
+    /* an installed face has Delete, which asks first; the firmware reports the face gone and the list shrinks */
+    face_config(face_cfg(), "test.min", NULL, 0);
+    down(1);
+    ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_LONG);
+    run(2100);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Min\n1/2\nMin\nIn use\nDelete\n"));
+    down(1);
+    seen_n = 0;
+    ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_LONG);
+    run(2100);
+    TEST_ASSERT_EQUAL_INT(0, seen_n);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Delete\nDelete?\n"));
+    ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_LONG);
+    TEST_ASSERT_EQUAL_INT(UI_ACTION_FACE_DELETE, seen_action);
+    TEST_ASSERT_EQUAL_UINT32(3, seen_arg);
+    TEST_ASSERT_EQUAL_STRING("test.min", ui_face_list_id(3));
+    remove_face(&blob, "test.min"); /* what the firmware does next; the id key goes back to Classic */
+    face_config(face_cfg(), "", NULL, 0);
+    run(2100);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Clock face\n3/3\nClassic\nIn use\nBig\n\nMinimal\n"));
+    TEST_ASSERT_NULL(strstr(text(), "Min\n"));
+    TEST_ASSERT_EQUAL_UINT32(0, state().violations);
+}
+
 int main(void)
 {
     UNITY_BEGIN();
@@ -2076,6 +2152,7 @@ int main(void)
     RUN_TEST(test_update_rows_in_the_settings_list);
     RUN_TEST(test_update_page_follows_the_state);
     RUN_TEST(test_update_row_shows_the_version_when_one_is_waiting);
+    RUN_TEST(test_settings_clock_face_pages);
     RUN_TEST(test_update_mark_on_the_clock_screen);
     RUN_TEST(test_update_prompt);
     RUN_TEST(test_update_prompt_choices);

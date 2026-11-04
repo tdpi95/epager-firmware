@@ -232,6 +232,28 @@ static void test_option_set_and_odd_pairs(void)
     cJSON_Delete(doc);
 }
 
+/* The names the settings pages list come from the first bytes of a file: the same as a full parse gives, and nothing
+ * (never a read past the bytes given) when the head is cut. */
+static void test_peek_names(void)
+{
+    cJSON *doc = load_vectors("clock_faces.json");
+    static uint8_t fbuf[FILE_MAX];
+    TEST_ASSERT_TRUE(parse_named(doc, "paper_full", &face, fbuf, sizeof(fbuf)));
+    char names[2][CF_NAME_MAX + 1];
+    cf_peek_names(fbuf, 512, names);
+    TEST_ASSERT_EQUAL_STRING(face.name[0], names[0]);
+    TEST_ASSERT_EQUAL_STRING(face.name[1], names[1]);
+    TEST_ASSERT_TRUE(names[0][0] != '\0');
+    for (size_t cut = 0; cut < 120; cut++) { /* a head that ends inside the section: no names, no overrun */
+        cf_peek_names(fbuf, cut, names);
+        TEST_ASSERT_TRUE(names[0][0] == '\0' || strcmp(names[0], face.name[0]) == 0);
+    }
+    cf_peek_names(fbuf, 0, names);
+    TEST_ASSERT_EQUAL_STRING("", names[0]);
+    TEST_ASSERT_EQUAL_STRING("", names[1]);
+    cJSON_Delete(doc);
+}
+
 /* ---------------------------------------------------------------- fuzz */
 
 static uint64_t rng = 0x9E3779B97F4A7C15ull;
@@ -320,6 +342,7 @@ int main(void)
     RUN_TEST(test_option_vectors);
     RUN_TEST(test_eval_vectors);
     RUN_TEST(test_option_set_and_odd_pairs);
+    RUN_TEST(test_peek_names);
     RUN_TEST(test_fuzz_parse);
     return UNITY_END();
 }

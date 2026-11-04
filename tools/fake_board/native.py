@@ -98,6 +98,7 @@ _SIGS = {
     "fb_set_rtc": ([C.c_int, C.c_uint32], None), "fb_rtc_utc": ([], C.c_uint32),
     "fb_set_climate": ([C.c_int, C.c_int, C.c_int16, C.c_uint16], None),
     "fb_set_storage_total": ([C.c_uint32], None), "fb_storage_budget": ([C.c_int32], None),
+    "fb_blob_put": ([C.c_char_p, C.c_char_p, C.c_size_t], C.c_int),
     "fb_corrupt_transfer": ([], C.c_int), "fb_set_fw_image_status": ([C.c_uint8], None),
     "fb_set_self_check_fail": ([C.c_int], None),
     "fb_ancs": ([C.c_uint8, C.c_uint8, C.c_uint8, C.c_uint32] + [C.c_char_p] * 6, None),

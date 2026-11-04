@@ -271,7 +271,11 @@ class BoardModel:
             atype, aid = name.split("_", 1)
             e = {"asset_type": int(atype), "id": aid, "size": len(self.files[name])}
             if name + "@" in self.files:
-                e["version"] = self.files[name + "@"].decode()
+                ver, _, origin = self.files[name + "@"].partition(b"\0")  # the version file: version [NUL origin]
+                if ver:
+                    e["version"] = ver.decode()
+                if origin:
+                    e["origin"] = origin[0]
             trial = {**fields, "asset": entries + [e]}
             if len(codec.encode_message(self.reg, self._rsp(req, trial))) > self.reg.limits["max_message_transfer"]:
                 break
@@ -279,6 +283,19 @@ class BoardModel:
         if entries:
             fields["asset"] = entries
         return self._rsp(req, fields)
+
+    def _budget_ok(self, f: dict) -> bool:
+        """The local limits of an asset type (`budget` bytes in all, `max_count` assets); the asset being replaced
+        does not count."""
+        entry = next((a for a in self.b["asset_support"] if a["asset_type"] == f["asset_type"]
+                      and (a.get("budget") or a.get("max_count"))), None)
+        if entry is None:
+            return True
+        mine = self._final_name(f)
+        others = [n for n in self._assets() if n.startswith(f"{f['asset_type']}_") and n != mine]
+        if entry.get("max_count") and mine not in self.files and len(others) >= entry["max_count"]:
+            return False
+        return not entry.get("budget") or sum(len(self.files[n]) for n in others) + f["size"] <= entry["budget"]
 
     def _begin(self, req: dict, f: dict) -> dict:
         s = self.session
@@ -305,6 +322,8 @@ class BoardModel:
             held = len(self.files.get(self._temp_name(j), b"")) if j and j["kind"] == KIND_ASSET else 0
             if f["size"] > self._free() + held:
                 return self._st(req, "NO_SPACE")
+            if not self._budget_ok(f):
+                return self._st(req, "NO_SPACE")
         else:
             new = parse_version(f.get("version"))
             cur = parse_version(fw["running_version"])
@@ -316,7 +335,8 @@ class BoardModel:
         # accepted: detach the current session as a disconnect would, then resume or start fresh
         self.disconnect()
         t = {"kind": kind, "asset_type": f.get("asset_type", 0), "id": f["id"], "size": f["size"],
-             "crc32": f["crc32"], "sha256": f["sha256"], "version": f.get("version")}
+             "crc32": f["crc32"], "sha256": f["sha256"], "version": f.get("version"),
+             "origin": f.get("origin") if kind == KIND_ASSET else None}  # not journaled: the BEGIN that finishes wins
         j = self.journal
         same = j is not None and all(j[k] == t[k] for k in ("kind", "asset_type", "id", "size", "crc32", "sha256"))
         if same and not f.get("restart", False):
@@ -397,8 +417,11 @@ class BoardModel:
             final = self._final_name(s)
             self.files.pop(final + "@", None)
             self.files[final] = self.files.pop(self._temp_name(s))
-            if s["version"]:
-                self._blob_write(final + "@", 0, s["version"].encode())  # best effort: no space = no version
+            meta = (s["version"] or "").encode()
+            if s.get("origin") is not None:
+                meta += bytes([0, s["origin"]])
+            if meta:
+                self._blob_write(final + "@", 0, meta)  # best effort: no space = no version
         self.journal = None
         s["state"] = ST_COMPLETE
         return self._st(req, "OK")

@@ -7264,6 +7264,1172 @@
    ]
   },
   {
+   "name": "asset_origin",
+   "description": "The origin of the BEGIN that completes a transfer is stored with the asset and listed (with the version, or alone); an absent origin stays absent.",
+   "steps": [
+    {
+     "op": "request",
+     "logical": {
+      "ver": 0,
+      "type": "XFER_BEGIN",
+      "req_id": 1,
+      "fields": {
+       "kind": 1,
+       "id": "a",
+       "size": 40,
+       "crc32": 3262690666,
+       "sha256": "a640365315d7e115fd2a9b53a35163f504e87ae499d35dcf7ccfe6114c01d787",
+       "asset_type": 3,
+       "version": "1.0.0",
+       "origin": 1
+      }
+     },
+     "hex": "00300100010100010201006103010003040400280000000504006ab578c2062000a640365315d7e115fd2a9b53a35163f504e87ae499d35dcf7ccfe6114c01d787070500312e302e3009010001",
+     "expect": [
+      {
+       "logical": {
+        "ver": 0,
+        "type": "XFER_BEGIN_RSP",
+        "req_id": 1,
+        "fields": {
+         "status": 0,
+         "handle": 1,
+         "offset": 0,
+         "prefix_crc32": 0,
+         "max_chunk": 64,
+         "ack_window": 128
+        }
+       },
+       "hex": "00b0010001010000020100010304000000000004040000000000050200400006040080000000"
+      }
+     ]
+    },
+    {
+     "op": "request",
+     "logical": {
+      "ver": 0,
+      "type": "XFER_CHUNK",
+      "req_id": 0,
+      "fields": {
+       "handle": 1,
+       "offset": 0,
+       "data": "45535041010304000000000018000000052a4f7499bee3082d52779cc1e60b30557a9fc4e90e3358"
+      }
+     },
+     "hex": "00310000010100010204000000000003280045535041010304000000000018000000052a4f7499bee3082d52779cc1e60b30557a9fc4e90e3358",
+     "expect": [
+      {
+       "logical": {
+        "ver": 0,
+        "type": "XFER_ACK",
+        "req_id": 0,
+        "fields": {
+         "handle": 1,
+         "offset": 40,
+         "status": 0
+        }
+       },
+       "hex": "00610000010100010204002800000003010000"
+      }
+     ]
+    },
+    {
+     "op": "request",
+     "logical": {
+      "ver": 0,
+      "type": "XFER_FINISH",
+      "req_id": 2,
+      "fields": {
+       "handle": 1
+      }
+     },
+     "hex": "0033020001010001",
+     "expect": [
+      {
+       "logical": {
+        "ver": 0,
+        "type": "XFER_FINISH_RSP",
+        "req_id": 2,
+        "fields": {
+         "status": 0
+        }
+       },
+       "hex": "00b3020001010000"
+      }
+     ]
+    },
+    {
+     "op": "request",
+     "logical": {
+      "ver": 0,
+      "type": "XFER_BEGIN",
+      "req_id": 3,
+      "fields": {
+       "kind": 1,
+       "id": "b",
+       "size": 40,
+       "crc32": 3262690666,
+       "sha256": "a640365315d7e115fd2a9b53a35163f504e87ae499d35dcf7ccfe6114c01d787",
+       "asset_type": 3,
+       "origin": 2
+      }
+     },
+     "hex": "00300300010100010201006203010003040400280000000504006ab578c2062000a640365315d7e115fd2a9b53a35163f504e87ae499d35dcf7ccfe6114c01d78709010002",
+     "expect": [
+      {
+       "logical": {
+        "ver": 0,
+        "type": "XFER_BEGIN_RSP",
+        "req_id": 3,
+        "fields": {
+         "status": 0,
+         "handle": 2,
+         "offset": 0,
+         "prefix_crc32": 0,
+         "max_chunk": 64,
+         "ack_window": 128
+        }
+       },
+       "hex": "00b0030001010000020100020304000000000004040000000000050200400006040080000000"
+      }
+     ]
+    },
+    {
+     "op": "request",
+     "logical": {
+      "ver": 0,
+      "type": "XFER_CHUNK",
+      "req_id": 0,
+      "fields": {
+       "handle": 2,
+       "offset": 0,
+       "data": "45535041010304000000000018000000052a4f7499bee3082d52779cc1e60b30557a9fc4e90e3358"
+      }
+     },
+     "hex": "00310000010100020204000000000003280045535041010304000000000018000000052a4f7499bee3082d52779cc1e60b30557a9fc4e90e3358",
+     "expect": [
+      {
+       "logical": {
+        "ver": 0,
+        "type": "XFER_ACK",
+        "req_id": 0,
+        "fields": {
+         "handle": 2,
+         "offset": 40,
+         "status": 0
+        }
+       },
+       "hex": "00610000010100020204002800000003010000"
+      }
+     ]
+    },
+    {
+     "op": "request",
+     "logical": {
+      "ver": 0,
+      "type": "XFER_FINISH",
+      "req_id": 4,
+      "fields": {
+       "handle": 2
+      }
+     },
+     "hex": "0033040001010002",
+     "expect": [
+      {
+       "logical": {
+        "ver": 0,
+        "type": "XFER_FINISH_RSP",
+        "req_id": 4,
+        "fields": {
+         "status": 0
+        }
+       },
+       "hex": "00b3040001010000"
+      }
+     ]
+    },
+    {
+     "op": "request",
+     "logical": {
+      "ver": 0,
+      "type": "XFER_BEGIN",
+      "req_id": 5,
+      "fields": {
+       "kind": 1,
+       "id": "c",
+       "size": 40,
+       "crc32": 3262690666,
+       "sha256": "a640365315d7e115fd2a9b53a35163f504e87ae499d35dcf7ccfe6114c01d787",
+       "asset_type": 3,
+       "version": "2"
+      }
+     },
+     "hex": "00300500010100010201006303010003040400280000000504006ab578c2062000a640365315d7e115fd2a9b53a35163f504e87ae499d35dcf7ccfe6114c01d78707010032",
+     "expect": [
+      {
+       "logical": {
+        "ver": 0,
+        "type": "XFER_BEGIN_RSP",
+        "req_id": 5,
+        "fields": {
+         "status": 0,
+         "handle": 3,
+         "offset": 0,
+         "prefix_crc32": 0,
+         "max_chunk": 64,
+         "ack_window": 128
+        }
+       },
+       "hex": "00b0050001010000020100030304000000000004040000000000050200400006040080000000"
+      }
+     ]
+    },
+    {
+     "op": "request",
+     "logical": {
+      "ver": 0,
+      "type": "XFER_CHUNK",
+      "req_id": 0,
+      "fields": {
+       "handle": 3,
+       "offset": 0,
+       "data": "45535041010304000000000018000000052a4f7499bee3082d52779cc1e60b30557a9fc4e90e3358"
+      }
+     },
+     "hex": "00310000010100030204000000000003280045535041010304000000000018000000052a4f7499bee3082d52779cc1e60b30557a9fc4e90e3358",
+     "expect": [
+      {
+       "logical": {
+        "ver": 0,
+        "type": "XFER_ACK",
+        "req_id": 0,
+        "fields": {
+         "handle": 3,
+         "offset": 40,
+         "status": 0
+        }
+       },
+       "hex": "00610000010100030204002800000003010000"
+      }
+     ]
+    },
+    {
+     "op": "request",
+     "logical": {
+      "ver": 0,
+      "type": "XFER_FINISH",
+      "req_id": 6,
+      "fields": {
+       "handle": 3
+      }
+     },
+     "hex": "0033060001010003",
+     "expect": [
+      {
+       "logical": {
+        "ver": 0,
+        "type": "XFER_FINISH_RSP",
+        "req_id": 6,
+        "fields": {
+         "status": 0
+        }
+       },
+       "hex": "00b3060001010000"
+      }
+     ]
+    },
+    {
+     "op": "request",
+     "logical": {
+      "ver": 0,
+      "type": "XFER_BEGIN",
+      "req_id": 7,
+      "fields": {
+       "kind": 1,
+       "id": "d",
+       "size": 40,
+       "crc32": 3262690666,
+       "sha256": "a640365315d7e115fd2a9b53a35163f504e87ae499d35dcf7ccfe6114c01d787",
+       "asset_type": 3,
+       "origin": 0
+      }
+     },
+     "hex": "00300700010100010201006403010003040400280000000504006ab578c2062000a640365315d7e115fd2a9b53a35163f504e87ae499d35dcf7ccfe6114c01d78709010000",
+     "expect": [
+      {
+       "logical": {
+        "ver": 0,
+        "type": "XFER_BEGIN_RSP",
+        "req_id": 7,
+        "fields": {
+         "status": 0,
+         "handle": 4,
+         "offset": 0,
+         "prefix_crc32": 0,
+         "max_chunk": 64,
+         "ack_window": 128
+        }
+       },
+       "hex": "00b0070001010000020100040304000000000004040000000000050200400006040080000000"
+      }
+     ]
+    },
+    {
+     "op": "request",
+     "logical": {
+      "ver": 0,
+      "type": "XFER_CHUNK",
+      "req_id": 0,
+      "fields": {
+       "handle": 4,
+       "offset": 0,
+       "data": "45535041010304000000000018000000052a4f7499bee3082d52779cc1e60b30557a9fc4e90e3358"
+      }
+     },
+     "hex": "00310000010100040204000000000003280045535041010304000000000018000000052a4f7499bee3082d52779cc1e60b30557a9fc4e90e3358",
+     "expect": [
+      {
+       "logical": {
+        "ver": 0,
+        "type": "XFER_ACK",
+        "req_id": 0,
+        "fields": {
+         "handle": 4,
+         "offset": 40,
+         "status": 0
+        }
+       },
+       "hex": "00610000010100040204002800000003010000"
+      }
+     ]
+    },
+    {
+     "op": "request",
+     "logical": {
+      "ver": 0,
+      "type": "XFER_FINISH",
+      "req_id": 8,
+      "fields": {
+       "handle": 4
+      }
+     },
+     "hex": "0033080001010004",
+     "expect": [
+      {
+       "logical": {
+        "ver": 0,
+        "type": "XFER_FINISH_RSP",
+        "req_id": 8,
+        "fields": {
+         "status": 0
+        }
+       },
+       "hex": "00b3080001010000"
+      }
+     ]
+    },
+    {
+     "op": "request",
+     "logical": {
+      "ver": 0,
+      "type": "ASSET_LIST",
+      "req_id": 9,
+      "fields": {}
+     },
+     "hex": "00390900",
+     "expect": [
+      {
+       "logical": {
+        "ver": 0,
+        "type": "ASSET_LIST_RSP",
+        "req_id": 9,
+        "fields": {
+         "status": 0,
+         "total": 4,
+         "asset": [
+          {
+           "asset_type": 3,
+           "id": "a",
+           "size": 40,
+           "version": "1.0.0",
+           "origin": 1
+          },
+          {
+           "asset_type": 3,
+           "id": "b",
+           "size": 40,
+           "origin": 2
+          },
+          {
+           "asset_type": 3,
+           "id": "c",
+           "size": 40,
+           "version": "2"
+          },
+          {
+           "asset_type": 3,
+           "id": "d",
+           "size": 40,
+           "origin": 0
+          }
+         ]
+        }
+       },
+       "hex": "00b90900010100000202000400031b00010100030201006103040028000000040500312e302e3005010001031300010100030201006203040028000000050100020313000101000302010063030400280000000401003203130001010003020100640304002800000005010000"
+      }
+     ]
+    },
+    {
+     "op": "request",
+     "logical": {
+      "ver": 0,
+      "type": "XFER_BEGIN",
+      "req_id": 10,
+      "fields": {
+       "kind": 1,
+       "id": "a",
+       "size": 40,
+       "crc32": 3262690666,
+       "sha256": "a640365315d7e115fd2a9b53a35163f504e87ae499d35dcf7ccfe6114c01d787",
+       "asset_type": 3,
+       "origin": 2
+      }
+     },
+     "hex": "00300a00010100010201006103010003040400280000000504006ab578c2062000a640365315d7e115fd2a9b53a35163f504e87ae499d35dcf7ccfe6114c01d78709010002",
+     "expect": [
+      {
+       "logical": {
+        "ver": 0,
+        "type": "XFER_BEGIN_RSP",
+        "req_id": 10,
+        "fields": {
+         "status": 0,
+         "handle": 5,
+         "offset": 0,
+         "prefix_crc32": 0,
+         "max_chunk": 64,
+         "ack_window": 128
+        }
+       },
+       "hex": "00b00a0001010000020100050304000000000004040000000000050200400006040080000000"
+      }
+     ]
+    },
+    {
+     "op": "request",
+     "logical": {
+      "ver": 0,
+      "type": "XFER_CHUNK",
+      "req_id": 0,
+      "fields": {
+       "handle": 5,
+       "offset": 0,
+       "data": "45535041010304000000000018000000052a4f7499bee3082d52779cc1e60b30557a9fc4e90e3358"
+      }
+     },
+     "hex": "00310000010100050204000000000003280045535041010304000000000018000000052a4f7499bee3082d52779cc1e60b30557a9fc4e90e3358",
+     "expect": [
+      {
+       "logical": {
+        "ver": 0,
+        "type": "XFER_ACK",
+        "req_id": 0,
+        "fields": {
+         "handle": 5,
+         "offset": 40,
+         "status": 0
+        }
+       },
+       "hex": "00610000010100050204002800000003010000"
+      }
+     ]
+    },
+    {
+     "op": "request",
+     "logical": {
+      "ver": 0,
+      "type": "XFER_FINISH",
+      "req_id": 11,
+      "fields": {
+       "handle": 5
+      }
+     },
+     "hex": "00330b0001010005",
+     "expect": [
+      {
+       "logical": {
+        "ver": 0,
+        "type": "XFER_FINISH_RSP",
+        "req_id": 11,
+        "fields": {
+         "status": 0
+        }
+       },
+       "hex": "00b30b0001010000"
+      }
+     ]
+    },
+    {
+     "op": "request",
+     "logical": {
+      "ver": 0,
+      "type": "ASSET_LIST",
+      "req_id": 12,
+      "fields": {}
+     },
+     "hex": "00390c00",
+     "expect": [
+      {
+       "logical": {
+        "ver": 0,
+        "type": "ASSET_LIST_RSP",
+        "req_id": 12,
+        "fields": {
+         "status": 0,
+         "total": 4,
+         "asset": [
+          {
+           "asset_type": 3,
+           "id": "a",
+           "size": 40,
+           "origin": 2
+          },
+          {
+           "asset_type": 3,
+           "id": "b",
+           "size": 40,
+           "origin": 2
+          },
+          {
+           "asset_type": 3,
+           "id": "c",
+           "size": 40,
+           "version": "2"
+          },
+          {
+           "asset_type": 3,
+           "id": "d",
+           "size": 40,
+           "origin": 0
+          }
+         ]
+        }
+       },
+       "hex": "00b90c0001010000020200040003130001010003020100610304002800000005010002031300010100030201006203040028000000050100020313000101000302010063030400280000000401003203130001010003020100640304002800000005010000"
+      }
+     ]
+    },
+    {
+     "op": "disconnect"
+    },
+    {
+     "op": "request",
+     "logical": {
+      "ver": 0,
+      "type": "XFER_BEGIN",
+      "req_id": 13,
+      "fields": {
+       "kind": 1,
+       "id": "e",
+       "size": 40,
+       "crc32": 3262690666,
+       "sha256": "a640365315d7e115fd2a9b53a35163f504e87ae499d35dcf7ccfe6114c01d787",
+       "asset_type": 3,
+       "origin": 1
+      }
+     },
+     "hex": "00300d00010100010201006503010003040400280000000504006ab578c2062000a640365315d7e115fd2a9b53a35163f504e87ae499d35dcf7ccfe6114c01d78709010001",
+     "expect": [
+      {
+       "logical": {
+        "ver": 0,
+        "type": "XFER_BEGIN_RSP",
+        "req_id": 13,
+        "fields": {
+         "status": 0,
+         "handle": 6,
+         "offset": 0,
+         "prefix_crc32": 0,
+         "max_chunk": 64,
+         "ack_window": 128
+        }
+       },
+       "hex": "00b00d0001010000020100060304000000000004040000000000050200400006040080000000"
+      }
+     ]
+    },
+    {
+     "op": "request",
+     "logical": {
+      "ver": 0,
+      "type": "XFER_CHUNK",
+      "req_id": 0,
+      "fields": {
+       "handle": 6,
+       "offset": 0,
+       "data": "45535041010304000000000018000000052a4f74"
+      }
+     },
+     "hex": "00310000010100060204000000000003140045535041010304000000000018000000052a4f74",
+     "expect": []
+    },
+    {
+     "op": "disconnect"
+    },
+    {
+     "op": "request",
+     "logical": {
+      "ver": 0,
+      "type": "XFER_BEGIN",
+      "req_id": 14,
+      "fields": {
+       "kind": 1,
+       "id": "e",
+       "size": 40,
+       "crc32": 3262690666,
+       "sha256": "a640365315d7e115fd2a9b53a35163f504e87ae499d35dcf7ccfe6114c01d787",
+       "asset_type": 3,
+       "origin": 2
+      }
+     },
+     "hex": "00300e00010100010201006503010003040400280000000504006ab578c2062000a640365315d7e115fd2a9b53a35163f504e87ae499d35dcf7ccfe6114c01d78709010002",
+     "expect": [
+      {
+       "logical": {
+        "ver": 0,
+        "type": "XFER_BEGIN_RSP",
+        "req_id": 14,
+        "fields": {
+         "status": 0,
+         "handle": 7,
+         "offset": 20,
+         "prefix_crc32": 2300556102,
+         "max_chunk": 64,
+         "ack_window": 128
+        }
+       },
+       "hex": "00b00e0001010000020100070304001400000004040046b31f89050200400006040080000000"
+      }
+     ]
+    },
+    {
+     "op": "request",
+     "logical": {
+      "ver": 0,
+      "type": "XFER_CHUNK",
+      "req_id": 0,
+      "fields": {
+       "handle": 7,
+       "offset": 20,
+       "data": "99bee3082d52779cc1e60b30557a9fc4e90e3358"
+      }
+     },
+     "hex": "00310000010100070204001400000003140099bee3082d52779cc1e60b30557a9fc4e90e3358",
+     "expect": [
+      {
+       "logical": {
+        "ver": 0,
+        "type": "XFER_ACK",
+        "req_id": 0,
+        "fields": {
+         "handle": 7,
+         "offset": 40,
+         "status": 0
+        }
+       },
+       "hex": "00610000010100070204002800000003010000"
+      }
+     ]
+    },
+    {
+     "op": "request",
+     "logical": {
+      "ver": 0,
+      "type": "XFER_FINISH",
+      "req_id": 15,
+      "fields": {
+       "handle": 7
+      }
+     },
+     "hex": "00330f0001010007",
+     "expect": [
+      {
+       "logical": {
+        "ver": 0,
+        "type": "XFER_FINISH_RSP",
+        "req_id": 15,
+        "fields": {
+         "status": 0
+        }
+       },
+       "hex": "00b30f0001010000"
+      }
+     ]
+    },
+    {
+     "op": "request",
+     "logical": {
+      "ver": 0,
+      "type": "ASSET_LIST",
+      "req_id": 16,
+      "fields": {}
+     },
+     "hex": "00391000",
+     "expect": [
+      {
+       "logical": {
+        "ver": 0,
+        "type": "ASSET_LIST_RSP",
+        "req_id": 16,
+        "fields": {
+         "status": 0,
+         "total": 5,
+         "asset": [
+          {
+           "asset_type": 3,
+           "id": "a",
+           "size": 40,
+           "origin": 2
+          },
+          {
+           "asset_type": 3,
+           "id": "b",
+           "size": 40,
+           "origin": 2
+          },
+          {
+           "asset_type": 3,
+           "id": "c",
+           "size": 40,
+           "version": "2"
+          },
+          {
+           "asset_type": 3,
+           "id": "d",
+           "size": 40,
+           "origin": 0
+          },
+          {
+           "asset_type": 3,
+           "id": "e",
+           "size": 40,
+           "origin": 2
+          }
+         ]
+        }
+       },
+       "hex": "00b910000101000002020005000313000101000302010061030400280000000501000203130001010003020100620304002800000005010002031300010100030201006303040028000000040100320313000101000302010064030400280000000501000003130001010003020100650304002800000005010002"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "asset_budget",
+   "description": "A board's budget (bytes of all assets of a type) and count: NO_SPACE at BEGIN; replacing an asset does not count the old file.",
+   "board": {
+    "asset_support": [
+     {
+      "asset_type": 3,
+      "format": 4,
+      "max_size": 512,
+      "budget": 100,
+      "max_count": 2
+     }
+    ]
+   },
+   "steps": [
+    {
+     "op": "request",
+     "logical": {
+      "ver": 0,
+      "type": "XFER_BEGIN",
+      "req_id": 1,
+      "fields": {
+       "kind": 1,
+       "id": "a",
+       "size": 40,
+       "crc32": 3262690666,
+       "sha256": "a640365315d7e115fd2a9b53a35163f504e87ae499d35dcf7ccfe6114c01d787",
+       "asset_type": 3
+      }
+     },
+     "hex": "00300100010100010201006103010003040400280000000504006ab578c2062000a640365315d7e115fd2a9b53a35163f504e87ae499d35dcf7ccfe6114c01d787",
+     "expect": [
+      {
+       "logical": {
+        "ver": 0,
+        "type": "XFER_BEGIN_RSP",
+        "req_id": 1,
+        "fields": {
+         "status": 0,
+         "handle": 1,
+         "offset": 0,
+         "prefix_crc32": 0,
+         "max_chunk": 64,
+         "ack_window": 128
+        }
+       },
+       "hex": "00b0010001010000020100010304000000000004040000000000050200400006040080000000"
+      }
+     ]
+    },
+    {
+     "op": "request",
+     "logical": {
+      "ver": 0,
+      "type": "XFER_CHUNK",
+      "req_id": 0,
+      "fields": {
+       "handle": 1,
+       "offset": 0,
+       "data": "45535041010304000000000018000000052a4f7499bee3082d52779cc1e60b30557a9fc4e90e3358"
+      }
+     },
+     "hex": "00310000010100010204000000000003280045535041010304000000000018000000052a4f7499bee3082d52779cc1e60b30557a9fc4e90e3358",
+     "expect": [
+      {
+       "logical": {
+        "ver": 0,
+        "type": "XFER_ACK",
+        "req_id": 0,
+        "fields": {
+         "handle": 1,
+         "offset": 40,
+         "status": 0
+        }
+       },
+       "hex": "00610000010100010204002800000003010000"
+      }
+     ]
+    },
+    {
+     "op": "request",
+     "logical": {
+      "ver": 0,
+      "type": "XFER_FINISH",
+      "req_id": 2,
+      "fields": {
+       "handle": 1
+      }
+     },
+     "hex": "0033020001010001",
+     "expect": [
+      {
+       "logical": {
+        "ver": 0,
+        "type": "XFER_FINISH_RSP",
+        "req_id": 2,
+        "fields": {
+         "status": 0
+        }
+       },
+       "hex": "00b3020001010000"
+      }
+     ]
+    },
+    {
+     "op": "request",
+     "logical": {
+      "ver": 0,
+      "type": "XFER_BEGIN",
+      "req_id": 3,
+      "fields": {
+       "kind": 1,
+       "id": "b",
+       "size": 40,
+       "crc32": 3262690666,
+       "sha256": "a640365315d7e115fd2a9b53a35163f504e87ae499d35dcf7ccfe6114c01d787",
+       "asset_type": 3
+      }
+     },
+     "hex": "00300300010100010201006203010003040400280000000504006ab578c2062000a640365315d7e115fd2a9b53a35163f504e87ae499d35dcf7ccfe6114c01d787",
+     "expect": [
+      {
+       "logical": {
+        "ver": 0,
+        "type": "XFER_BEGIN_RSP",
+        "req_id": 3,
+        "fields": {
+         "status": 0,
+         "handle": 2,
+         "offset": 0,
+         "prefix_crc32": 0,
+         "max_chunk": 64,
+         "ack_window": 128
+        }
+       },
+       "hex": "00b0030001010000020100020304000000000004040000000000050200400006040080000000"
+      }
+     ]
+    },
+    {
+     "op": "request",
+     "logical": {
+      "ver": 0,
+      "type": "XFER_CHUNK",
+      "req_id": 0,
+      "fields": {
+       "handle": 2,
+       "offset": 0,
+       "data": "45535041010304000000000018000000052a4f7499bee3082d52779cc1e60b30557a9fc4e90e3358"
+      }
+     },
+     "hex": "00310000010100020204000000000003280045535041010304000000000018000000052a4f7499bee3082d52779cc1e60b30557a9fc4e90e3358",
+     "expect": [
+      {
+       "logical": {
+        "ver": 0,
+        "type": "XFER_ACK",
+        "req_id": 0,
+        "fields": {
+         "handle": 2,
+         "offset": 40,
+         "status": 0
+        }
+       },
+       "hex": "00610000010100020204002800000003010000"
+      }
+     ]
+    },
+    {
+     "op": "request",
+     "logical": {
+      "ver": 0,
+      "type": "XFER_FINISH",
+      "req_id": 4,
+      "fields": {
+       "handle": 2
+      }
+     },
+     "hex": "0033040001010002",
+     "expect": [
+      {
+       "logical": {
+        "ver": 0,
+        "type": "XFER_FINISH_RSP",
+        "req_id": 4,
+        "fields": {
+         "status": 0
+        }
+       },
+       "hex": "00b3040001010000"
+      }
+     ]
+    },
+    {
+     "op": "request",
+     "logical": {
+      "ver": 0,
+      "type": "XFER_BEGIN",
+      "req_id": 5,
+      "fields": {
+       "kind": 1,
+       "id": "c",
+       "size": 40,
+       "crc32": 3262690666,
+       "sha256": "a640365315d7e115fd2a9b53a35163f504e87ae499d35dcf7ccfe6114c01d787",
+       "asset_type": 3
+      }
+     },
+     "hex": "00300500010100010201006303010003040400280000000504006ab578c2062000a640365315d7e115fd2a9b53a35163f504e87ae499d35dcf7ccfe6114c01d787",
+     "expect": [
+      {
+       "logical": {
+        "ver": 0,
+        "type": "XFER_BEGIN_RSP",
+        "req_id": 5,
+        "fields": {
+         "status": 15
+        }
+       },
+       "hex": "00b005000101000f"
+      }
+     ]
+    },
+    {
+     "op": "request",
+     "logical": {
+      "ver": 0,
+      "type": "XFER_BEGIN",
+      "req_id": 6,
+      "fields": {
+       "kind": 1,
+       "id": "a",
+       "size": 60,
+       "crc32": 2656440924,
+       "sha256": "b853c18e56f31c65c32d8c45fda396047307ae5c12830fcfb73afc8e7797baed",
+       "asset_type": 3
+      }
+     },
+     "hex": "003006000101000102010061030100030404003c0000000504005c12569e062000b853c18e56f31c65c32d8c45fda396047307ae5c12830fcfb73afc8e7797baed",
+     "expect": [
+      {
+       "logical": {
+        "ver": 0,
+        "type": "XFER_BEGIN_RSP",
+        "req_id": 6,
+        "fields": {
+         "status": 0,
+         "handle": 3,
+         "offset": 0,
+         "prefix_crc32": 0,
+         "max_chunk": 64,
+         "ack_window": 128
+        }
+       },
+       "hex": "00b0060001010000020100030304000000000004040000000000050200400006040080000000"
+      }
+     ]
+    },
+    {
+     "op": "request",
+     "logical": {
+      "ver": 0,
+      "type": "XFER_CHUNK",
+      "req_id": 0,
+      "fields": {
+       "handle": 3,
+       "offset": 0,
+       "data": "4553504101030400000000002c00000003284d7297bce1062b50759abfe4092e53789dc2e70c31567ba0c5ea0f34597ea3c8ed12375c81a6cbf0153a"
+      }
+     },
+     "hex": "003100000101000302040000000000033c004553504101030400000000002c00000003284d7297bce1062b50759abfe4092e53789dc2e70c31567ba0c5ea0f34597ea3c8ed12375c81a6cbf0153a",
+     "expect": [
+      {
+       "logical": {
+        "ver": 0,
+        "type": "XFER_ACK",
+        "req_id": 0,
+        "fields": {
+         "handle": 3,
+         "offset": 60,
+         "status": 0
+        }
+       },
+       "hex": "00610000010100030204003c00000003010000"
+      }
+     ]
+    },
+    {
+     "op": "request",
+     "logical": {
+      "ver": 0,
+      "type": "XFER_FINISH",
+      "req_id": 7,
+      "fields": {
+       "handle": 3
+      }
+     },
+     "hex": "0033070001010003",
+     "expect": [
+      {
+       "logical": {
+        "ver": 0,
+        "type": "XFER_FINISH_RSP",
+        "req_id": 7,
+        "fields": {
+         "status": 0
+        }
+       },
+       "hex": "00b3070001010000"
+      }
+     ]
+    },
+    {
+     "op": "request",
+     "logical": {
+      "ver": 0,
+      "type": "XFER_BEGIN",
+      "req_id": 8,
+      "fields": {
+       "kind": 1,
+       "id": "a",
+       "size": 61,
+       "crc32": 3879440432,
+       "sha256": "c37b4a10e6942882b692ffd643d59994037ac7bf04d15066fc92442d673c2b16",
+       "asset_type": 3
+      }
+     },
+     "hex": "003008000101000102010061030100030404003d00000005040030903be7062000c37b4a10e6942882b692ffd643d59994037ac7bf04d15066fc92442d673c2b16",
+     "expect": [
+      {
+       "logical": {
+        "ver": 0,
+        "type": "XFER_BEGIN_RSP",
+        "req_id": 8,
+        "fields": {
+         "status": 15
+        }
+       },
+       "hex": "00b008000101000f"
+      }
+     ]
+    },
+    {
+     "op": "request",
+     "logical": {
+      "ver": 0,
+      "type": "ASSET_DELETE",
+      "req_id": 9,
+      "fields": {
+       "asset_type": 3,
+       "id": "b"
+      }
+     },
+     "hex": "003a09000101000302010062",
+     "expect": [
+      {
+       "logical": {
+        "ver": 0,
+        "type": "ASSET_DELETE_RSP",
+        "req_id": 9,
+        "fields": {
+         "status": 0
+        }
+       },
+       "hex": "00ba090001010000"
+      }
+     ]
+    },
+    {
+     "op": "request",
+     "logical": {
+      "ver": 0,
+      "type": "XFER_BEGIN",
+      "req_id": 10,
+      "fields": {
+       "kind": 1,
+       "id": "c",
+       "size": 40,
+       "crc32": 3262690666,
+       "sha256": "a640365315d7e115fd2a9b53a35163f504e87ae499d35dcf7ccfe6114c01d787",
+       "asset_type": 3
+      }
+     },
+     "hex": "00300a00010100010201006303010003040400280000000504006ab578c2062000a640365315d7e115fd2a9b53a35163f504e87ae499d35dcf7ccfe6114c01d787",
+     "expect": [
+      {
+       "logical": {
+        "ver": 0,
+        "type": "XFER_BEGIN_RSP",
+        "req_id": 10,
+        "fields": {
+         "status": 0,
+         "handle": 4,
+         "offset": 0,
+         "prefix_crc32": 0,
+         "max_chunk": 64,
+         "ack_window": 128
+        }
+       },
+       "hex": "00b00a0001010000020100040304000000000004040000000000050200400006040080000000"
+      }
+     ]
+    }
+   ]
+  },
+  {
    "name": "firmware_update",
    "description": "Firmware transfer: newer version, battery fine, image accepted.",
    "steps": [

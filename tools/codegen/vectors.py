@@ -1353,6 +1353,47 @@ def gen_transfer() -> dict:
     s.listing(["a", "b", "c"])
     out.append(s.done())
 
+    s = Scenario("asset_origin", "The origin of the BEGIN that completes a transfer is stored with the asset and listed "
+                 "(with the version, or alone); an absent origin stays absent.")
+    for ident, extra in (("a", {"version": "1.0.0", "origin": 1}), ("b", {"origin": 2}), ("c", {"version": "2"}),
+                         ("d", {"origin": 0})):
+        h = s.asset(ident, B, **extra)["handle"]
+        s.chunks(h, B, 0, 40, [(40, "OK")])
+        s.finish(h, "OK")
+    got = s.listing(["a", "b", "c", "d"])
+    assert [(e.get("version"), e.get("origin")) for e in got] == [("1.0.0", 1), (None, 2), ("2", None), (None, 0)], got
+    h = s.asset("a", B, origin=2)["handle"]  # a replacement takes the origin of its own BEGIN
+    s.chunks(h, B, 0, 40, [(40, "OK")])
+    s.finish(h, "OK")
+    assert s.listing(["a", "b", "c", "d"])[0] == {"asset_type": THEME, "id": "a", "size": 40, "origin": 2}
+    s.op("disconnect")
+    h = s.asset("e", B, origin=1)["handle"]  # interrupted, resumed by a BEGIN with another origin: the new one wins
+    s.chunks(h, B, 0, 20, [])
+    s.op("disconnect")
+    h = s.asset("e", B, origin=2)["handle"]
+    s.chunks(h, B, 20, 40, [(40, "OK")])
+    s.finish(h, "OK")
+    assert s.listing(["a", "b", "c", "d", "e"])[4]["origin"] == 2
+    out.append(s.done())
+
+    budget = {"asset_support": [{"asset_type": THEME, "format": THEME_V1, "max_size": 512, "budget": 100,
+                                 "max_count": 2}]}
+    s = Scenario("asset_budget", "A board's budget (bytes of all assets of a type) and count: NO_SPACE at BEGIN; "
+                 "replacing an asset does not count the old file.", board=budget)
+    for ident in ("a", "b"):
+        h = s.asset(ident, B)["handle"]
+        s.chunks(h, B, 0, 40, [(40, "OK")])
+        s.finish(h, "OK")
+    s.asset("c", B, "NO_SPACE")  # a third asset: the count
+    a60 = transfer.container(THEME, THEME_V1, _blob(44, 3))
+    h = s.asset("a", a60)["handle"]  # 60 + b's 40 = 100: exactly the budget
+    s.chunks(h, a60, 0, 60, [(60, "OK")])
+    s.finish(h, "OK")
+    s.asset("a", transfer.container(THEME, THEME_V1, _blob(45, 4)), "NO_SPACE")  # 61 + 40 > 100
+    s.req("ASSET_DELETE", {"asset_type": THEME, "id": "b"}, "OK")
+    s.asset("c", B)  # room again
+    out.append(s.done())
+
     s = Scenario("firmware_update", "Firmware transfer: newer version, battery fine, image accepted.")
     h = s.begin(2, "firmware", FW, version="0.2.0")["handle"]
     s.chunks(h, FW, 0, 300, [(128, "OK"), (256, "OK"), (300, "OK")])

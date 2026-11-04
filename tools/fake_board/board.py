@@ -241,6 +241,10 @@ class FakeBoard:
     def set_storage_total(self, total: int) -> None:
         self._call(self.n.set_storage_total, total)
 
+    def blob_put(self, name: str, data: bytes) -> None:
+        """A file straight into the asset storage, past the transfer layer's checks (a face damaged after its install)."""
+        self._call(self.n.blob_put, name.encode(), data, len(data))
+
     def storage_budget(self, writes: int) -> None:
         """Storage fails after `writes` more writes (power-cut style); -1 restores it."""
         self._call(self.n.storage_budget, writes)

@@ -332,6 +332,27 @@ proto_status_t cf_parse(const uint8_t *file, size_t len, const cf_limits_t *lim,
     return check_elements(out, lim, why);
 }
 
+void cf_peek_names(const uint8_t *head, size_t len, char name[2][CF_NAME_MAX + 1])
+{
+    name[0][0] = name[1][0] = '\0';
+    if (len < CF_ASSET_HEADER_LEN + 4u) {
+        return;
+    }
+    const uint32_t tlv_len = proto_rd32(head + CF_ASSET_HEADER_LEN);
+    const size_t avail = len - (CF_ASSET_HEADER_LEN + 4u);
+    proto_tlv_reader_t r;
+    proto_tlv_t t;
+    proto_status_t err;
+    proto_tlv_reader_init(&r, head + CF_ASSET_HEADER_LEN + 4u, tlv_len < avail ? tlv_len : avail);
+    while (proto_tlv_next(&r, &t, &err)) {
+        if (t.tag == PROTO_TAG_FACE_ROOT_META) {
+            (void)get_text(t.val, t.len, PROTO_TAG_FACE_META_NAME, name[0], CF_NAME_MAX + 1);
+            (void)get_text(t.val, t.len, PROTO_TAG_FACE_META_NAME_VI, name[1], CF_NAME_MAX + 1);
+            return;
+        }
+    }
+}
+
 bool cf_draws_source(const cf_face_t *f, uint8_t source)
 {
     for (unsigned i = 0; i < f->n_elements; i++) {

@@ -32,7 +32,7 @@ HELP = """commands:
   ancs-reset                           new ANCS session (drops ANCS notifications)
   icon APP_ID [zalo|ring|cross]        upload an app icon (through the transfer protocol), shown for that app
   icon-remove APP_ID                   delete it again (the category icon is used)
-  face install FILE [id=ID]            install a clock face file (id from the file unless given)
+  face install FILE [id=ID] [origin=gallery|local]  install a clock face file (id from the file unless given)
   face select [ID]                     show an installed or built-in face (no ID: Classic); its options come back
   face opt N V                         set option N of the shown face to V
   face list | delete ID                the installed faces; remove one
@@ -83,38 +83,37 @@ def _wait(board: FakeBoard, ms: int = 100) -> None:
 
 
 def _face(board: FakeBoard, pos: list[str], kv: dict[str, str]) -> str:
-    """face install|select|opt|list|delete (the firmware's per-face option memory of M8b, done here in the console)."""
+    """face install|select|opt|list|delete. The board keeps each face's option values itself (M8b)."""
     sub = pos[0] if pos else "list"
-    mem = board.__dict__.setdefault("_face_values", {})  # face id -> {option id: value}
     shown = board.clock_face_shown()
     if sub == "install":
         data = Path(pos[1]).read_bytes()
         ident = kv.get("id")
         if ident is None:
             ident = CF.parse_face(data, _face_limits(board), None).meta["id"]
-        loopback.install_clock_face(board, ident, data)
+        loopback.install_clock_face(board, ident, data, origin=kv.get("origin"))
         return f"face {ident} installed ({len(data)} bytes)"
     if sub == "select":
-        ident = pos[1] if len(pos) > 1 else ""
-        pairs = b"".join(bytes([k, v]) for k, v in mem.get(ident, {}).items())
-        loopback.config_set(board, {"ui.clock_face_id": ident, "ui.clock_face_opts": pairs.hex()})
+        loopback.config_set(board, {"ui.clock_face_id": pos[1] if len(pos) > 1 else ""})
         _wait(board)
         return f"face {board.clock_face_shown() or 'classic'} (errors: {board.clock_face_errors()})"
     if sub == "opt":
         if not shown:
             return "no face is shown"
-        mem.setdefault(shown, {})[int(pos[1])] = int(pos[2])
-        pairs = b"".join(bytes([k, v]) for k, v in mem[shown].items())
-        loopback.config_set(board, {"ui.clock_face_opts": pairs.hex()})
+        old = loopback.config_get_raw(board, "ui.clock_face_opts")
+        pairs = {old[i]: old[i + 1] for i in range(0, len(old) - 1, 2)}
+        pairs[int(pos[1])] = int(pos[2])
+        loopback.config_set(board, {"ui.clock_face_opts": b"".join(bytes(p) for p in pairs.items()).hex()})
         _wait(board)
         return f"option {pos[1]} = {pos[2]}"
     if sub == "delete":
         loopback.delete_clock_face(board, pos[1])
-        mem.pop(pos[1], None)
         _wait(board)
         return f"face {pos[1]} deleted"
     items = loopback.asset_list(board, loopback.ASSET_TYPE_CLOCK_FACE)
-    return "\n".join([f"{'*' if a['id'] == shown else ' '} {a['id']} {a['size']} bytes" for a in items] or ["(no faces installed)"])
+    return "\n".join([f"{'*' if a['id'] == shown else ' '} {a['id']} {a['size']} bytes"
+                      f"{' (' + ('gallery', 'local')[a['origin'] - 1] + ')' if a.get('origin') in (1, 2) else ''}"
+                      for a in items] or ["(no faces installed)"])
 
 
 def run_command(board: FakeBoard, line: str, out: Callable[[str], None] = print) -> bool:

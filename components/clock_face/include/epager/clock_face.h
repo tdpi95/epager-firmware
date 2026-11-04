@@ -113,6 +113,12 @@ typedef struct {
 proto_status_t cf_parse(const uint8_t *file, size_t len, const cf_limits_t *lim, const char *expected_id,
                         uint32_t contract, cf_face_t *out, const char **why);
 
+/* The names of a face from the first bytes of its file (no validation: the file passed cf_parse when it was installed, and
+ * a built-in face is compiled in). name[0] English, name[1] Vietnamese; "" when the name is not in `head`. Reads only
+ * inside head[0, len) and writes at most CF_NAME_MAX + 1 bytes to each. 512 bytes hold the meta section of the files our
+ * tools build. */
+void cf_peek_names(const uint8_t *head, size_t len, char name[2][CF_NAME_MAX + 1]);
+
 /* True if an element or a condition of the face reads `source` (PROTO_FACE_SOURCE_*). */
 bool cf_draws_source(const cf_face_t *f, uint8_t source);
 

@@ -236,6 +236,48 @@ static uint32_t asset_max_size(const xfer_t *x, uint8_t type, bool *supported)
     return max;
 }
 
+/* Bytes and number of the installed assets of `type`, not counting the one named `skip` (it is being replaced). */
+static void type_usage(const blob_storage_t *b, uint8_t type, const char *skip, uint32_t *bytes, uint16_t *count)
+{
+    char name[BLOB_NAME_MAX + 1];
+    uint32_t size, i = 0;
+    *bytes = 0;
+    *count = 0;
+    while (b->list(b->ctx, i++, name, sizeof(name), &size) == BLOB_OK) {
+        uint8_t t;
+        const char *id;
+        size_t id_len;
+        if (parse_asset_name(name, &t, &id, &id_len) && t == type && strcmp(name, skip) != 0) {
+            *bytes += size;
+            (*count)++;
+        }
+    }
+}
+
+/* The local limits of an asset type (xfer_asset_support_t.budget, .max_count): NO_SPACE when the new file would break one. */
+static proto_status_t check_budget(const xfer_t *x, const xfer_target_t *t)
+{
+    const xfer_asset_support_t *e = NULL;
+    for (size_t i = 0; i < x->p.n_assets && !e; i++) {
+        if (x->p.assets[i].asset_type == t->asset_type && (x->p.assets[i].budget || x->p.assets[i].max_count)) {
+            e = &x->p.assets[i];
+        }
+    }
+    if (!e) {
+        return PROTO_OK;
+    }
+    char name[BLOB_NAME_MAX + 1];
+    uint32_t bytes, old = 0;
+    uint16_t count;
+    target_name(t, 0, name);
+    type_usage(x->p.blob, t->asset_type, name, &bytes, &count);
+    const bool replaces = x->p.blob->stat(x->p.blob->ctx, name, &old) == BLOB_OK;
+    if ((e->max_count && !replaces && count >= e->max_count) || (e->budget && (uint64_t)bytes + t->size > e->budget)) {
+        return PROTO_NO_SPACE;
+    }
+    return PROTO_OK;
+}
+
 static proto_status_t blob_to_status(blob_status_t b)
 {
     return b == BLOB_OK ? PROTO_OK : b == BLOB_NO_SPACE ? PROTO_NO_SPACE : PROTO_INTERNAL;
@@ -284,7 +326,7 @@ static proto_status_t begin_checks(xfer_t *x, const xfer_target_t *t, bool has_t
             (uint64_t)t->size > (uint64_t)free_bytes + held) {
             return PROTO_NO_SPACE;
         }
-        return PROTO_OK;
+        return check_budget(x, t);
     }
     return x->p.ota ? xfer_ota_check_begin(x->p.ota, t->ver, t->ver_len, has_version) : PROTO_OK;
 }
@@ -312,6 +354,7 @@ static void handle_begin(xfer_t *x, const proto_msg_t *req, proto_writer_t *w)
         memcpy(t.ver, v, vl);
     }
     (void)proto_get_bool(body, len, PROTO_TAG_XFER_BEGIN_RESTART, &restart);
+    t.has_origin = t.kind == PROTO_TRANSFER_KIND_ASSET && proto_get_u8(body, len, PROTO_TAG_XFER_BEGIN_ORIGIN, &t.origin);
 
     proto_status_t st = begin_checks(x, &t, has_type, has_version);
     if (st != PROTO_OK) {
@@ -510,7 +553,11 @@ static proto_status_t verify(xfer_t *x)
         return PROTO_HASH_MISMATCH;
     }
     if (t->kind == PROTO_TRANSFER_KIND_ASSET) {
-        return check_asset(x, header, t->size);
+        const proto_status_t st = check_asset(x, header, t->size);
+        if (st == PROTO_OK && x->p.check_asset) {
+            return x->p.check_asset(x->p.ctx, t->asset_type, t->id, t->id_len, temp, t->size);
+        }
+        return st;
     }
     return x->p.fw->finish(x->p.fw->ctx, t->size);
 }
@@ -528,8 +575,15 @@ static proto_status_t install_asset(xfer_t *x)
     if (b->rename(b->ctx, temp, final) != BLOB_OK) {
         return PROTO_INTERNAL;
     }
-    if (t->ver_len) {
-        (void)b->write(b->ctx, meta, 0, t->ver, t->ver_len);
+    if (t->ver_len || t->has_origin) { /* the version, then NUL and the origin when the BEGIN carried one */
+        uint8_t m[XFER_VERSION_MAX + 2];
+        size_t n = t->ver_len;
+        memcpy(m, t->ver, n);
+        if (t->has_origin) {
+            m[n++] = 0;
+            m[n++] = t->origin;
+        }
+        (void)b->write(b->ctx, meta, 0, m, n);
     }
     if (x->p.on_asset) {
         x->p.on_asset(x->p.ctx, t->asset_type);
@@ -615,7 +669,7 @@ static void handle_asset_list(const xfer_t *x, const proto_msg_t *req, proto_wri
     uint32_t i = 0, size;
     uint16_t index = 0, written = 0;
     while (written < limit && b->list(b->ctx, i++, name, sizeof(name), &size) == BLOB_OK) {
-        uint8_t type, ver[XFER_VERSION_MAX];
+        uint8_t type, ver[XFER_VERSION_MAX + 2];
         const char *id;
         size_t id_len;
         uint32_t ver_len = 0;
@@ -623,10 +677,28 @@ static void handle_asset_list(const xfer_t *x, const proto_msg_t *req, proto_wri
             continue;
         }
         file_name(type, id, id_len, '@', meta);
-        bool has_ver = b->stat(b->ctx, meta, &ver_len) == BLOB_OK && ver_len <= XFER_VERSION_MAX &&
-                       b->read(b->ctx, meta, 0, ver, ver_len) == BLOB_OK;
+        bool has_meta = b->stat(b->ctx, meta, &ver_len) == BLOB_OK && ver_len <= sizeof(ver) &&
+                        b->read(b->ctx, meta, 0, ver, ver_len) == BLOB_OK;
+        /* the version file: version [NUL origin] */
+        bool has_origin = false, has_ver = has_meta;
+        uint8_t origin = 0;
+        if (has_meta) {
+            for (uint32_t k = 0; k < ver_len; k++) {
+                if (ver[k] == 0) {
+                    has_origin = k + 2 == ver_len;
+                    origin = has_origin ? ver[k + 1] : 0;
+                    ver_len = k;
+                    break;
+                }
+            }
+            has_ver = ver_len > 0;
+            if (ver_len > XFER_VERSION_MAX) {
+                has_ver = false;
+            }
+        }
         size_t entry = PROTO_TLV_HDR_LEN + (PROTO_TLV_HDR_LEN + 1) + (PROTO_TLV_HDR_LEN + id_len) +
-                       (PROTO_TLV_HDR_LEN + 4) + (has_ver ? PROTO_TLV_HDR_LEN + ver_len : 0);
+                       (PROTO_TLV_HDR_LEN + 4) + (has_ver ? PROTO_TLV_HDR_LEN + ver_len : 0) +
+                       (has_origin ? PROTO_TLV_HDR_LEN + 1 : 0);
         if (w->len + entry > PROTO_LIMIT_MAX_MESSAGE_TRANSFER) {
             break; /* the app pages on (protocol.md 5) */
         }
@@ -636,6 +708,9 @@ static void handle_asset_list(const xfer_t *x, const proto_msg_t *req, proto_wri
         proto_w_u32(w, PROTO_TAG_ASSET_ENTRY_SIZE, size);
         if (has_ver) {
             proto_w_bytes(w, PROTO_TAG_ASSET_ENTRY_VERSION, ver, ver_len);
+        }
+        if (has_origin) {
+            proto_w_u8(w, PROTO_TAG_ASSET_ENTRY_ORIGIN, origin);
         }
         proto_w_struct_end(w);
         written++;

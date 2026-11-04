@@ -258,6 +258,22 @@ static proto_status_t cb_wifi_set(void *ctx, const uint8_t *ssid, size_t ssid_le
     return PROTO_OK;
 }
 
+/* XFER_FINISH of a clock face: parsed under the board's rules, like the firmware does (ui_face_check). */
+static proto_status_t cb_check_asset(void *ctx, uint8_t asset_type, const char *id, size_t id_len, const char *blob_name,
+                                     uint32_t size)
+{
+    (void)ctx;
+#ifdef FB_WITH_SIM
+    if (asset_type == PROTO_ASSET_TYPE_CLOCK_FACE) {
+        return ui_face_check(&fb.blob.iface, blob_name, size, id, id_len, fb.params.display_w, fb.params.display_h,
+                             fb.params.color_depth > 1);
+    }
+#else
+    (void)asset_type, (void)id, (void)id_len, (void)blob_name, (void)size;
+#endif
+    return PROTO_OK;
+}
+
 static void cb_asset(void *ctx, uint8_t asset_type)
 {
     (void)ctx;
@@ -326,11 +342,11 @@ static void boot(bool image_pending_verify)
 {
     memset(fb.slots, 0, sizeof(fb.slots));
     memset(fb.apps, 0, sizeof(fb.apps));
-    fb.assets[0] = (xfer_asset_support_t){PROTO_ASSET_TYPE_BACKGROUND, PROTO_ASSET_FORMAT_MONO1, 5016, 0, 0};
-    fb.assets[1] = (xfer_asset_support_t){PROTO_ASSET_TYPE_THEME, PROTO_ASSET_FORMAT_THEME_V1, 4096, 0, 0};
-    fb.assets[2] = (xfer_asset_support_t){PROTO_ASSET_TYPE_FONT, PROTO_ASSET_FORMAT_FONT_V1, 262144, 0, 0};
-    fb.assets[3] = (xfer_asset_support_t){PROTO_ASSET_TYPE_APP_ICON, PROTO_ASSET_FORMAT_MONO1, 88, 24, 24};
-    fb.assets[4] = (xfer_asset_support_t){PROTO_ASSET_TYPE_CLOCK_FACE, PROTO_ASSET_FORMAT_CLOCK_FACE_V1, 65536, 0, 0};
+    fb.assets[0] = (xfer_asset_support_t){PROTO_ASSET_TYPE_BACKGROUND, PROTO_ASSET_FORMAT_MONO1, 5016, 0, 0, 0, 0};
+    fb.assets[1] = (xfer_asset_support_t){PROTO_ASSET_TYPE_THEME, PROTO_ASSET_FORMAT_THEME_V1, 4096, 0, 0, 0, 0};
+    fb.assets[2] = (xfer_asset_support_t){PROTO_ASSET_TYPE_FONT, PROTO_ASSET_FORMAT_FONT_V1, 262144, 0, 0, 0, 0};
+    fb.assets[3] = (xfer_asset_support_t){PROTO_ASSET_TYPE_APP_ICON, PROTO_ASSET_FORMAT_MONO1, 88, 24, 24, 0, 0};
+    fb.assets[4] = (xfer_asset_support_t){PROTO_ASSET_TYPE_CLOCK_FACE, PROTO_ASSET_FORMAT_CLOCK_FACE_V1, 65536, 0, 0, 1048576u, 16};
     fb.params = (core_params_t){
         .device_name = fb.device_name, .board_id = "fake_epaper_154", .firmware_version = fb.version,
         .variant = PROTO_VARIANT_PAPER, .display_type = PROTO_DISPLAY_TYPE_EPAPER_BW, .color_depth = 1,
@@ -348,7 +364,7 @@ static void boot(bool image_pending_verify)
         .now_ms = cb_now_ms, .read_battery = fb.bat_reader ? cb_battery : NULL, .battery_poll_ms = 1000,
         .apps_flush_ms = 60000,
         .notify = cb_notify, .on_notif = cb_notif, .on_config = cb_config, .on_setting = cb_setting, .on_ota = cb_ota,
-        .on_asset = cb_asset, .wifi_set = cb_wifi_set, .ctx = NULL};
+        .on_asset = cb_asset, .check_asset = cb_check_asset, .wifi_set = cb_wifi_set, .ctx = NULL};
 #ifdef FB_WITH_SIM
     /* identity, display and battery come from the simulated board through board_api */
     const board_profile_t *b = board_get();
@@ -364,9 +380,9 @@ static void boot(bool image_pending_verify)
     fb.params.display_h = di.height;
     fb.params.variant = SIM_VARIANT;
 #ifdef FB_SIM_LCD
-    fb.assets[0] = (xfer_asset_support_t){PROTO_ASSET_TYPE_BACKGROUND, PROTO_ASSET_FORMAT_RGB565, 142096, 0, 0};
-    fb.assets[1] = (xfer_asset_support_t){PROTO_ASSET_TYPE_APP_ICON, PROTO_ASSET_FORMAT_RGB565A8, 3088, 32, 32};
-    fb.assets[2] = (xfer_asset_support_t){PROTO_ASSET_TYPE_CLOCK_FACE, PROTO_ASSET_FORMAT_CLOCK_FACE_V1, 1048576, 0, 0};
+    fb.assets[0] = (xfer_asset_support_t){PROTO_ASSET_TYPE_BACKGROUND, PROTO_ASSET_FORMAT_RGB565, 142096, 0, 0, 0, 0};
+    fb.assets[1] = (xfer_asset_support_t){PROTO_ASSET_TYPE_APP_ICON, PROTO_ASSET_FORMAT_RGB565A8, 3088, 32, 32, 0, 0};
+    fb.assets[2] = (xfer_asset_support_t){PROTO_ASSET_TYPE_CLOCK_FACE, PROTO_ASSET_FORMAT_CLOCK_FACE_V1, 1048576, 0, 0, 4194304u, 16};
     fb.params.n_assets = 3;
 #endif
     fb.params.read_battery = b->read_battery;
@@ -667,6 +683,16 @@ void fb_set_storage_total(uint32_t total)
     fb.blob.total = total < used ? used : total;
 }
 
+/* A file straight into the asset storage, past the transfer layer's checks: for a face that went bad after it was
+ * installed (a damaged flash), which the renderer must still survive. */
+int fb_blob_put(const char *name, const uint8_t *data, size_t len)
+{
+    (void)fb.blob.iface.remove(fb.blob.iface.ctx, name);
+    const int ok = fb.blob.iface.write(fb.blob.iface.ctx, name, 0, data, len) == BLOB_OK;
+    cb_asset(NULL, PROTO_ASSET_TYPE_CLOCK_FACE);
+    return ok;
+}
+
 void fb_storage_budget(int32_t writes)
 {
     fb.budget = writes;
@@ -891,6 +917,15 @@ static void on_ui_action(void *ctx, ui_action_t a, uint32_t arg)
         break;
     case UI_ACTION_SETTING: /* the Paper's settings list: a config key and its new value (PLAN D96) */
         core_config_set_u8(&fb.core, (uint16_t)(arg >> 8), (uint8_t)arg);
+        break;
+    case UI_ACTION_FACE_SELECT:
+        (void)core_face_select(&fb.core, ui_face_list_id(arg));
+        break;
+    case UI_ACTION_FACE_OPTION:
+        (void)core_face_option(&fb.core, (uint8_t)(arg >> 8), (uint8_t)arg);
+        break;
+    case UI_ACTION_FACE_DELETE:
+        (void)core_face_delete(&fb.core, ui_face_list_id(arg));
         break;
     case UI_ACTION_BRIGHTNESS_UP:
     case UI_ACTION_BRIGHTNESS_DOWN: {
