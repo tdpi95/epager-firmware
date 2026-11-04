@@ -175,6 +175,7 @@ The 1.4× rule permits an image of about **2.86 MiB**. Assets total 8,257,536 by
 | Persistence and privacy | Notification history in RAM only; config, bonds and seen apps in NVS; app icons and diagnostics in LittleFS. Notification content is excluded from firmware logs by default. |
 | UI languages | English and Vietnamese, with generated fonts and emoji support. |
 | Assets | App icons only are advertised by firmware: Paper 24 × 24 `mono1` (max 88 B), LCD 32 × 32 `rgb565a8` (max 3088 B). Forgetting/evicting an app removes its icon. Backgrounds/themes/fonts are not advertised as supported uploads. |
+| Clock faces | **Planned (M8, approved 2026-11-04, D113; not implemented): [clock-faces-plan.md](clock-faces-plan.md).** Data-only `clock_face` assets (layout, image digit sets, per-face options) installed over BLE by the phone apps, from a GitHub gallery or a file; Classic (today's idle screen) stays as the fallback. An iOS app is planned later (user, 2026-11-04). |
 | OTA direction | **Updates over Wi-Fi from the public GitHub Releases are required (user, 2026-11-03: there is no iOS app); implemented and run on the Paper: [wifi-ota-plan.md](wifi-ota-plan.md), [M6c](milestone-notes/M6c.md).** BLE OTA stays for the Android app. Signed application updates without hardware Secure Boot; downgrade refusal and a 30% low-battery threshold are intended. Portable policies and the device-side integration (M6b, D111) exist; both are unverified on a board. |
 
 ### 7b. LCD recovery and power constraints

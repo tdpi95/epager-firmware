@@ -19,6 +19,7 @@ Work on one approved milestone at a time. Each completed milestone has notes rec
 | M6a | LittleFS asset sink + app icons | done (host-verified); LCD upload/drawing observed 2026-10-17; remaining device cases open | [Notes and updates](milestone-notes/M6a.md), checklist 76 |
 | M6c | Firmware update over Wi-Fi from GitHub Releases (no iOS app): daily check, Install / Remind later / Skip | **done on the Paper 2026-11-03 (contract 0.14.0, portable logic, Wi-Fi task, screens, hardware acceptance); LCD board and the visual check of the e-paper open** | [Plan](wifi-ota-plan.md), [M6c notes](milestone-notes/M6c.md) |
 | M7 | Complete hardware verification | planned for completion; bring-up and later sessions have already recorded partial evidence | [Checklist](hw-checklist.md) |
+| M8 | Installable clock faces: format, renderer, settings, developer tools, GitHub gallery (proposed contract 0.15.0) | planned: plan approved 2026-11-04 (D113); nothing implemented, M8a next | [Plan](clock-faces-plan.md), §M8 below |
 | P1a | LCD board bring-up | done (hw-verified) 2026-10-13, awaiting review; battery characterization and long-idle touch carried forward | [Notes](milestone-notes/P1a.md), checklist 21–28 |
 | P1b | LCD colour UI, simulator, controls, weather and settings (0.8.0/0.9.0) | in progress; approved 2026-10-14; implemented features still need remaining hardware acceptance and closing notes | §P1b below, checklist 14, 27, 29–38, 54–55 |
 | v2 | Wi-Fi transfer fast path | not scheduled; only when requested | §v2 below |
@@ -240,6 +241,20 @@ The case stays closed. **Any LCD flash, including a probe or stock restore, requ
 - Hardware: colour screens/text/emoji/icons legible and matching intended layout; scrolling/gestures/rotation/settings usable; dim/off and key/notification wake work; USB still reflashes. Do not require touch to wake a sleeping chip. Complete remaining checklist 14, 27, 29–38 and 54–55, including long-idle touch and battery work carried from P1a.
 - Network/time: Wi-Fi saved by app/console and hotspot, captive page/QR flow on both phone families, weather/SNTP/time precedence, radio off between fetches, saved-profile selection/fallback and BLE coexistence. Hardware Paper extensions are also tracked in 60–62 and 72/78.
 - Write the P1b closing note with what passed, what remains and explicit follow-ups, update this status and stop for review. No final sign-off is inferred from the successful LCD icon upload.
+
+## M8: Installable clock faces
+
+**Goal:** users choose, customise and install clock faces (built-in, from a GitHub gallery, or from a file) through the phone apps; other developers build faces with our tools and submit them to the gallery.
+
+**Status:** planned; [plan](clock-faces-plan.md) approved 2026-11-04 (D113) with its defaults; nothing implemented yet. User decisions: the name `clock_face`, image digit sets, a GitHub gallery with developer submissions, per-face options, side-loading without the gallery, no hotspot upload (an iOS app will follow), the notification count is a field faces place themselves and the firmware badge shows on built-in faces only.
+
+**Parts (each ends with notes and a stop for review):**
+
+- **M8a, host only:** contract 0.15.0 (`clock_face` asset type, `clock_face_v1` format, `ui.clock_face_id`, `ui.clock_face_opts`, asset `origin`, gallery schema, vectors); portable `components/clock_face` parser and evaluator with fuzzing; `ui_face.c` renderer with Classic as the fallback; built-in faces; fake-board commands and golden images.
+- **M8b, firmware:** `asset_support`, budgets, per-face option files, delete/replace of the active face, Settings pages on both layouts; hardware acceptance as checklist item 85 (the LCD board only after the user's go-ahead).
+- **M8c, tools and gallery:** the `epager-face` command-line tool, the developer guide `docs/clock-faces.md`, the gallery repository with its CI and first release (a new public repository: the user's go-ahead first).
+
+**Acceptance:** as listed per step in the plan. Host results do not establish upload time, memory headroom, e-paper ghosting or battery cost on the boards. The phone apps' gallery and install screens are outside this repository.
 
 ## v2: Wi-Fi fast path (only when you ask)
 
