@@ -598,6 +598,17 @@ static size_t write_capabilities(core_t *c, uint8_t *buf, size_t cap)
     proto_w_u16(&w, PROTO_TAG_CAPABILITIES_MAX_MTU, p->max_mtu);
     proto_w_u32(&w, PROTO_TAG_CAPABILITIES_CONFIG_REVISION, cfg_revision(&c->cfg));
     proto_w_bool(&w, PROTO_TAG_CAPABILITIES_PAIRING_MODE, c->status.pairing_mode);
+    bool faces = false;
+    for (size_t i = 0; p->blob && i < p->n_assets; i++) {
+        faces |= p->assets[i].asset_type == PROTO_ASSET_TYPE_CLOCK_FACE;
+    }
+    for (size_t i = 0; faces && p->builtin_face; i++) {
+        const char *id = p->builtin_face(p->ctx, i);
+        if (id == NULL) {
+            break;
+        }
+        proto_w_str(&w, PROTO_TAG_CAPABILITIES_BUILTIN_FACE, id);
+    }
     return proto_writer_ok(&w) && w.len <= PROTO_LIMIT_CAPABILITIES_MAX ? w.len : 0;
 }
 

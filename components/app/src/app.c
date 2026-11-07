@@ -325,6 +325,13 @@ static void on_asset(void *ctx, uint8_t asset_type)
 }
 
 #if CONFIG_EPAGER_FEATURE_CLOCK_FACES
+/* CAPABILITIES lists the built-in faces (contract 0.16.0). */
+static const char *on_builtin_face(void *ctx, size_t i)
+{
+    (void)ctx;
+    return ui_builtin_face_id(face_colour, i);
+}
+
 /* XFER_FINISH of a clock face: the whole file is parsed under the board's rules (ui_face.c). */
 static proto_status_t on_check_asset(void *ctx, uint8_t asset_type, const char *id, size_t id_len, const char *blob_name,
                                      uint32_t size)
@@ -1145,6 +1152,7 @@ static bool init_core_and_ui(bool kv_nvs_ok, bool assets_ok)
                         : (xfer_asset_support_t){PROTO_ASSET_TYPE_CLOCK_FACE, PROTO_ASSET_FORMAT_CLOCK_FACE_V1, 65536u, 0, 0,
                                                  1048576u, 16};
         params.check_asset = on_check_asset;
+        params.builtin_face = on_builtin_face;
 #endif
     } else {
         ESP_LOGW(TAG, "no asset storage: cards show the built-in icons");

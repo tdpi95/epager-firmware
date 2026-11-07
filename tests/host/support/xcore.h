@@ -41,7 +41,7 @@ typedef struct {
     /* RAM */
     npipe_slot_t slots[8];
     npipe_app_t apps[16];
-    xfer_asset_support_t assets[2];
+    xfer_asset_support_t assets[3];
     core_params_t params;
     core_t core;
     /* captured outputs */

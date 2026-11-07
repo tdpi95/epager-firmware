@@ -427,6 +427,22 @@ static void free_face(void)
 
 /* ---------------------------------------------------------------- loading */
 
+const char *ui_builtin_face_id(bool colour, size_t i)
+{
+#if UI_HAS_COLOUR
+    if (colour) {
+        return i < ui_builtin_faces_colour_count ? ui_builtin_faces_colour[i].id : NULL;
+    }
+#endif
+#if UI_HAS_MONO
+    if (!colour) {
+        return i < ui_builtin_faces_mono_count ? ui_builtin_faces_mono[i].id : NULL;
+    }
+#endif
+    (void)colour, (void)i;
+    return NULL;
+}
+
 static const ui_builtin_face_t *find_builtin(const char *id)
 {
     const ui_builtin_face_t *list = NULL;

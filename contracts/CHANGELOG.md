@@ -2,6 +2,14 @@
 
 Rules (protocol.md §9): while 0.x, breaking changes bump the minor version and are marked **BREAKING**; from 1.0.0, additive = minor and breaking = major. Every entry lists the vector files that changed. A contract change, its version bump, this changelog and the vectors land in one commit.
 
+## 0.16.0 (2026-11-07)
+
+Additive, boards with clock faces: **`CAPABILITIES` lists the built-in faces**, so an app can offer them (and select them with `ui.clock_face_id`) without a gallery and without hard-coding ids per board.
+
+- New `CAPABILITIES` field **`builtin_face`** (15, `id`, repeated, since 0.16.0): the ids of the board's built-in clock faces other than Classic, in display order. Only on boards whose `asset_support` lists `clock_face`. An app that does not know the field loses nothing; an app that finds none offers Classic only.
+- `protocol.md` §6 and the clock-face text of §5 say it, and where an app finds a built-in face's options (the face source of that id in the firmware tree, shipped with the app).
+- Vectors: `messages.json` (`capabilities_paper` and `capabilities_lcd` carry a `clock_face` `asset_support` entry and `builtin_face`); every other vector file only carries the new version.
+
 ## 0.15.0 (2026-11-04)
 
 Additive, both variants: installable **clock faces** (docs/clock-faces-plan.md, PLAN D113). Data-only descriptions of the clock screen (shapes, images, numbers written with image digit sets, text in the board's fonts, built-in icons, per-face options) that the phone apps install over the existing asset transfer, from a GitHub gallery or from a file. An app that does not know them needs no change (unknown keys, tags and enum values are skipped, §2.3, §9).

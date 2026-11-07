@@ -60,6 +60,9 @@ typedef struct {
     const xfer_asset_support_t *assets;
     size_t n_assets;
     const xfer_fw_sink_t *fw;     /* NULL: no firmware updates */
+    /* The i-th built-in clock face other than Classic (its id), NULL past the last: listed in CAPABILITIES (0.16.0) on
+     * boards with a clock_face asset_support entry. NULL callback: none listed. */
+    const char *(*builtin_face)(void *ctx, size_t i);
     bool allow_downgrade;
     uint8_t low_battery_pct;      /* OTA gate */
     uint32_t ota_required_checks, ota_verify_timeout_ms;

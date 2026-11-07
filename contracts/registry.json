@@ -482,7 +482,8 @@
       {"tag": 11, "name": "asset_support", "type": "struct", "struct": "asset_support", "repeated": true},
       {"tag": 12, "name": "max_mtu", "type": "u16", "description": "Board's preferred ATT MTU (hint)."},
       {"tag": 13, "name": "config_revision", "type": "u32"},
-      {"tag": 14, "name": "pairing_mode", "type": "bool", "description": "The board accepts new bonds now (since 0.7.0); readable before bonding."}]},
+      {"tag": 14, "name": "pairing_mode", "type": "bool", "description": "The board accepts new bonds now (since 0.7.0); readable before bonding."},
+      {"tag": 15, "name": "builtin_face", "type": "id", "repeated": true, "description": "Since 0.16.0: the ids of the board's built-in clock faces other than Classic (which every board has), in display order. Only on boards whose asset_support lists clock_face."}]},
     {"id": 255, "name": "ERROR", "kind": "error", "channel": "any", "description": "Unattributable request error.", "fields": [
       {"tag": 1, "name": "status", "type": "u8", "enum": "status", "required": true},
       {"tag": 2, "name": "msg_type", "type": "u8", "description": "Type byte of the offending message, if any."}]}

@@ -72,8 +72,10 @@ CAPS = {"contract_version": reg.contract_version, "device_name": "ePager-1A2B",
         "asset_support": [{"asset_type": 1, "format": 3, "max_size": 262144},
                           {"asset_type": 2, "format": 1, "max_size": 5016},
                           {"asset_type": 3, "format": 4, "max_size": 4096},
-                          {"asset_type": 5, "format": 1, "max_size": 88, "width": 24, "height": 24}],
-        "max_mtu": 517, "config_revision": 3, "pairing_mode": False}
+                          {"asset_type": 5, "format": 1, "max_size": 88, "width": 24, "height": 24},
+                          {"asset_type": 6, "format": 7, "max_size": 65536}],
+        "max_mtu": 517, "config_revision": 3, "pairing_mode": False,
+        "builtin_face": ["epager.big", "epager.minimal"]}
 
 
 def _lcd_icon_pixels() -> list[list[tuple[int, int, int, int]]]:
@@ -96,8 +98,10 @@ LCD_CAPS = {"contract_version": reg.contract_version, "device_name": "ePager-3C4
                 "display": {"type": 2, "width": 296, "height": 240, "color_depth": 16, "refresh_class": 2},
                 "features": 0b11011000011111, "transports": 1, "storage_total": 8257536, "storage_free": 8200000,
                 "asset_support": [{"asset_type": 2, "format": 2, "max_size": 142096},
-                                  {"asset_type": 5, "format": 6, "max_size": 3088, "width": 32, "height": 32}],
-                "max_mtu": 517, "config_revision": 1, "pairing_mode": True}
+                                  {"asset_type": 5, "format": 6, "max_size": 3088, "width": 32, "height": 32},
+                                  {"asset_type": 6, "format": 7, "max_size": 1048576}],
+                "max_mtu": 517, "config_revision": 1, "pairing_mode": True,
+                "builtin_face": ["epager.big", "epager.night"]}
 
 PAPER_WEATHER_CAPS = {**CAPS, "device_name": "ePager-5E6F", "features": 0b11110000111111}
 

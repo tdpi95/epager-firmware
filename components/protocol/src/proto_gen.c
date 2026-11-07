@@ -338,6 +338,7 @@ static const proto_field_desc_t proto_fields_msg_CAPABILITIES[] = {
     { .name = "max_mtu", .tag = 12, .type = PROTO_FT_U16, .flags = 0, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = NULL },
     { .name = "config_revision", .tag = 13, .type = PROTO_FT_U32, .flags = 0, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = NULL },
     { .name = "pairing_mode", .tag = 14, .type = PROTO_FT_BOOL, .flags = 0, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = NULL },
+    { .name = "builtin_face", .tag = 15, .type = PROTO_FT_ID, .flags = PROTO_F_REPEATED, .min_len = 1, .max_len = 32, .min = 0, .max = 0, .nested = NULL },
 };
 static const proto_field_desc_t proto_fields_msg_ERROR[] = {
     { .name = "status", .tag = 1, .type = PROTO_FT_U8, .flags = PROTO_F_REQUIRED, .min_len = 0, .max_len = 0, .min = 0, .max = 0, .nested = NULL },
@@ -370,7 +371,7 @@ const proto_msg_desc_t proto_messages[] = {
     { 0x62, PROTO_KIND_EVENT, PROTO_CHAN_CONFIG, { "APP_SEEN", proto_fields_msg_APP_SEEN, 1 } },
     { 0x63, PROTO_KIND_EVENT, PROTO_CHAN_NOTIFICATION, { "NOTIF_DISMISSED", proto_fields_msg_NOTIF_DISMISSED, 3 } },
     { 0x70, PROTO_KIND_EVENT, PROTO_CHAN_STATUS, { "DEVICE_STATUS", proto_fields_msg_DEVICE_STATUS, 10 } },
-    { 0x7E, PROTO_KIND_READ, PROTO_CHAN_CAPABILITIES, { "CAPABILITIES", proto_fields_msg_CAPABILITIES, 14 } },
+    { 0x7E, PROTO_KIND_READ, PROTO_CHAN_CAPABILITIES, { "CAPABILITIES", proto_fields_msg_CAPABILITIES, 15 } },
     { 0x81, PROTO_KIND_RESPONSE, PROTO_CHAN_ANY, { "PING_RSP", proto_fields_msg_PING_RSP, 2 } },
     { 0x90, PROTO_KIND_RESPONSE, PROTO_CHAN_CONFIG, { "CONFIG_GET_RSP", proto_fields_msg_CONFIG_GET_RSP, 3 } },
     { 0x91, PROTO_KIND_RESPONSE, PROTO_CHAN_CONFIG, { "CONFIG_SET_RSP", proto_fields_msg_CONFIG_SET_RSP, 3 } },

@@ -115,10 +115,18 @@ static proto_status_t wifi_set(void *ctx, const uint8_t *ssid, size_t ssid_len, 
 
 static void on_ota(void *ctx, const xfer_ota_event_t *ev) { ((xcore_t *)ctx)->ota_events[ev->kind]++; }
 
+static const char *on_builtin_face(void *ctx, size_t i)
+{
+    (void)ctx;
+    static const char *const ids[] = {"epager.big", "epager.minimal"};
+    return i < 2 ? ids[i] : NULL;
+}
+
 static void setup_params(xcore_t *x)
 {
     x->assets[0] = (xfer_asset_support_t){PROTO_ASSET_TYPE_THEME, PROTO_ASSET_FORMAT_THEME_V1, 512, 0, 0, 0, 0};
     x->assets[1] = (xfer_asset_support_t){PROTO_ASSET_TYPE_BACKGROUND, PROTO_ASSET_FORMAT_MONO1, 5016, 0, 0, 0, 0};
+    x->assets[2] = (xfer_asset_support_t){PROTO_ASSET_TYPE_CLOCK_FACE, PROTO_ASSET_FORMAT_CLOCK_FACE_V1, 65536, 0, 0, 0, 0};
     x->params = (core_params_t){
         .device_name = "ePager-1A2B", .board_id = "host_test_board", .firmware_version = x->version,
         .variant = PROTO_VARIANT_PAPER, .display_type = PROTO_DISPLAY_TYPE_EPAPER_BW, .color_depth = 1,
@@ -127,7 +135,8 @@ static void setup_params(xcore_t *x)
                     PROTO_FEATURES_BATTERY | (x->has_wifi ? PROTO_FEATURES_WIFI | PROTO_FEATURES_WEATHER : 0u),
         .transports = PROTO_TRANSPORTS_BLE, .max_mtu = 517,
         .kv_cfg = &x->kv.iface, .kv_apps = &x->kv.iface, .kv_xfer = &x->kv.iface,
-        .blob = &x->blob.iface, .assets = x->assets, .n_assets = 2, .fw = &x->fw.iface,
+        .blob = &x->blob.iface, .assets = x->assets, .n_assets = 3, .fw = &x->fw.iface,
+        .builtin_face = on_builtin_face,
         .low_battery_pct = 30, .ota_required_checks = 0, .ota_verify_timeout_ms = 60000,
         .ack_window = 1024, .journal_every = 512,
         .slots = x->slots, .n_slots = 8, .apps = x->apps, .n_apps = 16,

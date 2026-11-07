@@ -61,6 +61,7 @@ static void test_capabilities_read(void)
     ASSERT_CONTAINS(s, "\"storage_total\":16384,\"storage_free\":16384");
     ASSERT_CONTAINS(s, "\"asset_support\":[{\"asset_type\":3,\"format\":4,\"max_size\":512},{\"asset_type\":2");
     ASSERT_CONTAINS(s, "\"max_mtu\":517,\"config_revision\":0,\"pairing_mode\":false");
+    ASSERT_CONTAINS(s, "\"builtin_face\":[\"epager.big\",\"epager.minimal\"]"); /* since 0.16.0 */
     free(s);
     /* readable without a secure link; Status is not */
     core_set_secure(&x->core, false);

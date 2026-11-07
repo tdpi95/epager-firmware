@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-#define PROTO_CONTRACT_VERSION "0.15.0"
+#define PROTO_CONTRACT_VERSION "0.16.0"
 #define PROTO_MAJOR 0
 #define PROTO_UNICODE_VERSION "15.0.0"
 
@@ -229,6 +229,7 @@ typedef enum {
 #define PROTO_TAG_CAPABILITIES_MAX_MTU 12
 #define PROTO_TAG_CAPABILITIES_CONFIG_REVISION 13
 #define PROTO_TAG_CAPABILITIES_PAIRING_MODE 14
+#define PROTO_TAG_CAPABILITIES_BUILTIN_FACE 15
 #define PROTO_TAG_ERROR_STATUS 1
 #define PROTO_TAG_ERROR_MSG_TYPE 2
 
@@ -568,7 +569,7 @@ extern const proto_struct_desc_t proto_struct_face_root;
 #define PROTO_CFG_KEY_COUNT 27u
 #define PROTO_CFG_STR_MAX_LEN 64u
 /* Contract versions packed as major << 16 | minor << 8 | patch (config key `since`) */
-#define PROTO_CONTRACT_VERSION_PACKED 0x000f00u
+#define PROTO_CONTRACT_VERSION_PACKED 0x001000u
 
 /* GATT UUIDs, little-endian byte order (as BLE_UUID128_INIT expects) */
 #define PROTO_UUID_SERVICE_LE 0xca, 0x5f, 0xda, 0x25, 0x19, 0x6c, 0x47, 0x8b, 0x14, 0x42, 0x0a, 0x0c, 0x01, 0x00, 0x8a, 0xa0

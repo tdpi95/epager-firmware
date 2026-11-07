@@ -1,5 +1,5 @@
 {
- "contract_version": "0.15.0",
+ "contract_version": "0.16.0",
  "description": "Config value validation (protocol.md 5). A board of the given variant must return 'expect' for value_hex written to key. 'value' is the typed logical value.",
  "scope": "app+board",
  "cases": [

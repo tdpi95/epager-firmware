@@ -103,6 +103,15 @@
             "pairing_mode": {
               "type": "boolean",
               "description": "The board accepts new bonds now (since 0.7.0); readable before bonding."
+            },
+            "builtin_face": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z0-9_-][a-z0-9._-]{0,31}$",
+                "minLength": 1,
+                "description": "Since 0.16.0: the ids of the board's built-in clock faces other than Classic (which every board has), in display order. Only on boards whose asset_support lists clock_face.; id: max 32 UTF-8 bytes; min 1 bytes"
+              }
             }
           },
           "required": [

@@ -1,5 +1,5 @@
 {
- "contract_version": "0.15.0",
+ "contract_version": "0.16.0",
  "description": "Clock faces (asset-formats.md, 'Clock faces'). 'faces' are files by name. 'parse': parsing file_hex for the board (limits in asset-formats.md; max_file overrides the file size limit) with the asset id 'id' must give 'expect' (OK, or IMAGE_INVALID, or TOO_LARGE); the file is file_hex, or the named 'face'; for OK the 'summary' must match. 'options': resolving the stored pairs against the face gives 'values' (one per option in table order) and packing them gives 'packed_hex'. 'eval': what each element draws for the option pairs and the data snapshot; elements are compared in order, fields not listed for an element are absent. Data fields: time_known hour minute day month year wday (0 = Sunday) clock_24h language ('en' or 'vi') date fahrenheit; wx (temp_c10 high_c10 low_c10 rain cond day place; a missing key = no value); room (temp_c100 rh_c100) or null; battery (255 = unknown) charging ble wifi notif update. 'gallery': gallery.json manifests; 'valid' says whether clock-face-gallery.schema.json accepts them.",
  "scope": "app+board",
  "faces": {

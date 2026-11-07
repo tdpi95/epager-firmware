@@ -247,6 +247,9 @@ void ui_assets_changed(uint8_t asset_type);
 /* The id of face number `index` of the Clock face list ("" = Classic, also for an index past the end). Valid when the UI
  * reports UI_ACTION_FACE_SELECT or _DELETE, from the callback. */
 const char *ui_face_list_id(size_t index);
+/* The i-th built-in clock face of the colour (LCD) or the mono (Paper) layout, other than Classic: its id; NULL past the last.
+ * Needs no UI state (CAPABILITIES asks before the UI starts). */
+const char *ui_builtin_face_id(bool colour, size_t i);
 /* Every face of the Clock face list as the settings pages would show it now (Classic with id "", the built-in faces, the
  * installed ones), for the debug console and tools: `each` gets the id, the English name and whether it is built in, from
  * a file and in use. Does not touch the open settings page. */

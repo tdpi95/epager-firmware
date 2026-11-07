@@ -274,6 +274,17 @@ static proto_status_t cb_check_asset(void *ctx, uint8_t asset_type, const char *
     return PROTO_OK;
 }
 
+static const char *cb_builtin_face(void *ctx, size_t i)
+{
+    (void)ctx;
+#ifdef FB_WITH_SIM
+    return ui_builtin_face_id(fb.params.color_depth > 1, i);
+#else
+    (void)i;
+    return NULL;
+#endif
+}
+
 static void cb_asset(void *ctx, uint8_t asset_type)
 {
     (void)ctx;
@@ -364,7 +375,7 @@ static void boot(bool image_pending_verify)
         .now_ms = cb_now_ms, .read_battery = fb.bat_reader ? cb_battery : NULL, .battery_poll_ms = 1000,
         .apps_flush_ms = 60000,
         .notify = cb_notify, .on_notif = cb_notif, .on_config = cb_config, .on_setting = cb_setting, .on_ota = cb_ota,
-        .on_asset = cb_asset, .check_asset = cb_check_asset, .wifi_set = cb_wifi_set, .ctx = NULL};
+        .on_asset = cb_asset, .check_asset = cb_check_asset, .builtin_face = cb_builtin_face, .wifi_set = cb_wifi_set, .ctx = NULL};
 #ifdef FB_WITH_SIM
     /* identity, display and battery come from the simulated board through board_api */
     const board_profile_t *b = board_get();
