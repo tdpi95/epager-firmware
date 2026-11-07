@@ -186,5 +186,5 @@ Three sub-milestones, each ending with notes and a stop for review, like M6a-c.
 - **Limits:** the budget and the count are fields of `xfer_asset_support_t` (local, not advertised); the face check is a hook (`check_asset`) that parses the whole file with `cf_parse` at `XFER_FINISH`.
 - **Option files** are `opt_<id>` (an asset name starts with a number); the bookkeeping is in `core.c`, shared by the firmware, the fake board and the console. Deleting the face in use clears `ui.clock_face_id`.
 - **Origin** is stored in the version file as `version [NUL origin]`.
-- **Pages:** Settings → Clock face (the row before About) lists Classic, the built-in faces and the installed ones; a face's page has Use this face, the options (the face in use only) and Delete (installed faces). There is no separate `Customize` page. Installed faces are listed by the name in the file head.
+- **Pages:** Settings → Clock face (the row before About) lists Classic, the built-in faces and the installed ones; selecting a face that is not in use uses it at once (no page); selecting the face in use opens its page with the options and, for an installed face, Delete (only when there is something to show). There is no separate `Customize` page. Installed faces are listed by the name in the file head.
 - **Pool:** 128 KB of PSRAM (D122); the plan's "images in PSRAM" were already so.

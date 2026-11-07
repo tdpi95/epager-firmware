@@ -72,7 +72,7 @@ typedef struct {
     const char *upd_install, *upd_check, *upd_later, *upd_skip, *upd_cancel;
     const char *upd_err[UI_UPD_ERR_COUNT]; /* [UI_UPD_ERR_NONE] is unused */
     /* clock faces (M8b): the row and page title, the list's marks, the page's rows */
-    const char *set_face, *face_classic, *face_active, *face_file, *face_use, *face_delete, *face_delete_ask;
+    const char *set_face, *face_classic, *face_active, *face_file, *face_delete, *face_delete_ask;
 } ui_strings_t;
 
 /* Owns the LVGL display and its buffers; service pushes what LVGL rendered to the board. */
@@ -242,5 +242,6 @@ void ui_settings_scroll(int dir);
 ui_action_t ui_settings_select(void);
 /* The installed faces changed: the Clock face pages read the list again. */
 void ui_settings_faces_changed(void);
+void ui_settings_config_changed(void); /* the configuration changed (ui_set_config) */
 /* True on a board whose keys drive the UI (the frame path, no touch): the Paper. */
 bool ui_keys_only(void);

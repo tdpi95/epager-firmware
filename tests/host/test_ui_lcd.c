@@ -716,16 +716,15 @@ static void test_settings_clock_face_pages(void)
     TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n3/3\nClock face\n>\nAbout\n>\n"));
     TAP_ROW(0);
     TEST_ASSERT_NOT_NULL(strstr(text(), "Clock face\nClassic\nIn use\nBig\nNight\n"));
-    TAP_ROW(1); /* a built-in face: its page has Use this face and no Delete */
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Big\nBig\nUse this face\n"));
-    TEST_ASSERT_NULL(strstr(text(), "Delete"));
     const uint32_t n = n_actions;
-    TAP_ROW(1);
+    TAP_ROW(1); /* a face that is not in use is used at once: no page */
     TEST_ASSERT_EQUAL_UINT32(n + 1, n_actions);
     TEST_ASSERT_EQUAL_INT(UI_ACTION_FACE_SELECT, last_action);
     TEST_ASSERT_EQUAL_UINT32(1, last_arg);
     TEST_ASSERT_EQUAL_STRING("epager.big", ui_face_list_id(1));
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Clock face\nClassic\nIn use\n")); /* back on the list */
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Clock face\nClassic\nIn use\n")); /* still on the list */
+    TAP_ROW(0); /* Classic is in use and has nothing to set: nothing happens */
+    TEST_ASSERT_EQUAL_UINT32(n + 1, n_actions);
     SWIPE_BACK(); /* to the settings, then the clock */
     TEST_ASSERT_NOT_NULL(strstr(text(), "Settings"));
     SWIPE_BACK();

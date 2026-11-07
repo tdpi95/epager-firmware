@@ -134,7 +134,6 @@ def scene_face_big() -> Frames:
     Fahrenheit, then with the weather and the date switched off through its options."""
     b = face_board()
     select_face(b, "epager.big")
-    assert b.clock_face_shown() == "epager.big"
     out: Frames = [("face_big", b.panel())]
     set_config(b, {"ui.clock_24h": False, "ui.temp_unit": 1, "ui.language": 1})
     out.append(("face_big_12h_vi_f", b.panel()))
@@ -222,6 +221,8 @@ def scene_settings() -> Frames:
     settle(b)
     out.append(("settings_about", b.panel()))
     b.button(BTN_PWR, long_press=True)  # back, on the About row
+    b.button(BTN_BOOT)  # up to Clock face
+    b.button(BTN_BOOT)  # up to Software update
     b.button(BTN_BOOT)  # up to Wi-Fi networks
     b.button(BTN_BOOT, long_press=True)
     settle(b)
@@ -238,8 +239,8 @@ def scene_settings() -> Frames:
 
 
 def scene_settings_faces() -> Frames:
-    """The Clock face pages (M8b): the list with the face in use and a face from a file, a face that is not in use
-    (Use this face), then the face in use with its options and the one installed from a file with Delete."""
+    """The Clock face pages (M8b): the list with the face in use and a face from a file; selecting a face uses it at once;
+    selecting the face in use opens its page with the options."""
     b = face_board()
     loopback.install_clock_face(b, "me.mine", sample_faces.big_variant("paper", "me.mine"), origin="local")
     b.button(BTN_PWR)  # the clock: open the settings
@@ -249,14 +250,10 @@ def scene_settings_faces() -> Frames:
     settle(b)
     out: Frames = [("settings_faces", b.panel())]
     b.button(BTN_PWR)  # down to Big
-    b.button(BTN_BOOT, long_press=True)
-    settle(b)
-    out.append(("settings_face_use", b.panel()))
-    b.button(BTN_PWR)  # Use this face: Big is chosen, the list shows it
-    b.button(BTN_BOOT, long_press=True)
+    b.button(BTN_BOOT, long_press=True)  # used at once
     settle(b)
     out.append(("settings_faces_big_in_use", b.panel()))
-    b.button(BTN_BOOT, long_press=True)  # the page of the face in use: its options
+    b.button(BTN_BOOT, long_press=True)  # the face in use: its page with the options
     settle(b)
     out.append(("settings_face_options", b.panel()))
     return out

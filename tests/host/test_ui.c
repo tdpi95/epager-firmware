@@ -2079,28 +2079,34 @@ static void test_settings_clock_face_pages(void)
     install_face(&blob, "test.min", file, vector_face("paper_min", file, sizeof(file)));
     open_face_list();
     TEST_ASSERT_NOT_NULL(strstr(text(), "Clock face\n1/4\nClassic\nIn use\nBig\n\nMinimal\n\nMin\n"));
-    /* the page of a face that is not in use: Use this face, no options; the built-in ones cannot be deleted */
+    /* a face that is not in use is used at once, no page: the UI reports the choice and stays on the list */
     down(1);
     seen_n = 0;
     ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_LONG);
-    run(2100);
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Big\n1/2\nBig\n\nUse this face\n"));
-    ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT);
-    ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_LONG);
+    TEST_ASSERT_EQUAL_INT(1, seen_n);
     TEST_ASSERT_EQUAL_INT(UI_ACTION_FACE_SELECT, seen_action);
     TEST_ASSERT_EQUAL_UINT32(1, seen_arg);
     TEST_ASSERT_EQUAL_STRING("epager.big", ui_face_list_id(1)); /* what the firmware resolves it with */
     run(2100);
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Clock face\n2/4\n")); /* back on the list, on that row */
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Clock face\n2/4\n"));
+    /* the face in use with nothing to set (a built-in face without options, Classic) opens no page */
+    face_config(face_cfg(), "", NULL, 0);
+    run(2100);
+    ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_SHORT);
+    seen_n = 0;
+    ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_LONG);
+    TEST_ASSERT_EQUAL_INT(0, seen_n);
+    run(2100);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Clock face\n1/4\n"));
+    down(1);
     /* the firmware stores the choice: the list moves "In use", the page of the face in use has its options */
     face_config(face_cfg(), "epager.minimal", NULL, 0);
     run(2100);
     TEST_ASSERT_NOT_NULL(strstr(text(), "Classic\n\nBig\n\nMinimal\nIn use\n"));
     down(1);
-    ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_LONG);
+    ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_LONG); /* the face in use: its page */
     run(2100);
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Minimal\n1/3\nMinimal\nIn use\nStyle\nLight\nDate\nOn\n"));
-    down(1);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Minimal\n1/2\nStyle\nLight\nDate\nOn\n"));
     seen_n = 0;
     ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_LONG); /* an option row moves to its next value: Light -> Dark */
     TEST_ASSERT_EQUAL_INT(1, seen_n);
@@ -2117,8 +2123,7 @@ static void test_settings_clock_face_pages(void)
     down(1);
     ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_LONG);
     run(2100);
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Min\n1/2\nMin\nIn use\nDelete\n"));
-    down(1);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Min\n1/1\nDelete\n"));
     seen_n = 0;
     ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_LONG);
     run(2100);

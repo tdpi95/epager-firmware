@@ -36,7 +36,7 @@ static const ui_strings_t STRINGS[] = {
                            "Install", "Check now", "Remind later", "Skip this version", "Cancel",
                            {"", "No Wi-Fi saved", "No connection", "Clock not set", "Download failed", "Update rejected",
                             "Phone update running", "Cancelled", "Battery below 30%", "Update failed"},
-                           "Clock face", "Classic", "In use", "From file", "Use this face", "Delete", "Delete?"},
+                           "Clock face", "Classic", "In use", "From file", "Delete", "Delete?"},
     [PROTO_LANGUAGE_VI] = {"Chưa đặt giờ", "Chế độ ghép nối", "Đã tắt nguồn", "Đang cập nhật %d%%", "Nhiệt độ", "Độ ẩm",
                            {"Chủ nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"},
                            {0},
@@ -56,7 +56,7 @@ static const ui_strings_t STRINGS[] = {
                            "Cài đặt", "Kiểm tra ngay", "Nhắc lại sau", "Bỏ qua bản này", "Hủy",
                            {"", "Chưa lưu Wi-Fi", "Không có kết nối", "Chưa đặt giờ", "Tải về lỗi", "Bản cập nhật bị từ chối",
                             "Điện thoại đang cập nhật", "Đã hủy", "Pin dưới 30%", "Cập nhật lỗi"},
-                           "Mặt đồng hồ", "Cổ điển", "Đang dùng", "Từ tệp", "Dùng mặt này", "Xóa", "Xóa?"},
+                           "Mặt đồng hồ", "Cổ điển", "Đang dùng", "Từ tệp", "Xóa", "Xóa?"},
 };
 
 ui_wifi_icon_t ui_wifi_icon_for(uint8_t wifi_state)
@@ -406,6 +406,7 @@ void ui_set_config(const ui_config_t *c)
     }
     ui.cfg = *c;
     ui.cfg.clock_face_id[sizeof(ui.cfg.clock_face_id) - 1] = '\0';
+    ui_settings_config_changed();
 }
 
 void ui_set_update(const ui_update_t *u)

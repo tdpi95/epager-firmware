@@ -211,10 +211,11 @@ static ui_action_t upd_select(void)
 
 /* ---------------------------------------------------------------- the Clock face pages (M8b) */
 
-/* The list: Classic, the built-in faces, the installed ones. A face's page: its status, Use, then (the active face) its
- * options, then Delete (installed faces). Selecting an option row moves it to the next value. */
-typedef enum { FR_STATUS, FR_USE, FR_OPTION, FR_DELETE } face_row_t;
-#define FACE_ROWS_MAX (3u + 8u)
+/* The list: Classic, the built-in faces, the installed ones. Selecting a face that is not in use uses it at once; selecting
+ * the one in use opens its page (its name is the title) when there is something to do there: the face's options (a
+ * select moves one to its next value) and, for an installed face, Delete (asks first, like Forget). */
+typedef enum { FR_OPTION, FR_DELETE } face_row_t;
+#define FACE_ROWS_MAX (1u + 8u)
 
 static bool face_is_active(size_t i)
 {
@@ -241,15 +242,11 @@ static void faces_refresh(void)
     ui.n_faces = ui_faces_collect(ui.faces, UI_FACES_MAX);
 }
 
-/* The rows of the page of face `face_sel`: option rows only for the face on screen. */
+/* The rows of the page of face `face_sel`: option rows only while it is the face in use. */
 static size_t face_rows(face_row_t out[FACE_ROWS_MAX])
 {
     size_t n = 0;
-    const bool active = face_is_active(ui.face_sel);
-    out[n++] = FR_STATUS;
-    if (!active) {
-        out[n++] = FR_USE;
-    } else {
+    if (face_is_active(ui.face_sel)) {
         for (size_t i = 0; i < ui_face_option_count() && n < FACE_ROWS_MAX - 1u; i++) {
             out[n++] = FR_OPTION;
         }
@@ -278,13 +275,7 @@ static void face_row(size_t i, const char **name, char *value, size_t cap)
     if (i >= n) {
         return;
     }
-    const ui_face_entry_t *e = &ui.faces[ui.face_sel];
     switch (rows[i]) {
-    case FR_STATUS:
-        *name = face_name(e);
-        snprintf(value, cap, "%s", face_is_active(ui.face_sel) ? s->face_active : e->local ? s->face_file : "");
-        break;
-    case FR_USE: *name = s->face_use; break;
     case FR_OPTION: {
         uint8_t id, next;
         size_t k = 0; /* the option row's number among the option rows */
@@ -309,10 +300,6 @@ static ui_action_t face_select(void)
         return UI_ACTION_NONE;
     }
     switch (rows[ui.set_cur]) {
-    case FR_USE:
-        ui_emit(UI_ACTION_FACE_SELECT, (uint32_t)ui.face_sel);
-        ui_settings_back(); /* the list shows the check where the firmware has moved it */
-        break;
     case FR_OPTION: {
         const char *label;
         char value[2];
@@ -339,6 +326,14 @@ static ui_action_t face_select(void)
     default: break;
     }
     return UI_ACTION_NONE;
+}
+
+/* The configuration changed: a face's page closes when its face is no longer the one in use (a phone chose another). */
+void ui_settings_config_changed(void)
+{
+    if (ui.settings && ui.set_page == UI_PAGE_FACE && !face_is_active(ui.face_sel)) {
+        ui_settings_faces_changed(); /* reads the list again and goes back to it */
+    }
 }
 
 const char *ui_face_list_id(size_t index) { return index < ui.n_faces ? ui.faces[index].id : ""; }
@@ -622,7 +617,12 @@ ui_action_t ui_settings_select(void)
         return upd_select();
     }
     if (ui.set_page == UI_PAGE_FACES) {
-        if (ui.set_cur < ui.n_faces) {
+        if (ui.set_cur >= ui.n_faces) {
+            return UI_ACTION_NONE;
+        }
+        if (!face_is_active(ui.set_cur)) { /* use it: the firmware stores the choice and the list moves "In use" */
+            ui_emit(UI_ACTION_FACE_SELECT, (uint32_t)ui.set_cur);
+        } else if (ui_face_option_count() > 0 || !ui.faces[ui.set_cur].builtin) {
             ui.set_faces_cur = ui.set_cur;
             ui.face_sel = ui.set_cur;
             ui.set_page = UI_PAGE_FACE;
