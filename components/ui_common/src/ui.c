@@ -781,8 +781,12 @@ bool ui_service(void)
         ui.model_dirty = true;
     }
     /* a message or a queued card is on a timer of a few seconds: keep calling (the app does not sleep meanwhile) */
-    return pending || ui.model_dirty || ui.n_queue != 0 || ui.notice != UI_NOTICE_NONE;
+    const bool timers = ui.model_dirty || ui.n_queue != 0 || ui.notice != UI_NOTICE_NONE;
+    ui.panel_wait = pending && !timers && ui.backend->panel_wait != NULL && ui.backend->panel_wait();
+    return pending || timers;
 }
+
+bool ui_panel_wait(void) { return ui.panel_wait; }
 
 void ui_get_stats(ui_stats_t *out) { *out = ui.stats; }
 

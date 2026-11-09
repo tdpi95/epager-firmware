@@ -75,7 +75,7 @@ typedef struct {
 
 typedef enum {
     BLEU_CONN_FAST = 0,    /* 15-30 ms, no latency: transfers, the first seconds, the ANCS replay */
-    BLEU_CONN_RELAXED = 1, /* 90-120 ms, latency 4: idle (the board skips up to 4 events, a message from the phone waits up to 600 ms) */
+    BLEU_CONN_RELAXED = 1, /* 165-200 ms, latency 4, 6 s: idle (the board skips up to 4 events, a message from the phone waits up to 1 s; D123) */
 } bleu_conn_mode_t;
 
 void bleu_conn_params(bleu_conn_mode_t mode, bleu_conn_params_t *out);

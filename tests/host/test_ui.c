@@ -201,6 +201,23 @@ static void test_partial_takes_300ms(void)
     TEST_ASSERT_EQUAL_UINT32(1, state().partial);
 }
 
+/* PLAN D123: the app sleeps through a refresh only while the panel alone has work. */
+static void test_panel_wait_only_while_the_panel_alone_works(void)
+{
+    run(100);
+    TEST_ASSERT_TRUE(state().refreshing);
+    TEST_ASSERT_TRUE(ui_service());
+    TEST_ASSERT_TRUE(ui_panel_wait()); /* the boot frame is on the panel's way: nothing else to do */
+    ui_set_time(T_14_27_05);           /* a new picture while the panel is busy: it waits for the panel */
+    TEST_ASSERT_TRUE(ui_service());
+    TEST_ASSERT_FALSE(ui_panel_wait());
+    run(4000);
+    TEST_ASSERT_FALSE(state().refreshing);
+    TEST_ASSERT_EQUAL_UINT32(2, state().full + state().partial); /* the waiting frame was shown too */
+    TEST_ASSERT_FALSE(ui_service());
+    TEST_ASSERT_FALSE(ui_panel_wait());
+}
+
 static void test_changes_during_a_refresh_are_coalesced(void)
 {
     run(100); /* boot refresh running */
@@ -2149,6 +2166,7 @@ int main(void)
     RUN_TEST(test_full_refresh_cards_count_a_quarter);
     RUN_TEST(test_full_refresh_waits_for_a_quiet_moment);
     RUN_TEST(test_partial_takes_300ms);
+    RUN_TEST(test_panel_wait_only_while_the_panel_alone_works);
     RUN_TEST(test_changes_during_a_refresh_are_coalesced);
     RUN_TEST(test_unchanged_frame_is_not_refreshed);
     RUN_TEST(test_cards_and_buttons);

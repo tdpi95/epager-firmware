@@ -6,7 +6,7 @@
  *   ab                           the state
  *   ab rail on|off               the audio rail held on between I2C uses (default: switched around each use, D73)
  *   ab ble default               the idle (relaxed) connection parameters
- *   ab ble MIN_MS MAX_MS LATENCY [TIMEOUT_MS]   asked for in place of 90-120 ms, latency 4, 4000 ms; Apple's rules
+ *   ab ble MIN_MS MAX_MS LATENCY [TIMEOUT_MS]   asked for in place of 165-200 ms, latency 4, 6000 ms; Apple's rules
  *                                apply (min a multiple of 15 ms, max >= min + 15, max x (latency + 1) <= 2 s,
  *                                x3 < timeout, timeout 2-6 s)
  *   ab ancs default|off|SECONDS  the longest wait between ANCS discovery retries while linked (default 120);

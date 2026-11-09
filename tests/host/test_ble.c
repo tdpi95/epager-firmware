@@ -194,6 +194,10 @@ static void test_connection_parameters_follow_apples_rules(void)
     TEST_ASSERT_TRUE(bleu_conn_params_apple_ok(&p));
     bleu_conn_params(BLEU_CONN_RELAXED, &p);
     TEST_ASSERT_TRUE(bleu_conn_params_apple_ok(&p));
+    /* idle: the board must listen only about once a second (PLAN D123), and keep a 6 s supervision timeout */
+    const uint32_t span_us = p.itvl_max * 1250u * (p.latency + 1u);
+    TEST_ASSERT_TRUE(span_us >= 900000u && span_us <= 1050000u);
+    TEST_ASSERT_EQUAL_UINT16(600, p.timeout);
 
     /* the checker itself: each rule can fail on its own */
     const bleu_conn_params_t good = {12, 24, 0, 400};

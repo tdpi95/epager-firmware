@@ -79,6 +79,7 @@ typedef struct {
 typedef struct {
     bool (*init)(void);    /* after lv_init: create ui.disp */
     bool (*service)(void); /* true while work is pending (a frame waiting, a refresh in progress) */
+    bool (*panel_wait)(void); /* NULL or false: after service, the only work left is the panel's own refresh */
     void (*reset)(void);   /* forget everything (LVGL memory is already freed) */
 } ui_backend_t;
 
@@ -111,6 +112,7 @@ typedef struct {
     const ui_backend_t *backend;
     const ui_layout_t *layout;
     bool powered, model_dirty;
+    bool panel_wait;                   /* ui_panel_wait(): set by ui_service */
     bool settings;                     /* the settings list is open (closed when the screen goes off and after
                                         * cards_timeout_s without a key or a touch) */
     size_t set_cur, set_top;           /* the highlighted (Paper) or last tapped (LCD) row, and the first row on screen */

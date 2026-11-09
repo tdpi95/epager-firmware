@@ -285,6 +285,10 @@ uint8_t ui_brightness_step(uint8_t brightness, bool up);
 /* Render pending changes and push the frame when the display is free. Returns true while work is
  * pending (a frame waiting for the display, or a refresh in progress). Call every ~20 ms. */
 bool ui_service(void);
+/* After ui_service returned true: whether the only work left is a refresh the panel runs on its own (frame
+ * path): nothing to render or push until it ends, so the app may sleep until the display's idle_wake fires
+ * instead of polling (PLAN D123). False while a frame waits, a card or a message is on a timer, or on LCDs. */
+bool ui_panel_wait(void);
 void ui_get_stats(ui_stats_t *out);
 /* Text of the visible labels, one per line (NUL-terminated), for tools and tests. */
 size_t ui_visible_text(char *out, size_t cap);

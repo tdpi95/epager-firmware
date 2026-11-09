@@ -110,7 +110,9 @@ void bleu_conn_params(bleu_conn_mode_t mode, bleu_conn_params_t *out)
     if (mode == BLEU_CONN_FAST) {
         *out = (bleu_conn_params_t){.itvl_min = 12, .itvl_max = 24, .latency = 0, .timeout = 400}; /* 15-30 ms, 4 s */
     } else {
-        *out = (bleu_conn_params_t){.itvl_min = 72, .itvl_max = 96, .latency = 4, .timeout = 400}; /* 90-120 ms, 4 s */
+        /* About one radio wake-up a second when idle, like the Pebble's idle setting (168.75-201.25 ms, latency 4,
+         * 6 s), with the minimum on Apple's 15 ms grid: 165-200 ms, latency 4, 6 s (PLAN D123). */
+        *out = (bleu_conn_params_t){.itvl_min = 132, .itvl_max = 160, .latency = 4, .timeout = 600};
     }
 }
 

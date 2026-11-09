@@ -63,6 +63,12 @@ typedef struct {
      * the nearest one it can. The board turns the panel and the touch together: get_info and display
      * coordinates do not change (PLAN D58). The caller redraws the whole screen afterwards. */
     void (*set_rotation)(void *ctx, uint8_t quarter_turns);
+    /* Frame path, optional (NULL: the app polls busy() through a refresh). on = true arms a wake-up for the end
+     * of the refresh in progress: done(user) runs in an interrupt once the panel is idle again, and the same
+     * event ends a light sleep, so the chip need not stay awake through the waveform (PLAN D123). Returns false
+     * when nothing was armed (no refresh running, or the panel is not busy yet or any more): poll busy() as
+     * before and ask again on the next pass. on = false disarms; harmless when nothing is armed. */
+    bool (*idle_wake)(void *ctx, bool on, void (*done)(void *user), void *user);
     void *ctx;
 } board_display_t;
 

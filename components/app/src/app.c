@@ -68,6 +68,7 @@
 #define ASSETS_LABEL "assets"
 #define LOOP_BUSY_MS 20  /* UI work pending (a refresh in flight, an animation, a finger): poll fast */
 #define LOOP_IDLE_MS 100
+#define LOOP_PANEL_MS 250 /* asleep through a refresh: BUSY wakes the loop; this only bounds a missed wake-up */
 #define CORE_TICK_MS 1000
 #define PAIRING_TIMEOUT_MS (3u * 60u * 1000u) /* pairing mode closes by itself (PLAN D76) */
 #define CLIMATE_POLL_MS 60000 /* one sensor measurement a minute, like the clock's redraw */
@@ -1018,7 +1019,8 @@ static void on_wake_isr(void *user)
 
 /* Hold the locks while the app is busy or a key just woke the chip; release them once it is idle and the keys
  * can wake it. Idle = the screen is off (boards with a backlight), or nothing is pending and the radio is quiet
- * (the Paper: its panel keeps the picture without power, so the chip sleeps right after a refresh, PLAN D82). */
+ * (the Paper: its panel keeps the picture without power, so the chip sleeps right after a refresh, PLAN D82, and
+ * through the refresh itself when the panel can wake it, D123). */
 static void sleep_policy(uint32_t t, bool quiet)
 {
     const bool backlight = board->display != NULL && board->display->set_backlight != NULL;
@@ -1053,6 +1055,35 @@ static void sleep_policy(uint32_t t, bool quiet)
         app_ev(APP_EV_SLEEP_DISARM, 0);
         app_batlog_note_wake();
     }
+}
+
+/* Interrupt context: the panel finished its refresh (PLAN D123). Wake the main loop to push the next frame or put
+ * the panel to sleep; not a key, so the locks stay released. */
+static void on_panel_idle_isr(void *user)
+{
+    (void)user;
+    BaseType_t woken = pdFALSE;
+    vTaskNotifyGiveFromISR(main_task, &woken);
+    portYIELD_FROM_ISR(woken);
+}
+
+/* The Pebble kept its chip awake for the SPI transfer of a frame, not for the panel's update (PLAN D123): while
+ * the chip may sleep and only the panel is working, the end of the refresh wakes it. Returns whether that wake-up
+ * is armed; when it is not (the panel is not busy yet), the loop polls at the busy rate, still allowed to sleep. */
+static bool panel_wake_policy(bool panel_wait)
+{
+    static bool armed;
+    const board_display_t *d = board->display;
+    if (d == NULL || d->idle_wake == NULL) {
+        return false;
+    }
+    if (panel_wait && slp.armed) {
+        armed = d->idle_wake(d->ctx, true, on_panel_idle_isr, NULL);
+    } else if (armed) {
+        d->idle_wake(d->ctx, false, NULL, NULL);
+        armed = false;
+    }
+    return armed;
 }
 
 /* esp_timer task: only queue the event for the main loop. */
@@ -1493,8 +1524,11 @@ void app_run(const app_config_t *cfg)
         }
 #endif
         uint32_t t = now_ms(NULL);
+        /* only the panel's own refresh is left: the chip may sleep through it (PLAN D123) */
+        const bool panel_wait = pending && ui_panel_wait() && board->display != NULL && board->display->idle_wake != NULL;
         power_off_poll(t, pending);
-        sleep_policy(t, !pending && !radio_busy);
+        sleep_policy(t, (!pending || panel_wait) && !radio_busy);
+        const bool panel_armed = panel_wake_policy(panel_wait);
         LP_SEC(pol_us);
         if (t - last_tick >= CORE_TICK_MS) {
             last_tick = t;
@@ -1530,7 +1564,7 @@ void app_run(const app_config_t *cfg)
          * screen off nothing needs the loop but the 1 s tick (and the USB check of D50): wait on the key
          * queue, so a key (or the radio, PLAN D67) wakes it at once. */
         const uint32_t wait_ms = radio_busy ? LOOP_BUSY_MS /* queued notifications, ANCS timers: even with the screen off */
-                                 : slp.armed ? CORE_TICK_MS
+                                 : slp.armed ? (!panel_wait ? CORE_TICK_MS : panel_armed ? LOOP_PANEL_MS : LOOP_BUSY_MS)
                                              : pending || board->read_touch ? LOOP_BUSY_MS : LOOP_IDLE_MS;
 #if CONFIG_EPAGER_DEBUG_CONSOLE
         {

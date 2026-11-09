@@ -18,12 +18,20 @@
  * Power: the panel rail is switched off when the panel sleeps, which clears the controller RAM, so
  * the driver keeps the frame that is on the panel (prev) and rewrites it into the "old" RAM
  * (0x26) with every new frame; the partial waveform compares old and new.
+ *
+ * Light sleep during a refresh (PLAN D123, like the Pebble, which kept the chip awake only for the SPI
+ * transfer): the controller runs the waveform on its own, so the chip may sleep until BUSY falls (idle_wake).
+ * While the rail is on, the control pins keep driving their levels in light sleep (by default light sleep
+ * isolates every pin, and a floating RST or CS could reset or confuse the controller mid-waveform); while it is
+ * off they are isolated again, so they never feed the unpowered controller.
+ * TODO(hw-verify): checklist 86 (a refresh completes cleanly with the chip asleep; BUSY wakes it).
  */
 #include <string.h>
 
 #include "driver/gpio.h"
 #include "driver/spi_master.h"
 #include "esp_log.h"
+#include "esp_sleep.h"
 #include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -67,6 +75,9 @@ static struct {
     bool primed;     /* the analog supply was powered once since the last reset (needed before a partial) */
     int64_t busy_from_us; /* when the last refresh was started */
     bool refreshing;
+    bool isr_added;  /* the BUSY interrupt handler is installed */
+    void (*idle_done)(void *user);
+    void *idle_user;
     uint8_t prev[FRAME_BYTES]; /* what the panel shows (0xFF = white) */
 } epd;
 
@@ -170,11 +181,29 @@ static void get_info(void *ctx, board_display_info_t *out)
     out->refresh_class = PROTO_REFRESH_CLASS_EPAPER;
 }
 
+/* The control and SPI pins: driven through light sleep while the rail is on, isolated while it is off. */
+static void hold_pins_in_sleep(bool hold)
+{
+    static const gpio_num_t pins[] = {WS154_EPD_RST, WS154_EPD_DC, WS154_EPD_CS, WS154_EPD_SCLK, WS154_EPD_SDI};
+    for (size_t i = 0; i < sizeof(pins) / sizeof(pins[0]); i++) {
+        if (hold) {
+            gpio_sleep_sel_dis(pins[i]);
+        } else {
+            gpio_sleep_sel_en(pins[i]);
+        }
+    }
+}
+
 static bool epd_rail(bool on)
 {
+    if (on) {
+        hold_pins_in_sleep(true);
+    }
     gpio_set_level(WS154_EPD_PWR, on ? 0 : 1); /* active low (PMOS) */
     if (on) {
         vTaskDelay(pdMS_TO_TICKS(10)); /* TODO(hw-verify): rail settle time */
+    } else {
+        hold_pins_in_sleep(false);
     }
     return true;
 }
@@ -258,6 +287,48 @@ static bool busy(void *ctx)
     return false;
 }
 
+/* BUSY is low again: the refresh is over. A level interrupt, so it also fires when BUSY fell before it was
+ * enabled; it disables itself, and idle_wake(false) or the next arming tidies up. */
+static void busy_isr(void *arg)
+{
+    (void)arg;
+    gpio_intr_disable(WS154_EPD_BUSY);
+    if (epd.idle_done != NULL) {
+        epd.idle_done(epd.idle_user);
+    }
+}
+
+static bool idle_wake(void *ctx, bool on, void (*done)(void *user), void *user)
+{
+    (void)ctx;
+    if (on && epd.refreshing && pin_busy()) {
+        if (!epd.isr_added) {
+            const esp_err_t e = gpio_install_isr_service(0);
+            if ((e != ESP_OK && e != ESP_ERR_INVALID_STATE) ||
+                gpio_isr_handler_add(WS154_EPD_BUSY, busy_isr, NULL) != ESP_OK) {
+                ESP_LOGE(TAG, "busy wake-up not available");
+                return false;
+            }
+            epd.isr_added = true;
+        }
+        gpio_intr_disable(WS154_EPD_BUSY);
+        epd.idle_done = done;
+        epd.idle_user = user;
+        /* low = idle; this also keeps the pin an input in light sleep and makes it a wake-up source */
+        if (gpio_wakeup_enable(WS154_EPD_BUSY, GPIO_INTR_LOW_LEVEL) != ESP_OK) {
+            return false;
+        }
+        esp_sleep_enable_gpio_wakeup();
+        gpio_intr_enable(WS154_EPD_BUSY);
+        return true;
+    }
+    if (epd.isr_added) {
+        gpio_intr_disable(WS154_EPD_BUSY);
+        gpio_wakeup_disable(WS154_EPD_BUSY);
+    }
+    return false;
+}
+
 static board_refresh_t choose_refresh(void *ctx, uint32_t partials_since_full, uint32_t full_every)
 {
     (void)ctx;
@@ -288,6 +359,6 @@ static void panel_wake(void *ctx)
 
 static const board_display_t display = {
     .get_info = get_info, .init = init, .write_frame = write_frame, .refresh = refresh, .busy = busy,
-    .choose_refresh = choose_refresh, .sleep = panel_sleep, .wake = panel_wake, .ctx = NULL};
+    .choose_refresh = choose_refresh, .sleep = panel_sleep, .wake = panel_wake, .idle_wake = idle_wake, .ctx = NULL};
 
 const board_display_t *ws154_epd_get(void) { return &display; }

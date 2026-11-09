@@ -134,6 +134,7 @@ static void test_first_frame_then_backlight(void)
     TEST_ASSERT_EQUAL_UINT8(70, s.backlight);
     TEST_ASSERT_EQUAL_UINT8(70, ui_backlight());
     TEST_ASSERT_EQUAL_UINT32(0, s.violations);
+    TEST_ASSERT_FALSE(ui_panel_wait()); /* the area path has no refresh to sleep through (D123) */
 }
 
 static void test_only_changes_are_sent(void)

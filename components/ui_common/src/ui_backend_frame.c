@@ -18,6 +18,7 @@ static struct {
     uint8_t *draw_buf, *shadow, *panel;
     uint32_t lv_stride, stride, frame_len;
     bool frame_ready, pushed_once, asleep;
+    bool panel_wait; /* the last service left only the panel's refresh running */
     uint32_t quarters; /* partials since the last full refresh, a clock redraw counting 4 and anything else 1 */
 } f;
 
@@ -132,9 +133,13 @@ static bool service(void)
         d->sleep(d->ctx);
         f.asleep = true;
     }
+    f.panel_wait = busy && !f.frame_ready;
     return busy || f.frame_ready;
 }
 
+/* Only the panel is working: the next frame (if any) can wait for the end of its refresh. */
+static bool panel_wait(void) { return f.panel_wait; }
+
 static void reset(void) { memset(&f, 0, sizeof(f)); }
 
-const ui_backend_t ui_backend_frame = {.init = init, .service = service, .reset = reset};
+const ui_backend_t ui_backend_frame = {.init = init, .service = service, .panel_wait = panel_wait, .reset = reset};
