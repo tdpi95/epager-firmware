@@ -29,6 +29,10 @@ CONFIG_FREERTOS_USE_TICKLESS_IDLE=y
 # and 20 us at 160 MHz), which counts with a wake-up at every BLE connection event. Costs about 2.3 KB of IRAM.
 CONFIG_PM_SLP_IRAM_OPT=y
 CONFIG_PM_RTOS_IDLE_OPT=y
+# Power the radio's MAC and baseband down in light sleep while the PHY is off (PLAN D124): Espressif's NimBLE
+# power_save example sets it for the ESP32-S3. ESP-IDF's help: "a small amount" of power for about 5.3 KB of
+# internal RAM (Wi-Fi + BLE) to keep their state. TODO(hw-verify): checklist 86.
+CONFIG_ESP_PHY_MAC_BB_PD=y
 
 # --- BLE: NimBLE, LE Secure Connections + bonding, 1 connection, 3 bonds (PLAN D1, D6)
 CONFIG_BT_ENABLED=y
