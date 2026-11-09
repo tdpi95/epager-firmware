@@ -303,9 +303,7 @@ static bool idle_wake(void *ctx, bool on, void (*done)(void *user), void *user)
     (void)ctx;
     if (on && epd.refreshing && pin_busy()) {
         if (!epd.isr_added) {
-            const esp_err_t e = gpio_install_isr_service(0);
-            if ((e != ESP_OK && e != ESP_ERR_INVALID_STATE) ||
-                gpio_isr_handler_add(WS154_EPD_BUSY, busy_isr, NULL) != ESP_OK) {
+            if (gpio_isr_handler_add(WS154_EPD_BUSY, busy_isr, NULL) != ESP_OK) { /* the service: board init */
                 ESP_LOGE(TAG, "busy wake-up not available");
                 return false;
             }

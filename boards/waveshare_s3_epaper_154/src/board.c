@@ -70,6 +70,11 @@ static bool board_init(void *ctx)
             ok &= gpio_sleep_sel_dis(pin) == ESP_OK;
         }
     }
+    /* The GPIO interrupt service, once for its two users: the key wake-up below and the panel's BUSY wake-up
+     * (ws154_epd.c, PLAN D123). Installing it a second time logs an error. */
+    if (gpio_install_isr_service(0) != ESP_OK) {
+        ESP_LOGE(TAG, "GPIO interrupt service not installed: no wake-up from keys or the panel");
+    }
     init_i2c_chips();
 #if CONFIG_EPAGER_BOOT_SOUND
     ok &= ws154_audio_init_pins();
@@ -233,8 +238,7 @@ static bool set_sleep(void *ctx, bool sleeping, void (*wake_isr)(void *user), vo
         return false;
     }
     if (!slp.isr_ready) {
-        const esp_err_t e = gpio_install_isr_service(0);
-        if ((e != ESP_OK && e != ESP_ERR_INVALID_STATE) || gpio_isr_handler_add(pins[0], key_wake_isr, NULL) != ESP_OK ||
+        if (gpio_isr_handler_add(pins[0], key_wake_isr, NULL) != ESP_OK || /* the service: board init */
             gpio_isr_handler_add(pins[1], key_wake_isr, NULL) != ESP_OK) {
             ESP_LOGE(TAG, "key wake-up not available");
             return true;
