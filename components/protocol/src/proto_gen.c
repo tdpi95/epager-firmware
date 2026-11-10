@@ -417,6 +417,7 @@ const proto_cfg_key_desc_t proto_cfg_keys[] = {
     { "quiet.enabled", 32, PROTO_FT_BOOL, 0, 0, 0, 0, 0x0u, NULL, 0, 0, NULL, 0x000100u },
     { "quiet.start_min", 33, PROTO_FT_U16, PROTO_CFG_HAS_MIN | PROTO_CFG_HAS_MAX, 0, 0, 1439, 0x0u, NULL, 0, 1320, NULL, 0x000100u },
     { "quiet.end_min", 34, PROTO_FT_U16, PROTO_CFG_HAS_MIN | PROTO_CFG_HAS_MAX, 0, 0, 1439, 0x0u, NULL, 0, 420, NULL, 0x000100u },
+    { "quiet.radio_off", 35, PROTO_FT_BOOL, 0, 0, 0, 0, 0x0u, NULL, 0, 1, NULL, 0x001100u },
     { "time.tz_offset_min", 48, PROTO_FT_I16, PROTO_CFG_HAS_MIN | PROTO_CFG_HAS_MAX, 0, -720, 840, 0x0u, NULL, 0, 0, NULL, 0x000100u },
     { "ui.theme_id", 64, PROTO_FT_STR, 0, 32, 0, 0, 0x0u, NULL, 0, 0, "", 0x000100u },
     { "ui.font_id", 65, PROTO_FT_STR, 0, 32, 0, 0, 0x0u, NULL, 0, 0, "", 0x000100u },

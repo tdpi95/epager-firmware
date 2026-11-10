@@ -116,6 +116,24 @@ static int cmd_display(int argc, char **argv)
                   argv[1]);
 }
 
+/* Quiet hours (protocol.md 5, PLAN D125): the phone app sets them; this is for tests on the board. */
+static int cmd_quiet(int argc, char **argv)
+{
+    if (argc == 4 && strcmp(argv[1], "on") == 0) {
+        return config(PROTO_CFG_QUIET_START_MIN, 2, argv[2]) | config(PROTO_CFG_QUIET_END_MIN, 2, argv[3]) |
+               config(PROTO_CFG_QUIET_ENABLED, 1, "1");
+    }
+    if (argc == 2 && strcmp(argv[1], "off") == 0) {
+        return config(PROTO_CFG_QUIET_ENABLED, 1, "0");
+    }
+    if (argc == 3 && strcmp(argv[1], "radio") == 0) {
+        return config(PROTO_CFG_QUIET_RADIO_OFF, 1, strcmp(argv[2], "off") == 0 ? "1" : "0");
+    }
+    printf("usage: quiet on START_MIN END_MIN | off | radio on|off   (minutes after local midnight; radio off = "
+           "Bluetooth off in the window)\n");
+    return 1;
+}
+
 static int cmd_wifi(int argc, char **argv)
 {
     app_console_cmd_t c = {.kind = APP_CMD_STATUS};
@@ -287,6 +305,7 @@ void app_console_start(void)
         {.command = "update", .help = "update [status|check|install|cancel|later|skip|due|url URL|interval MIN|drop KIB|auto 0|1]: firmware updates over Wi-Fi", .func = cmd_update},
         {.command = "face", .help = "face [list|select ID|opt N V|delete ID]: clock faces", .func = cmd_face},
         {.command = "setup", .help = "setup on|off: the Wi-Fi setup hotspot", .func = cmd_setup},
+        {.command = "quiet", .help = "quiet on START_MIN END_MIN | off | radio on|off: quiet hours", .func = cmd_quiet},
         {.command = "batlog", .help = "batlog [clear]: print the battery log | delete it", .func = cmd_batlog},
         {.command = "loop", .help = "loop: the main loop passes and where their time goes, since the last 5-minute report", .func = cmd_loop},
         {.command = "tasks", .help = "tasks: the busiest tasks since boot (run-time stats)", .func = cmd_tasks},

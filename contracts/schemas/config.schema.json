@@ -614,6 +614,11 @@
           "default": 420,
           "description": "key 34 (0x0022), since 0.1.0. Quiet hours end, minutes after local midnight (may be before start: spans midnight)."
         },
+        "quiet.radio_off": {
+          "type": "boolean",
+          "default": true,
+          "description": "key 35 (0x0023), since 0.17.0. Switch Bluetooth off during quiet hours (protocol.md 5): no phone link and no advertising until the window ends or a key wakes the board."
+        },
         "time.tz_offset_min": {
           "type": "integer",
           "minimum": -720,

@@ -1,5 +1,5 @@
 {
- "contract_version": "0.16.0",
+ "contract_version": "0.17.0",
  "description": "CRC-32 (IEEE 802.3 / zlib). Implementations must also support incremental update: crc32(a+b) == update(crc32(a), b).",
  "scope": "app+board",
  "cases": [

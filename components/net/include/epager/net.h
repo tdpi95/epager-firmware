@@ -78,6 +78,9 @@ proto_status_t net_wifi_set(const uint8_t *ssid, size_t ssid_len, const uint8_t 
 void net_setup(bool open);
 /* Fetch now (debug console). */
 void net_kick(void);
+/* Quiet hours (PLAN D125, any task): while true no scheduled weather fetch starts; a fetch asked for (net_kick, a
+ * new network or city) still runs. The app keeps the daily update check back itself. */
+void net_set_quiet(bool quiet);
 /* Firmware update (any task; queued, false if the Wi-Fi task cannot take it now). A check reads the release
  * manifest, joining Wi-Fi if no weather fetch is under way; manual = the person asked. An install fetches the
  * manifest again, and downloads and installs the image if it still names `version`. Cancel stops a download

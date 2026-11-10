@@ -62,6 +62,10 @@ void cfg_init(cfg_store_t *c, const cfg_params_t *p);
 uint32_t cfg_revision(const cfg_store_t *c);
 /* Integer/bool value; the default for keys not on this variant; 0 for unknown keys. */
 int32_t cfg_get_int(const cfg_store_t *c, uint16_t key);
+/* Whether quiet hours apply at utc (protocol.md 5: quiet.enabled, quiet.start_min, quiet.end_min in local time,
+ * time.tz_offset_min); never while the clock is unset (utc 0). When they apply and left_s is not NULL, *left_s is
+ * the number of seconds until the window ends. */
+bool cfg_quiet_hours(const cfg_store_t *c, uint32_t utc, uint32_t *left_s);
 /* String or bytes value (not NUL-terminated); length 0 for unknown keys. */
 size_t cfg_get_str(const cfg_store_t *c, uint16_t key, const uint8_t **s);
 /* Wire encoding of a key's value into out[PROTO_CFG_STR_MAX_LEN]. False if the key does not exist on this variant. */

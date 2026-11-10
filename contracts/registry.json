@@ -506,6 +506,7 @@
     {"id": 32, "name": "quiet.enabled", "type": "bool", "default": false, "since": "0.1.0", "description": "Quiet hours on/off."},
     {"id": 33, "name": "quiet.start_min", "type": "u16", "min": 0, "max": 1439, "default": 1320, "since": "0.1.0", "description": "Quiet hours start, minutes after local midnight."},
     {"id": 34, "name": "quiet.end_min", "type": "u16", "min": 0, "max": 1439, "default": 420, "since": "0.1.0", "description": "Quiet hours end, minutes after local midnight (may be before start: spans midnight)."},
+    {"id": 35, "name": "quiet.radio_off", "type": "bool", "default": true, "since": "0.17.0", "description": "Switch Bluetooth off during quiet hours (protocol.md 5): no phone link and no advertising until the window ends or a key wakes the board."},
     {"id": 48, "name": "time.tz_offset_min", "type": "i16", "min": -720, "max": 840, "default": 0, "since": "0.1.0", "description": "Local time offset from UTC in minutes."},
     {"id": 64, "name": "ui.theme_id", "type": "str", "max_len": 32, "default": "", "since": "0.1.0", "description": "Installed theme asset id; empty = built-in."},
     {"id": 65, "name": "ui.font_id", "type": "str", "max_len": 32, "default": "", "since": "0.1.0", "description": "Installed font asset id; empty = built-in."},

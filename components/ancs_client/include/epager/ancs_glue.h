@@ -33,6 +33,8 @@ void ancsg_set_retry_max_s(uint32_t s);
 void ancsg_start(uint16_t conn);
 /* The link is gone, or the phone is not an iPhone user's any more (host task). */
 void ancsg_stop(void);
+/* NimBLE is about to be torn down (blec_stop, PLAN D125): stop and free the retry timer; ancsg_start makes a new one. */
+void ancsg_deinit(void);
 /* A notification or indication arrived from the phone. True if it was ANCS's or Service Changed's. */
 bool ancsg_on_notify_rx(uint16_t conn, uint16_t attr_handle, const uint8_t *data, uint16_t len);
 /* Write a Control Point command (any task). The result comes as ANCSG_EV_WRITE. */

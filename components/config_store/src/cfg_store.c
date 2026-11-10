@@ -342,6 +342,23 @@ bool cfg_handle(cfg_store_t *c, const proto_msg_t *req, proto_writer_t *w)
     }
 }
 
+bool cfg_quiet_hours(const cfg_store_t *c, uint32_t utc, uint32_t *left_s)
+{
+    if (utc == 0 || !cfg_get_int(c, PROTO_CFG_QUIET_ENABLED)) {
+        return false;
+    }
+    const int64_t local = (int64_t)utc + (int64_t)cfg_get_int(c, PROTO_CFG_TIME_TZ_OFFSET_MIN) * 60;
+    const int32_t s = (int32_t)((local % 86400 + 86400) % 86400); /* seconds after local midnight */
+    const int32_t m = s / 60;
+    const int32_t start = cfg_get_int(c, PROTO_CFG_QUIET_START_MIN), end = cfg_get_int(c, PROTO_CFG_QUIET_END_MIN);
+    const bool in = start < end ? m >= start && m < end
+                                : start > end && (m >= start || m < end); /* spans midnight; start == end: empty */
+    if (in && left_s != NULL) {
+        *left_s = (uint32_t)(((end * 60 - s) % 86400 + 86400) % 86400);
+    }
+    return in;
+}
+
 void cfg_write_changed_event(proto_writer_t *w, uint32_t revision, const uint16_t *keys, size_t n_keys)
 {
     proto_w_header(w, PROTO_MSG_CONFIG_CHANGED, 0);

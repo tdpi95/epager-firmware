@@ -352,6 +352,15 @@ void ancsg_start(uint16_t conn)
     begin();
 }
 
+void ancsg_deinit(void)
+{
+    ancsg_stop();
+    if (g.retry_init) {
+        ble_npl_callout_deinit(&g.retry);
+        g.retry_init = false;
+    }
+}
+
 void ancsg_stop(void)
 {
     if (g.retry_init) {

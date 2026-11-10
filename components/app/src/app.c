@@ -144,6 +144,21 @@ static net_status_t net_st;     /* last state from the Wi-Fi task */
 static uint32_t seen_time, seen_city;
 static net_setup_state_t seen_setup;
 static bool net_ok, net_config_dirty;
+
+/* Quiet hours save power (PLAN D125, protocol.md 5): scheduled Wi-Fi requests wait until QUIET_WIFI_LEAD_S before
+ * the window ends, and with quiet.radio_off Bluetooth is off for the window. A key keeps it on for QUIET_GRACE_MS,
+ * pairing mode keeps it on, and a phone that wrote in the last QUIET_TALK_MS is not cut off mid-transfer. */
+#define QUIET_WIFI_LEAD_S 600u
+#define QUIET_GRACE_MS (10u * 60u * 1000u)
+#define QUIET_TALK_MS 60000u
+#define QUIET_RETRY_MS 60000u
+static struct {
+    bool wifi_held;      /* scheduled Wi-Fi requests wait */
+    bool grace;          /* a key woke the radio until grace_ms */
+    bool retry;          /* Bluetooth did not come back: try again at retry_ms */
+    uint32_t grace_ms, write_ms, retry_ms;
+    bool pairing;        /* pairing mode is open */
+} qh;
 #endif
 
 static uint32_t now_ms(void *ctx)
@@ -284,6 +299,7 @@ static uint32_t pairing_since_ms;
 
 static void set_pairing(bool on)
 {
+    qh.pairing = on;
     pairing_since_ms = now_ms(NULL);
     core_set_pairing_mode(&core, on);
     if (ble_ok) {
@@ -437,6 +453,7 @@ static void ble_event(const blec_event_t *ev)
         refresh_info();
         break;
     case BLEC_EV_WRITE:
+        qh.write_ms = now_ms(NULL);
         core_write(&core, ev->chr, ev->data, ev->len);
         break;
     case BLEC_EV_PASSKEY:
@@ -660,7 +677,8 @@ static void update_tick(uint32_t t)
         return;
     }
     const uint32_t utc = core_now_utc(&core);
-    if (!upd_check_inflight && upd_policy_check_due(&upd, utc, t / 1000u) && net_update_check(false)) {
+    if (!upd_check_inflight && !qh.wifi_held && upd_policy_check_due(&upd, utc, t / 1000u) &&
+        net_update_check(false)) {
         upd_check_inflight = true;
     }
     update_sync_ui();
@@ -1086,6 +1104,49 @@ static bool panel_wake_policy(bool panel_wait)
     return armed;
 }
 
+/* Once a second (PLAN D125). */
+static void quiet_tick(uint32_t t)
+{
+    uint32_t left_s = 0;
+    const bool in = cfg_quiet_hours(&core.cfg, core_now_utc(&core), &left_s);
+    qh.wifi_held = in && left_s > QUIET_WIFI_LEAD_S;
+#if CONFIG_EPAGER_FEATURE_WIFI
+    if (net_ok) {
+        net_set_quiet(qh.wifi_held);
+    }
+#endif
+    if (!ble_ok) {
+        return;
+    }
+    if (qh.grace && (int32_t)(t - qh.grace_ms) >= 0) {
+        qh.grace = false;
+    }
+    const bool radio_off = in && cfg_get_int(&core.cfg, PROTO_CFG_QUIET_RADIO_OFF) != 0 && !qh.pairing && !qh.grace &&
+                           t - qh.write_ms >= QUIET_TALK_MS;
+    if (radio_off && blec_running()) {
+        blec_stop();
+        app_ev(APP_EV_RADIO_OFF, (int32_t)left_s);
+        app_batlog_note_text("radio off (quiet hours)");
+    } else if (!radio_off && !blec_running() && (!qh.retry || (int32_t)(t - qh.retry_ms) >= 0)) {
+        qh.retry = false;
+        if (blec_resume()) {
+            app_ev(APP_EV_RADIO_ON, 0);
+            app_batlog_note_text("radio on");
+        } else {
+            ESP_LOGE(TAG, "Bluetooth did not come back: trying again in a minute");
+            qh.retry = true;
+            qh.retry_ms = t + QUIET_RETRY_MS;
+        }
+    }
+}
+
+/* A key: the person is at the board, so the radio stays on for a while (quiet hours, PLAN D125). */
+static void quiet_key(uint32_t t)
+{
+    qh.grace = true;
+    qh.grace_ms = t + QUIET_GRACE_MS;
+}
+
 /* esp_timer task: only queue the event for the main loop. */
 static void on_button(void *user, board_button_t btn, board_press_t press)
 {
@@ -1484,6 +1545,7 @@ void app_run(const app_config_t *cfg)
 #endif
         key_ev_t ev;
         while (keys != NULL && xQueueReceive(keys, &ev, 0) == pdTRUE) {
+            quiet_key(now_ms(NULL));
             if (ev.btn == EV_WAKE) {
                 slp.woke_ms = now_ms(NULL); /* sleep_policy turns the key polling back on */
                 continue;
@@ -1539,6 +1601,7 @@ void app_run(const app_config_t *cfg)
             }
 #endif
             core_tick(&core);
+            quiet_tick(t);
 #if CONFIG_EPAGER_FEATURE_WIFI_OTA
             update_tick(t);
 #endif

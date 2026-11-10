@@ -516,6 +516,41 @@ static void test_kv_mem(void)
     kv.power = NULL;
 }
 
+/* protocol.md 5: the window, across midnight, the time zone, and the seconds left (PLAN D125). */
+static void test_quiet_hours_window_and_time_left(void)
+{
+    const uint32_t midnight = 1794009600u; /* 2026-11-07 00:00:00 UTC */
+    uint32_t left = 0;
+    TEST_ASSERT_FALSE(cfg_quiet_hours(&cfg, midnight + 23 * 3600, &left)); /* off by default */
+    TEST_ASSERT_EQUAL(PROTO_OK, set_u8(PROTO_CFG_QUIET_ENABLED, 1));      /* 22:00-07:00 by default */
+    TEST_ASSERT_FALSE(cfg_quiet_hours(&cfg, 0, &left));                    /* clock unset */
+    TEST_ASSERT_FALSE(cfg_quiet_hours(&cfg, midnight + 21 * 3600 + 59 * 60 + 59, &left));
+    TEST_ASSERT_TRUE(cfg_quiet_hours(&cfg, midnight + 22 * 3600, &left));
+    TEST_ASSERT_EQUAL_UINT32(9 * 3600, left);
+    TEST_ASSERT_TRUE(cfg_quiet_hours(&cfg, midnight + 6 * 3600 + 59 * 60 + 30, &left));
+    TEST_ASSERT_EQUAL_UINT32(30, left);
+    TEST_ASSERT_TRUE(cfg_quiet_hours(&cfg, midnight + 3 * 3600, NULL));
+    TEST_ASSERT_FALSE(cfg_quiet_hours(&cfg, midnight + 7 * 3600, &left));
+    /* UTC+7: 15:00 UTC is 22:00 local */
+    uint8_t tz[2];
+    proto_wr16(tz, (uint16_t)(int16_t)420);
+    TEST_ASSERT_EQUAL(PROTO_OK, set1(PROTO_CFG_TIME_TZ_OFFSET_MIN, tz, 2));
+    TEST_ASSERT_TRUE(cfg_quiet_hours(&cfg, midnight + 15 * 3600, &left));
+    TEST_ASSERT_EQUAL_UINT32(9 * 3600, left);
+    TEST_ASSERT_FALSE(cfg_quiet_hours(&cfg, midnight + 14 * 3600 + 59 * 60, &left));
+    /* within one day, and an empty window */
+    TEST_ASSERT_EQUAL(PROTO_OK, set1(PROTO_CFG_TIME_TZ_OFFSET_MIN, "\0\0", 2));
+    TEST_ASSERT_EQUAL(PROTO_OK, set_u16(PROTO_CFG_QUIET_START_MIN, 13 * 60));
+    TEST_ASSERT_EQUAL(PROTO_OK, set_u16(PROTO_CFG_QUIET_END_MIN, 14 * 60));
+    TEST_ASSERT_TRUE(cfg_quiet_hours(&cfg, midnight + 13 * 3600 + 15 * 60, &left));
+    TEST_ASSERT_EQUAL_UINT32(45 * 60, left);
+    TEST_ASSERT_FALSE(cfg_quiet_hours(&cfg, midnight + 14 * 3600, &left));
+    TEST_ASSERT_EQUAL(PROTO_OK, set_u16(PROTO_CFG_QUIET_END_MIN, 13 * 60));
+    TEST_ASSERT_FALSE(cfg_quiet_hours(&cfg, midnight + 13 * 3600, &left));
+    /* the new key: on by default (contract 0.17.0) */
+    TEST_ASSERT_EQUAL_INT32(1, cfg_get_int(&cfg, PROTO_CFG_QUIET_RADIO_OFF));
+}
+
 int main(void)
 {
     UNITY_BEGIN();
@@ -539,5 +574,6 @@ int main(void)
     RUN_TEST(test_msg_reset_and_time_sync);
     RUN_TEST(test_changed_event_matches_vector);
     RUN_TEST(test_kv_mem);
+    RUN_TEST(test_quiet_hours_window_and_time_left);
     return UNITY_END();
 }

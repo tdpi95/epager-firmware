@@ -52,6 +52,9 @@ static struct {
     uint16_t rd_len[2];
     uint8_t own_addr_type;
     bool synced, enabled, started; /* host synced; blec_start() called; advertising begun */
+    volatile bool running;  /* NimBLE is up (blec_init / blec_resume until blec_stop) */
+    volatile bool halting;  /* blec_stop under way: no advertising, no tick */
+    uint8_t bonds_cached;   /* blec_bond_count while stopped */
     uint16_t conn;                          /* host task */
     volatile uint16_t conn_pub;             /* for the app task's notifications */
     volatile bool connected, secure, pairing_mode, busy, reapply, sub[CHR_COUNT];
@@ -286,7 +289,7 @@ bool blec_connected(void)
 
 bool blec_ancs_write(const uint8_t *cmd, size_t len)
 {
-    return g.cfg.ancs && ancsg_write_cp(cmd, len);
+    return g.running && g.cfg.ancs && ancsg_write_cp(cmd, len);
 }
 
 /* ---------------------------------------------------------------- GATT table */
@@ -422,7 +425,10 @@ static uint8_t bond_count(void)
 
 uint8_t blec_bond_count(void)
 {
-    return bond_count();
+    if (g.running) {
+        g.bonds_cached = bond_count();
+    }
+    return g.bonds_cached;
 }
 
 static bool peer_bonded(const ble_addr_t *id_addr)
@@ -442,7 +448,7 @@ static bool peer_bonded(const ble_addr_t *id_addr)
 
 static void adv_start(void)
 {
-    if (!g.started || g.connected) {
+    if (!g.started || g.connected || g.halting) {
         return;
     }
     ble_gap_adv_stop(); /* restarting with another interval: ignore "not advertising" */
@@ -474,6 +480,9 @@ static bool apply_conn_mode(bleu_conn_mode_t mode)
 static void tick_cb(struct ble_npl_event *ev)
 {
     (void)ev;
+    if (g.halting) {
+        return; /* blec_stop: no re-arm */
+    }
     const uint32_t t = now_ms();
     if (!g.connected) {
         const uint16_t want = bleu_adv_interval(g.pairing_mode, t - g.adv_start_ms);
@@ -735,7 +744,7 @@ size_t blec_bonds(bool *connected, size_t max)
 {
     ble_addr_t peers[MAX_PEERS], link;
     int n = 0;
-    if (ble_store_util_bonded_peers(peers, &n, MAX_PEERS) != 0) {
+    if (!g.running || ble_store_util_bonded_peers(peers, &n, MAX_PEERS) != 0) {
         return 0;
     }
     const bool have_link = link_peer(&link);
@@ -764,13 +773,18 @@ static void forget_one_cb(struct ble_npl_event *ev)
 
 void blec_forget_bond(size_t index)
 {
+    if (!g.running) {
+        return;
+    }
     g.forget_index = index;
     ble_npl_eventq_put(nimble_port_get_dflt_eventq(), &g.ev_forget_one);
 }
 
 void blec_forget_bonds(void)
 {
-    ble_npl_eventq_put(nimble_port_get_dflt_eventq(), &g.ev_forget);
+    if (g.running) {
+        ble_npl_eventq_put(nimble_port_get_dflt_eventq(), &g.ev_forget);
+    }
 }
 
 void blec_disconnect(void)
@@ -862,16 +876,9 @@ const char *blec_device_name(void)
     return g.name;
 }
 
-bool blec_init(const blec_config_t *cfg)
+/* NimBLE, the controller, the GATT table and the host task: at boot, and again after blec_stop. */
+static bool stack_up(void)
 {
-    g.cfg = *cfg;
-    blec_device_name();
-    uint8_t *rx = alloc(RX_FIFO_BYTES), *tx = alloc(TX_FIFO_BYTES);
-    if (rx == NULL || tx == NULL) {
-        return false;
-    }
-    bleu_fifo_init(&g.rx, rx, RX_FIFO_BYTES);
-    bleu_fifo_init(&g.tx, tx, TX_FIFO_BYTES);
     if (nimble_port_init() != ESP_OK) {
         ESP_LOGE(TAG, "nimble_port_init failed");
         return false;
@@ -890,17 +897,81 @@ bool blec_init(const blec_config_t *cfg)
     ble_svc_gatt_init();
     if (ble_gatts_count_cfg(svcs) != 0 || ble_gatts_add_svcs(svcs) != 0) {
         ESP_LOGE(TAG, "GATT table refused");
+        nimble_port_deinit();
         return false;
     }
     ble_svc_gap_device_name_set(g.name);
     ble_store_config_init();
-    if (cfg->ancs) {
+    if (g.cfg.ancs) {
         ancsg_init(ancs_post);
     }
     ble_npl_callout_init(&g.tick, nimble_port_get_dflt_eventq(), tick_cb, NULL);
     ble_npl_event_init(&g.ev_forget, forget_cb, NULL);
     ble_npl_event_init(&g.ev_forget_one, forget_one_cb, NULL);
     ble_npl_event_init(&g.ev_start, start_cb, NULL);
+    g.halting = false;
+    g.running = true;
     nimble_port_freertos_init(host_task);
+    return true;
+}
+
+bool blec_init(const blec_config_t *cfg)
+{
+    g.cfg = *cfg;
+    blec_device_name();
+    uint8_t *rx = alloc(RX_FIFO_BYTES), *tx = alloc(TX_FIFO_BYTES);
+    if (rx == NULL || tx == NULL) {
+        return false;
+    }
+    bleu_fifo_init(&g.rx, rx, RX_FIFO_BYTES);
+    bleu_fifo_init(&g.tx, tx, TX_FIFO_BYTES);
+    return stack_up();
+}
+
+bool blec_running(void)
+{
+    return g.running;
+}
+
+void blec_stop(void)
+{
+    if (!g.running) {
+        return;
+    }
+    g.bonds_cached = bond_count();
+    g.halting = true; /* the tick and every restart of the advertising stop here */
+    /* ble_hs_stop inside ends the link with a normal disconnect (gap_event posts BLEC_EV_DISCONNECTED and stops
+     * ANCS) and stops the advertising; the host task then leaves nimble_port_run and deletes itself. */
+    if (nimble_port_stop() != 0) {
+        ESP_LOGE(TAG, "nimble_port_stop failed: Bluetooth stays on");
+        g.halting = false;
+        ble_npl_callout_reset(&g.tick, ble_npl_time_ms_to_ticks32(tick_ms));
+        return;
+    }
+    ble_npl_callout_deinit(&g.tick);
+    if (g.cfg.ancs) {
+        ancsg_deinit();
+    }
+    if (nimble_port_deinit() != ESP_OK) {
+        ESP_LOGE(TAG, "nimble_port_deinit failed");
+    }
+    g.running = false;
+    g.synced = g.started = g.adv_on = g.adv_failed = g.dropping = false;
+    g.connected = g.secure = false;
+    g.conn = g.conn_pub = BLE_HS_CONN_HANDLE_NONE;
+    memset((void *)g.sub, 0, sizeof(g.sub));
+    ESP_LOGI(TAG, "off (quiet hours)");
+}
+
+bool blec_resume(void)
+{
+    if (g.running) {
+        return true;
+    }
+    if (!stack_up()) {
+        return false;
+    }
+    blec_start(); /* advertising begins once the host has synced */
+    ESP_LOGI(TAG, "on again");
     return true;
 }

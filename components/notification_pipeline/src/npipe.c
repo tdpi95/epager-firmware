@@ -249,21 +249,7 @@ void npipe_init(npipe_t *np, const npipe_params_t *p)
 
 /* ---------------------------------------------------------------- filters (protocol.md 6.3) */
 
-static bool in_quiet_hours(const npipe_t *np)
-{
-    const cfg_store_t *c = np->p.cfg;
-    uint32_t utc = now(np);
-    if (!cfg_get_int(c, PROTO_CFG_QUIET_ENABLED) || utc == 0) {
-        return false;
-    }
-    int64_t local = (int64_t)utc + (int64_t)cfg_get_int(c, PROTO_CFG_TIME_TZ_OFFSET_MIN) * 60;
-    int32_t m = (int32_t)((local % 86400 + 86400) % 86400 / 60);
-    int32_t start = cfg_get_int(c, PROTO_CFG_QUIET_START_MIN), end = cfg_get_int(c, PROTO_CFG_QUIET_END_MIN);
-    if (start < end) {
-        return m >= start && m < end;
-    }
-    return start > end && (m >= start || m < end); /* spans midnight; start == end: empty */
-}
+static bool in_quiet_hours(const npipe_t *np) { return cfg_quiet_hours(np->p.cfg, now(np), NULL); }
 
 static bool passes(const npipe_t *np, const npipe_app_t *app, const npipe_notif_t *n)
 {

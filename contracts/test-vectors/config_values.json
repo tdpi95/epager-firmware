@@ -1,5 +1,5 @@
 {
- "contract_version": "0.16.0",
+ "contract_version": "0.17.0",
  "description": "Config value validation (protocol.md 5). A board of the given variant must return 'expect' for value_hex written to key. 'value' is the typed logical value.",
  "scope": "app+board",
  "cases": [
@@ -137,6 +137,14 @@
    "variant": "paper",
    "value_hex": "a401",
    "value": 420,
+   "expect": "OK"
+  },
+  {
+   "name": "default_quiet.radio_off",
+   "key": 35,
+   "variant": "paper",
+   "value_hex": "01",
+   "value": true,
    "expect": "OK"
   },
   {
@@ -382,6 +390,29 @@
    "variant": "paper",
    "value_hex": "a005",
    "expect": "OUT_OF_RANGE"
+  },
+  {
+   "name": "quiet_radio_off_off",
+   "key": 35,
+   "variant": "paper",
+   "value_hex": "00",
+   "expect": "OK",
+   "value": false
+  },
+  {
+   "name": "quiet_radio_off_on_lcd",
+   "key": 35,
+   "variant": "lcd",
+   "value_hex": "01",
+   "expect": "OK",
+   "value": true
+  },
+  {
+   "name": "quiet_radio_off_two_bytes",
+   "key": 35,
+   "variant": "paper",
+   "value_hex": "0100",
+   "expect": "TYPE_MISMATCH"
   },
   {
    "name": "tz_negative",

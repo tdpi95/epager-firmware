@@ -57,6 +57,8 @@ static char user_agent[48];
 static EXT_RAM_BSS_ATTR char body[BODY_MAX]; /* PSRAM where the image allows it */
 static char url[WX_URL_MAX];
 #if CONFIG_EPAGER_FEATURE_WIFI_OTA
+static volatile bool quiet_hold; /* quiet hours: no scheduled weather fetch (PLAN D125) */
+static bool fetch_asked;          /* task: a fetch the person asked for runs even then */
 static volatile uint8_t upd_pending; /* a check was asked for and no cycle has done it yet (0 none, 1 daily, 2 manual) */
 #endif
 static bool sntp_done;
@@ -608,6 +610,9 @@ static void handle(cmd_t *c)
 {
     switch (c->kind) {
     case CMD_CONFIG:
+        if (strlen(net.city) != c->city_len || memcmp(net.city, c->city, c->city_len) != 0) {
+            fetch_asked = true; /* a new city: worth a fetch even in quiet hours */
+        }
         net.language = c->language;
         memcpy(net.city, c->city, c->city_len);
         net.city[c->city_len] = '\0';
@@ -618,6 +623,7 @@ static void handle(cmd_t *c)
         if ((c->flag ? (c->ssid[0] ? net_forget_network(c->ssid) : net_store_network(NULL, NULL))
                      : net_store_network(c->ssid, c->pw)) && !c->flag) {
             wx_kick(&wx, net.now_ms());
+            fetch_asked = true;
         }
         break;
     case CMD_SETUP:
@@ -632,6 +638,7 @@ static void handle(cmd_t *c)
         break;
     case CMD_KICK:
         wx_kick(&wx, net.now_ms());
+        fetch_asked = true;
         break;
 #if CONFIG_EPAGER_FEATURE_WIFI_OTA
     case CMD_UPD_CHECK:
@@ -670,12 +677,15 @@ static void task(void *arg)
         }
         if (net_setup_active()) {
             net_setup_service();
-        } else if (profiles_any() && wx_due(&wx, net.now_ms())) {
+        } else if (profiles_any() && wx_due(&wx, net.now_ms()) && (!quiet_hold || fetch_asked)) {
+            fetch_asked = false;
             fetch_cycle();
         }
         publish_weather();
     }
 }
+
+void net_set_quiet(bool quiet) { quiet_hold = quiet; }
 
 static bool post(cmd_t *c)
 {

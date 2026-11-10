@@ -76,7 +76,7 @@ void app_ab_apply(const board_profile_t *board, const app_console_cmd_t *cmd);
  * prints the events of the earlier runs. */
 typedef enum {
     APP_EV_BOOT = 1, APP_EV_SLEEP_ARM, APP_EV_SLEEP_DISARM, APP_EV_BLE_CONNECTED, APP_EV_BLE_SECURE,
-    APP_EV_BLE_DISCONNECTED,
+    APP_EV_BLE_DISCONNECTED, APP_EV_RADIO_OFF, APP_EV_RADIO_ON,
 } app_ev_t;
 #if CONFIG_EPAGER_EVENT_LOG
 void app_ev(uint16_t code, int32_t arg);

@@ -65,6 +65,14 @@ bool blec_init(const blec_config_t *cfg);
 
 /* Start advertising (after the app has set the read values): until then the host runs but is not visible. */
 void blec_start(void);
+/* Quiet hours (PLAN D125, protocol.md 5): app task. Stop switches Bluetooth off completely (the link ends with a
+ * normal disconnect, NimBLE and the controller are torn down, so the controller no longer keeps the main crystal
+ * running in light sleep); BLEC_EV_DISCONNECTED follows if a phone was linked. Resume builds it again and
+ * advertises; a bonded phone reconnects by itself. Both block: usually well under a second, a stop up to the
+ * supervision timeout (6 s) if the phone does not answer the disconnect. Harmless when already in that state. While stopped, the other calls do nothing (blec_bond_count: the count before the stop). */
+void blec_stop(void);
+bool blec_resume(void);
+bool blec_running(void);
 
 /* App task: the next event, oldest first. False when there is none. */
 bool blec_poll(blec_event_t *ev);

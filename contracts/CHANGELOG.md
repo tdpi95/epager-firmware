@@ -2,6 +2,14 @@
 
 Rules (protocol.md §9): while 0.x, breaking changes bump the minor version and are marked **BREAKING**; from 1.0.0, additive = minor and breaking = major. Every entry lists the vector files that changed. A contract change, its version bump, this changelog and the vectors land in one commit.
 
+## 0.17.0 (2026-11-10)
+
+Additive, every board: **quiet hours save power** (PLAN D125). An app that does not know the key needs no change (an unknown key is skipped, §9), but it should expect no link during quiet hours on a board that uses the default.
+
+- New config key **`quiet.radio_off`** (35, bool, default **true**): while quiet hours apply, the board switches Bluetooth off (no link, no advertising) until the window ends or a key wakes it. With the default, a board that has `quiet.enabled` on drops the phone link at the start of the window; before 0.17.0 the link stayed up. Set it to false to keep the link.
+- `protocol.md` §5 describes quiet hours as a whole: the window (as in §6.3, unchanged), the notifications (§6.3, unchanged), scheduled Wi-Fi requests (weather, the daily update check) that wait until about 10 minutes before the window ends (board behaviour, no key), and the radio.
+- Vectors: `config_values.json` (new `quiet_radio_off_*` cases); every other vector file only carries the new version.
+
 ## 0.16.0 (2026-11-07)
 
 Additive, boards with clock faces: **`CAPABILITIES` lists the built-in faces**, so an app can offer them (and select them with `ui.clock_face_id`) without a gallery and without hard-coding ids per board.

@@ -38,6 +38,8 @@ static const char *name(uint16_t code)
     case APP_EV_BLE_CONNECTED: return "phone connected";
     case APP_EV_BLE_SECURE: return "link secure";
     case APP_EV_BLE_DISCONNECTED: return "phone disconnected (reason)";
+    case APP_EV_RADIO_OFF: return "Bluetooth off for quiet hours (seconds left)";
+    case APP_EV_RADIO_ON: return "Bluetooth on again";
     default: return "?";
     }
 }
