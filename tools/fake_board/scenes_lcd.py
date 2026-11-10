@@ -235,6 +235,22 @@ def scene_status() -> Frames:
     return out
 
 
+def scene_quiet() -> Frames:
+    """Quiet hours at 23:10 (PLAN D125, D126): the moon; no Bluetooth icon while it is off for them, the icon and the
+    moon side by side when quiet.radio_off is false."""
+    b = board()
+    loopback.time_sync(b, TS + 9 * 3600 + 40 * 60, 420)  # 23:10 local
+    loopback.config_set(b, {"quiet.enabled": True})
+    b.advance(3200)  # the "Setting updated" message goes (D79)
+    out: Frames = [("quiet_radio_off", rgb(b))]
+    loopback.config_set(b, {"quiet.radio_off": False})
+    phone = loopback.idle_link()
+    b.connect(phone)  # the link stays up: the icon next to the moon
+    b.advance(3200)
+    out.append(("quiet_radio_on", rgb(b)))
+    return out
+
+
 def scene_weather() -> Frames:
     """The idle clock with the weather row and the place (recorded Open-Meteo values for Ho Chi Minh City),
     then deg F in 12-hour time at night with rain and a long Vietnamese name, then a reading with only the
@@ -343,6 +359,7 @@ SCENES: dict[str, Callable[[], Frames]] = {
     "badge": scene_badge,
     "emoji": scene_emoji,
     "status": scene_status,
+    "quiet": scene_quiet,
     "weather": scene_weather,
     "face_big": scene_face_big,
     "face_night": scene_face_night,

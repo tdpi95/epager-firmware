@@ -150,6 +150,7 @@ typedef struct {
     uint32_t notice_ms;
     ui_icon_t icon_src;
     ui_link_icon_t link_src;
+    bool quiet_src;                    /* ui_quiet_icon() */
     ui_wifi_icon_t wifi_src;
     /* backlight policy (displays with set_backlight) */
     uint32_t last_activity_ms;

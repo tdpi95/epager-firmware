@@ -39,14 +39,15 @@ class _Event(C.Structure):
                 ("subtitle", C.c_char * 257), ("body", C.c_char * 1025), ("text", C.c_char * 64)]
 
 
-LINK_ICONS = {1: "connected", 2: "disconnected"}  # ui_link_icon_t
+LINK_ICONS = {1: "connected", 2: "disconnected", 3: "off"}  # ui_link_icon_t
 WIFI_ICONS = {1: "ok", 2: "connecting", 3: "failed"}  # ui_wifi_icon_t
 
 
 class _Display(C.Structure):
     _fields_ = [(n, C.c_uint32) for n in ("refreshing", "asleep", "kind", "phase", "elapsed_ms", "partial", "full",
                                           "violations", "ui_partial", "ui_full", "ui_skipped",
-                                          "partials_since_full", "powered", "link", "backlight", "wifi")]
+                                          "partials_since_full", "powered", "link", "backlight", "wifi",
+                                          "quiet")]
 
 
 @dataclass
@@ -74,9 +75,10 @@ class DisplayState:
     ui_skipped: int
     partials_since_full: int
     powered: bool
-    link: str          # status-bar connection icon: "connected" | "disconnected" | "none"
+    link: str          # status-bar connection icon: "connected" | "disconnected" | "off" (quiet hours) | "none"
     backlight: int     # LCD: percent set last (e-paper: 0)
     wifi: str          # status-bar Wi-Fi icon: "ok" | "connecting" | "failed" | "none"
+    quiet: bool = False  # status-bar quiet-hours moon (PLAN D126)
 
 
 def _s(b: bytes) -> str:
@@ -262,7 +264,7 @@ class Native:
         return DisplayState(bool(d.refreshing), bool(d.asleep), "full" if d.kind else "partial", d.phase,
                             d.elapsed_ms, d.partial, d.full, d.violations, d.ui_partial, d.ui_full, d.ui_skipped,
                             d.partials_since_full, bool(d.powered), LINK_ICONS.get(d.link, "none"), d.backlight,
-                            WIFI_ICONS.get(d.wifi, "none"))
+                            WIFI_ICONS.get(d.wifi, "none"), bool(d.quiet))
 
     def screen_text(self) -> str:
         b = C.create_string_buffer(4096)

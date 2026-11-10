@@ -20,6 +20,7 @@ typedef enum {
     UI_STATUS_ICON_WIFI,
     UI_STATUS_ICON_WIFI_FAILED,
     UI_STATUS_ICON_CHARGING,
+    UI_STATUS_ICON_QUIET,  /* a crescent moon: quiet hours apply (PLAN D126) */
     UI_STATUS_ICON_COUNT,
 } ui_status_icon_t;
 

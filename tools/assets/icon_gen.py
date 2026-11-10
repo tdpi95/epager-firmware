@@ -255,9 +255,34 @@ def charging() -> list[list[int]]:
     return [[1 if c == "#" else 0 for c in row] for row in CHARGING_BOLT]
 
 
+QUIET_MOON = (  # a crescent: quiet hours apply (PLAN D126)
+    "................",
+    "................",
+    "....##..........",
+    "...###..........",
+    "..###...........",
+    "..###...........",
+    ".####...........",
+    ".#####..........",
+    ".#####..........",
+    ".######.........",
+    "..######........",
+    "..############..",
+    "...##########...",
+    "....########....",
+    ".....######.....",
+    "................",
+)
+
+
+def quiet() -> list[list[int]]:
+    """A crescent moon: quiet hours apply (status line, PLAN D126)."""
+    return [[1 if c == "#" else 0 for c in row] for row in QUIET_MOON]
+
+
 # order = ui_status_icon_t
 STATUS_ICONS = {"ble_connected": bt_on, "ble_disconnected": bt_off, "wifi": wifi_on, "wifi_failed": wifi_off,
-                "charging": charging}
+                "charging": charging, "quiet": quiet}
 
 ICONS = {
     "other": other, "incoming_call": incoming_call, "missed_call": missed_call, "voicemail": voicemail,

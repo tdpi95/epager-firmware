@@ -403,6 +403,21 @@ def scene_status() -> Frames:
     return out
 
 
+def scene_quiet() -> Frames:
+    """Quiet hours at 23:10 (PLAN D125, D126): the moon in the status bar; with quiet.radio_off (the default)
+    Bluetooth is off, so no rune; with the radio kept on the rune and the moon side by side."""
+    b = board()
+    loopback.time_sync(b, TS + 9 * 3600 + 40 * 60, 420)  # 23:10 local
+    set_config(b, {"quiet.enabled": True})  # 22:00-07:00 by default
+    out: Frames = [("quiet_radio_off", b.panel())]
+    set_config(b, {"quiet.radio_off": False})
+    phone = loopback.idle_link()
+    b.connect(phone)  # the link stays up: the rune next to the moon
+    settle(b)
+    out.append(("quiet_radio_on", b.panel()))
+    return out
+
+
 def scene_update() -> Frames:
     """Firmware update (docs/wifi-ota-plan.md): the clock screen's mark, the prompt (Install, Remind later, Skip), and
     the Software update page from the settings list in a few states."""
@@ -458,6 +473,7 @@ SCENES: dict[str, Callable[[], Frames]] = {
     "icons": scene_icons,
     "refresh_sequence": scene_refresh_sequence,
     "status": scene_status,
+    "quiet": scene_quiet,
 }
 
 SIZE = (WIDTH, HEIGHT)

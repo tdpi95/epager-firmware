@@ -41,6 +41,8 @@ HELP = """commands:
   clock 12|24                          clock format (config ui.clock_24h)
   unit c|f                             temperature unit (config ui.temp_unit)
   mask on|off                          show numbers of 4+ digits as **** (config display.mask_numbers)
+  quiet on START END | off | radio on|off   quiet hours (minutes after local midnight; config quiet.*): the moon
+                                       in the status bar, and with radio off no Bluetooth icon (PLAN D126)
   climate TEMP_C RH_PCT | fail | none  temperature/humidity sensor reading (none: no sensor after reboot)
   weather TEMP_C WMO_CODE [night] [hi=C] [lo=C] [rain=PCT] [place=NAME]   a weather reading on the idle screen
   weather off                          remove it
@@ -173,6 +175,14 @@ def run_command(board: FakeBoard, line: str, out: Callable[[str], None] = print)
             loopback.config_set(board, {"ui.clock_24h": {"12": False, "24": True}[pos[0]]})
         elif cmd == "mask":
             loopback.config_set(board, {"display.mask_numbers": {"on": True, "off": False}[pos[0]]})
+        elif cmd == "quiet":
+            if pos[0] == "on":
+                loopback.config_set(board, {"quiet.start_min": int(pos[1]), "quiet.end_min": int(pos[2]),
+                                            "quiet.enabled": True})
+            elif pos[0] == "off":
+                loopback.config_set(board, {"quiet.enabled": False})
+            else:
+                loopback.config_set(board, {"quiet.radio_off": pos[1] == "off"})
         elif cmd == "unit":
             loopback.config_set(board, {"ui.temp_unit": {"c": 0, "f": 1}[pos[0]]})
         elif cmd == "climate":

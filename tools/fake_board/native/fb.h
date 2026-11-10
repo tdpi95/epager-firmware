@@ -46,6 +46,7 @@ typedef struct {
     uint32_t link;                               /* status-bar connection icon: ui_link_icon_t */
     uint32_t backlight;                          /* LCD: percent set last (e-paper: 0) */
     uint32_t wifi;                               /* status-bar Wi-Fi icon: ui_wifi_icon_t */
+    uint32_t quiet;                              /* status-bar quiet-hours moon shown (PLAN D126) */
 } fb_display_t;
 
 FB_API size_t fb_event_size(void);

@@ -1857,6 +1857,39 @@ static void test_connection_icon(void)
     TEST_ASSERT_EQUAL_INT(UI_LINK_NONE, ui_link_icon());
 }
 
+/* PLAN D126: quiet hours show a moon left of the link icon; with Bluetooth off for them it takes the icon's place. */
+static void test_quiet_hours_icon(void)
+{
+    ui_status_t st = {.battery_pct = 80, .ota_pct = -1, .connected = true};
+    ui_set_status(&st);
+    run(2100);
+    lv_point_t ts;
+    lv_text_get_size(&ts, "80%", &ui_font_regular_16, 0, 0, LV_COORD_MAX, LV_TEXT_FLAG_NONE);
+    const uint32_t x0 = SIM_EPAPER_W - 4 - (uint32_t)ts.x - 4 - UI_STATUS_ICON_SIZE, y0 = SIM_EPAPER_H - 24 + 4;
+    TEST_ASSERT_FALSE(ui_quiet_icon());
+    TEST_ASSERT_FALSE(link_icon_at(x0 - 4 - UI_STATUS_ICON_SIZE, y0, UI_STATUS_ICON_QUIET));
+    st.quiet = true; /* quiet hours, Bluetooth kept on (quiet.radio_off false) */
+    ui_set_status(&st);
+    run(400);
+    TEST_ASSERT_TRUE(ui_quiet_icon());
+    TEST_ASSERT_EQUAL_INT(UI_LINK_CONNECTED, ui_link_icon());
+    TEST_ASSERT_TRUE(link_icon_at(x0, y0, UI_STATUS_ICON_BLE_CONNECTED));
+    TEST_ASSERT_TRUE(link_icon_at(x0 - 4 - UI_STATUS_ICON_SIZE, y0, UI_STATUS_ICON_QUIET));
+    st.radio_off = true; /* Bluetooth off for them: no link icon, the moon in its place */
+    st.connected = false;
+    ui_set_status(&st);
+    run(400);
+    TEST_ASSERT_EQUAL_INT(UI_LINK_OFF, ui_link_icon());
+    TEST_ASSERT_TRUE(link_icon_at(x0, y0, UI_STATUS_ICON_QUIET));
+    TEST_ASSERT_FALSE(link_icon_at(x0, y0, UI_STATUS_ICON_BLE_DISCONNECTED));
+    st.quiet = st.radio_off = false; /* the window is over */
+    ui_set_status(&st);
+    run(400);
+    TEST_ASSERT_FALSE(ui_quiet_icon());
+    TEST_ASSERT_EQUAL_INT(UI_LINK_DISCONNECTED, ui_link_icon());
+    TEST_ASSERT_TRUE(link_icon_at(x0, y0, UI_STATUS_ICON_BLE_DISCONNECTED));
+    TEST_ASSERT_FALSE(link_icon_at(x0 - 4 - UI_STATUS_ICON_SIZE, y0, UI_STATUS_ICON_QUIET));
+}
 
 /* ---------------------------------------------------------------- clock faces */
 
@@ -2212,6 +2245,7 @@ int main(void)
     RUN_TEST(test_clock_fits_the_panel);
     RUN_TEST(test_climate_values_fit_their_boxes);
     RUN_TEST(test_connection_icon);
+    RUN_TEST(test_quiet_hours_icon);
     RUN_TEST(test_climate_line);
     RUN_TEST(test_face_builtin_replaces_classic);
     RUN_TEST(test_face_follows_the_data);

@@ -130,6 +130,7 @@ typedef enum {
     UI_LINK_NONE = 0,            /* none (powered off) */
     UI_LINK_CONNECTED,           /* Bluetooth rune: a phone is connected */
     UI_LINK_DISCONNECTED,        /* the rune struck through */
+    UI_LINK_OFF,                 /* none: Bluetooth is off for quiet hours (PLAN D125, D126) */
 } ui_link_icon_t;
 
 /* Which Wi-Fi icon the status bar shows (tests and tools). The radio is on only to fetch (PLAN D60): the icon is
@@ -200,6 +201,8 @@ typedef struct {
     bool has_passkey;            /* pairing is in progress: show the code the phone asks for (DisplayOnly, PLAN D6) */
     uint32_t passkey;            /* 0-999999, shown with leading zeros */
     int16_t ota_pct;             /* -1 = no update running */
+    bool quiet;                  /* quiet hours apply: the status bar shows a moon (PLAN D126) */
+    bool radio_off;              /* Bluetooth is off for them (quiet.radio_off): no Bluetooth icon */
 } ui_status_t;
 
 typedef struct {
@@ -267,6 +270,8 @@ uint32_t ui_clock_face_errors(void);
 ui_icon_t ui_current_icon(void);
 ui_link_icon_t ui_link_icon(void);
 ui_wifi_icon_t ui_wifi_icon(void);
+/* The status bar shows the quiet-hours moon (tests and tools). */
+bool ui_quiet_icon(void);
 /* LCD boards: both keys together (BOARD_BTN_UP_DOWN, SHORT) switch the screen off at once; any key wakes it. */
 ui_action_t ui_on_button(board_button_t btn, board_press_t press);
 void ui_set_power(bool on);      /* off: a "powered off" screen, buttons except PWR long ignored */

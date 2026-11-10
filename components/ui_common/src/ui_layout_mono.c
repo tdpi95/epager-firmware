@@ -63,6 +63,7 @@ static struct {
     lv_obj_t *clock_box, *clock, *ampm, *date, *badge, *divider;
     lv_obj_t *wx_hilo, *wx_rain, *temp, *rh;
     icon_t wx_icon, rain_icon, temp_icon, rh_icon, wifi_icon, bolt_icon; /* the status line: the fan left of the link icon, the bolt left of the level */
+    icon_t quiet_icon;               /* the status line: the moon, between the link icon and the fan (PLAN D126) */
     lv_obj_t *pair_title, *pair_text, *pair_code, *pair_keys, *pair_box;
     lv_obj_t *qr, *setup_text, *setup_key;
     lv_obj_t *notice_bar, *notice; /* a short message over the footer */
@@ -320,6 +321,7 @@ static void build(void)
 
     icon_init(&m.wifi_icon, scr, UI_STATUS_ICON_SIZE);
     icon_init(&m.bolt_icon, scr, UI_STATUS_ICON_SIZE);
+    icon_init(&m.quiet_icon, scr, UI_STATUS_ICON_SIZE);
     build_idle(scr, w, foot_y);
     build_screens(scr, w, foot_y);
     build_settings(scr, w);
@@ -701,8 +703,8 @@ static void apply_settings(void)
     }
 }
 
-/* Right side of the status bar: the charging bolt and "80%", the connection icon, the Wi-Fi fan; the left text
- * ends before them. */
+/* Right side of the status bar: the charging bolt and "80%", the connection icon (none while Bluetooth is off for
+ * quiet hours), the quiet-hours moon, the Wi-Fi fan; the left text ends before them. */
 static void apply_status_right(void)
 {
     char buf[24] = "";
@@ -725,13 +727,25 @@ static void apply_status_right(void)
     int32_t left_end = right;
     ui.link_src = UI_LINK_NONE;
     if (m.link) {
-        ui_set_hidden(m.link, !ui.powered);
-        if (ui.powered) {
+        ui_set_hidden(m.link, !ui.powered || ui.st.radio_off);
+        if (ui.powered && ui.st.radio_off) {
+            ui.link_src = UI_LINK_OFF;
+        } else if (ui.powered) {
             const ui_status_icon_t i = ui.st.connected ? UI_STATUS_ICON_BLE_CONNECTED : UI_STATUS_ICON_BLE_DISCONNECTED;
             load_mono1(m.link, m.link_buf, ui_status_icons[i], UI_STATUS_ICON_SIZE);
             left_end = right - (int32_t)UI_STATUS_ICON_SIZE;
             lv_obj_set_pos(m.link, left_end, (int32_t)ui.info.height - BAR_H + (BAR_H - (int32_t)UI_STATUS_ICON_SIZE) / 2);
             ui.link_src = ui.st.connected ? UI_LINK_CONNECTED : UI_LINK_DISCONNECTED;
+        }
+    }
+    ui.quiet_src = ui.powered && ui.st.quiet && m.quiet_icon.obj != NULL;
+    if (m.quiet_icon.obj) {
+        ui_set_hidden(m.quiet_icon.obj, !ui.quiet_src);
+        if (ui.quiet_src) {
+            icon_show(&m.quiet_icon, UI_STATUS_ICON_QUIET, ui_status_icons[UI_STATUS_ICON_QUIET], UI_STATUS_ICON_SIZE);
+            left_end -= (left_end < right ? LINK_GAP : 0) + (int32_t)UI_STATUS_ICON_SIZE;
+            lv_obj_set_pos(m.quiet_icon.obj, left_end,
+                           (int32_t)ui.info.height - BAR_H + (BAR_H - (int32_t)UI_STATUS_ICON_SIZE) / 2);
         }
     }
     /* the Wi-Fi fan, left of the link icon: how the last join went; the radio is on only to fetch (D60) */
@@ -880,6 +894,8 @@ static void apply(void)
         ui_set_hidden(m.link, true); /* the hint, or the message, takes the footer */
         ui_set_hidden(m.wifi_icon.obj, true);
         ui_set_hidden(m.bolt_icon.obj, true);
+        ui_set_hidden(m.quiet_icon.obj, true);
+        ui.quiet_src = false;
     }
     if (notice) {
         ui_set_hidden(m.foot_left, true);

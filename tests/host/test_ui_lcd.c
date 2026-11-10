@@ -425,6 +425,37 @@ static void test_wifi_status_icon(void)
     run(20);
 }
 
+/* PLAN D126: the quiet-hours moon; with Bluetooth off for quiet hours no link icon. */
+static void test_quiet_hours_icon(void)
+{
+    ui_status_t st = {.battery_pct = 80, .ota_pct = -1, .connected = true};
+    ui_set_status(&st);
+    run(20);
+    TEST_ASSERT_FALSE(ui_quiet_icon());
+    TEST_ASSERT_EQUAL_INT(UI_LINK_CONNECTED, ui_link_icon());
+    st.quiet = true;
+    ui_set_status(&st);
+    run(20);
+    TEST_ASSERT_TRUE(ui_quiet_icon());
+    TEST_ASSERT_EQUAL_INT(UI_LINK_CONNECTED, ui_link_icon());
+    st.radio_off = true;
+    st.connected = false;
+    ui_set_status(&st);
+    run(20);
+    TEST_ASSERT_TRUE(ui_quiet_icon());
+    TEST_ASSERT_EQUAL_INT(UI_LINK_OFF, ui_link_icon());
+    ui_set_power(false);
+    run(20);
+    TEST_ASSERT_FALSE(ui_quiet_icon()); /* the bar is hidden when powered off */
+    ui_set_power(true);
+    st.quiet = st.radio_off = false;
+    ui_set_status(&st);
+    run(20);
+    TEST_ASSERT_FALSE(ui_quiet_icon());
+    TEST_ASSERT_EQUAL_INT(UI_LINK_DISCONNECTED, ui_link_icon());
+    TEST_ASSERT_EQUAL_UINT32(0, state().violations);
+}
+
 static void reinit(bool wifi_setup)
 {
     ui_deinit();
@@ -1246,6 +1277,7 @@ int main(void)
 {
     UNITY_BEGIN();
     RUN_TEST(test_first_frame_then_backlight);
+    RUN_TEST(test_quiet_hours_icon);
     RUN_TEST(test_only_changes_are_sent);
     RUN_TEST(test_card_and_keys);
     RUN_TEST(test_card_masks_numbers_when_asked);

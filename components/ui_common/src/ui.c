@@ -629,6 +629,7 @@ void ui_assets_changed(uint8_t asset_type)
 ui_icon_t ui_current_icon(void) { return ui.icon_src; }
 ui_link_icon_t ui_link_icon(void) { return ui.link_src; }
 ui_wifi_icon_t ui_wifi_icon(void) { return ui.wifi_src; }
+bool ui_quiet_icon(void) { return ui.quiet_src; }
 
 ui_action_t ui_on_button(board_button_t btn, board_press_t press)
 {

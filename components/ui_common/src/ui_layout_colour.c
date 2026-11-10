@@ -107,8 +107,8 @@ static const uint32_t ACCENT[UI_BUILTIN_ICON_COUNT] = {
 };
 
 static struct {
-    lv_obj_t *bar, *bar_line, *bar_left, *bar_right, *link, *wifi;
-    lv_draw_buf_t *link_buf, *wifi_buf;
+    lv_obj_t *bar, *bar_line, *bar_left, *bar_right, *link, *wifi, *quiet;
+    lv_draw_buf_t *link_buf, *wifi_buf, *quiet_buf;
     lv_obj_t *stripe, *card_box, *tile, *builtin, *app_icon, *app, *counter, *title, *body;
     lv_draw_buf_t *builtin_buf, *app_buf;
     lv_obj_t *clock, *ampm, *date, *off;
@@ -128,6 +128,7 @@ static struct {
     uint32_t shown_id;               /* card on screen: a new card collapses the body again */
     uint32_t icon_id, icon_gen;      /* icons on screen: loaded again only when these change */
     int link_state, wifi_state;      /* -1 none, else the ui_status_icon_t shown */
+    bool quiet_loaded;               /* the moon is on its canvas */
 } c;
 
 /* The QR code's pixels: A8, which LVGL blends directly. Static, not in LVGL's heap: an A1 image would be
@@ -389,6 +390,12 @@ static void build(void)
         lv_obj_set_style_image_recolor(c.link, hex(C_TEXT), 0);
         lv_obj_set_style_image_recolor_opa(c.link, LV_OPA_COVER, 0);
     }
+    c.quiet = canvas(scr, &c.quiet_buf, UI_STATUS_ICON_SIZE, LV_COLOR_FORMAT_A1); /* the quiet-hours moon (D126) */
+    if (c.quiet) {
+        lv_obj_set_style_image_recolor(c.quiet, hex(C_TEXT), 0);
+        lv_obj_set_style_image_recolor_opa(c.quiet, LV_OPA_COVER, 0);
+        ui_set_hidden(c.quiet, true);
+    }
 
     /* the clock screen's badge: a pill in the status bar's left part (empty there), in the newest card's colour */
     c.badge = label(scr, FONT_SMALL, BAR_INSET, (STATUS_H - BADGE_H) / 2, BADGE_W, BADGE_H, LV_LABEL_LONG_MODE_CLIP,
@@ -589,13 +596,17 @@ static void apply_status(bool idle)
     }
     ui_set_text(c.bar_right, buf);
 
-    /* right to left: power/battery label, Bluetooth, Wi-Fi; the left text gets the rest */
+    /* right to left: power/battery label, Bluetooth (none while it is off for quiet hours), the quiet-hours moon,
+     * Wi-Fi; the left text gets the rest */
     lv_point_t ts;
     lv_text_get_size(&ts, buf, FONT_SMALL, 0, 0, LV_COORD_MAX, LV_TEXT_FLAG_NONE);
     const int32_t icon_y = (STATUS_H - (int32_t)UI_STATUS_ICON_SIZE) / 2;
     int32_t x = (int32_t)ui.info.width - BAR_INSET - ts.x; /* left edge of what is placed so far */
     ui.link_src = UI_LINK_NONE;
-    if (c.link) {
+    if (c.link && ui.st.radio_off) {
+        ui_set_hidden(c.link, true); /* shown again by apply(), which hides the bar's objects on a face */
+        ui.link_src = UI_LINK_OFF;
+    } else if (c.link) {
         const ui_status_icon_t i = ui.st.connected ? UI_STATUS_ICON_BLE_CONNECTED : UI_STATUS_ICON_BLE_DISCONNECTED;
         if (c.link_state != (int)i) {
             c.link_state = (int)i;
@@ -604,6 +615,18 @@ static void apply_status(bool idle)
         x -= (ts.x ? LINK_GAP : 0) + (int32_t)UI_STATUS_ICON_SIZE;
         lv_obj_set_pos(c.link, x, icon_y);
         ui.link_src = ui.st.connected ? UI_LINK_CONNECTED : UI_LINK_DISCONNECTED;
+    }
+    ui.quiet_src = ui.powered && ui.st.quiet && c.quiet != NULL;
+    if (c.quiet) {
+        ui_set_hidden(c.quiet, !ui.quiet_src);
+        if (ui.quiet_src) {
+            if (!c.quiet_loaded) {
+                c.quiet_loaded = true;
+                load_mono1(c.quiet, c.quiet_buf, ui_status_icons[UI_STATUS_ICON_QUIET], UI_STATUS_ICON_SIZE);
+            }
+            x -= LINK_GAP + (int32_t)UI_STATUS_ICON_SIZE;
+            lv_obj_set_pos(c.quiet, x, icon_y);
+        }
     }
     ui.wifi_src = ui.powered ? ui_wifi_icon_for(ui.st.wifi_state) : UI_WIFI_NONE;
     if (c.wifi) {
@@ -949,6 +972,7 @@ static void apply(void)
     ui_set_hidden(c.off, ui.powered);
     ui.icon_src = UI_ICON_NONE;
     ui.link_src = UI_LINK_NONE;
+    ui.quiet_src = false;
     if (!ui.powered) {
         char buf[48];
         snprintf(buf, sizeof(buf), "ePager\n%s", ui_strings()->off);
@@ -973,6 +997,10 @@ static void apply(void)
     apply_status(idle);
     if (face && c.wifi) {
         ui_set_hidden(c.wifi, true); /* the status bar's Wi-Fi icon is not part of a face */
+    }
+    if (face && c.quiet) {
+        ui_set_hidden(c.quiet, true); /* nor the moon */
+        ui.quiet_src = false;
     }
     ui_face_apply(face);
 }

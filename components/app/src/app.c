@@ -147,7 +147,8 @@ static bool net_ok, net_config_dirty;
 
 /* Quiet hours save power (PLAN D125, protocol.md 5): scheduled Wi-Fi requests wait until QUIET_WIFI_LEAD_S before
  * the window ends, and with quiet.radio_off Bluetooth is off for the window. A key keeps it on for QUIET_GRACE_MS,
- * pairing mode keeps it on, and a phone that wrote in the last QUIET_TALK_MS is not cut off mid-transfer. */
+ * pairing mode keeps it on, and a transfer (a write to the Transfer characteristic in the last QUIET_TALK_MS) is not
+ * cut off; notifications and settings do not count: an Android phone posts them all the time. */
 #define QUIET_WIFI_LEAD_S 600u
 #define QUIET_GRACE_MS (10u * 60u * 1000u)
 #define QUIET_TALK_MS 60000u
@@ -287,7 +288,9 @@ static void sync_ui_status(void)
     ui_status_t s = {.battery_pct = core_battery_pct(&core), .wifi_state = core.status.wifi_state,
                      .external_power = core.status.external_power == PROTO_EXTERNAL_POWER_YES,
                      .connected = ble_secure, .pairing_mode = core.status.pairing_mode,
-                     .has_passkey = has_passkey, .passkey = passkey, .ota_pct = ota_ui_pct(now_ms(NULL))};
+                     .has_passkey = has_passkey, .passkey = passkey, .ota_pct = ota_ui_pct(now_ms(NULL)),
+                     .quiet = cfg_quiet_hours(&core.cfg, core_now_utc(&core), NULL),
+                     .radio_off = ble_ok && !blec_running()};
     ui_set_status(&s);
     if (ble_ok) {
         blec_set_battery(s.battery_pct);
@@ -453,7 +456,9 @@ static void ble_event(const blec_event_t *ev)
         refresh_info();
         break;
     case BLEC_EV_WRITE:
-        qh.write_ms = now_ms(NULL);
+        if (ev->chr == CORE_CHR_TRANSFER) { /* an asset or firmware transfer: not cut off by quiet hours */
+            qh.write_ms = now_ms(NULL);
+        }
         core_write(&core, ev->chr, ev->data, ev->len);
         break;
     case BLEC_EV_PASSKEY:

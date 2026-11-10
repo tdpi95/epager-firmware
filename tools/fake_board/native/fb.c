@@ -172,6 +172,10 @@ static void sync_ui_status(void)
     ui_status_t s = {.has_passkey = fb_passkey >= 0, .passkey = fb_passkey >= 0 ? (uint32_t)fb_passkey : 0, .battery_pct = fb.core.status.battery_pct, .wifi_state = fb.core.status.wifi_state,
                      .external_power = fb.core.status.external_power == PROTO_EXTERNAL_POWER_YES,
                      .connected = fb.connected, .pairing_mode = fb.core.status.pairing_mode, .ota_pct = fb.ota_pct};
+    /* quiet hours (PLAN D125, D126): the firmware's radio would be off; the fake board keeps its link and only
+     * shows it */
+    s.quiet = cfg_quiet_hours(&fb.core.cfg, core_now_utc(&fb.core), NULL);
+    s.radio_off = s.quiet && cfg_get_int(&fb.core.cfg, PROTO_CFG_QUIET_RADIO_OFF) != 0;
     ui_set_status(&s);
 }
 
@@ -987,7 +991,7 @@ void fb_display_state(fb_display_t *out)
     sim_lcd_state(&s);
     *out = (fb_display_t){.asleep = s.asleep, .violations = s.violations, .powered = fb.powered,
                           .link = ui_link_icon(), .backlight = s.backlight,
-                          .wifi = ui_wifi_icon()};
+                          .wifi = ui_wifi_icon(), .quiet = ui_quiet_icon()};
 }
 
 void fb_set_ghosting(int on) { (void)on; }
@@ -1022,7 +1026,8 @@ void fb_display_state(fb_display_t *out)
                           .elapsed_ms = s.elapsed_ms, .partial = s.partial, .full = s.full,
                           .violations = s.violations, .ui_partial = u.partial, .ui_full = u.full,
                           .ui_skipped = u.skipped, .partials_since_full = u.partials_since_full,
-                          .powered = fb.powered, .link = ui_link_icon(), .wifi = ui_wifi_icon()};
+                          .powered = fb.powered, .link = ui_link_icon(), .wifi = ui_wifi_icon(),
+                          .quiet = ui_quiet_icon()};
 }
 
 void fb_set_ghosting(int on) { sim_epaper_set_ghosting(on != 0); }
