@@ -77,7 +77,8 @@ FONTS = [
     FontSpec("ui_font_regular_16", "NotoSans-Regular.ttf", 16, 600),
     FontSpec("ui_font_bold_16", "NotoSans-Bold.ttf", 16, 700),
     FontSpec("ui_font_clock_56", "NotoSans-Bold.ttf", 56, 700, " -0123456789:"),
-    FontSpec("ui_font_bold_24", "NotoSans-Bold.ttf", 24, 700, " %-.0123456789CF\u00b0"),
+    FontSpec("ui_font_bold_24", "NotoSans-Bold.ttf", 24, 700,
+             " %-.0123456789\u00b0ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"),
     # LCD (colour layout)
     FontSpec("ui_font_lcd_16", "NotoSans-Regular.ttf", 16, 0, bpp=4, emoji="colour"),
     FontSpec("ui_font_lcd_20", "NotoSans-Regular.ttf", 20, 0, bpp=4, emoji="colour"),

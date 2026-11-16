@@ -2,6 +2,13 @@
 
 Rules (protocol.md §9): while 0.x, breaking changes bump the minor version and are marked **BREAKING**; from 1.0.0, additive = minor and breaking = major. Every entry lists the vector files that changed. A contract change, its version bump, this changelog and the vectors land in one commit.
 
+## 0.18.0 (2026-11-16)
+
+Additive, the Paper board's clock faces: **`large_bold` has letters**. No message, tag or key changes; an app needs no change.
+
+- `asset-formats.md` "Clock faces", fonts: on the Paper the `large_bold` font (bold 24 px) now also holds the letters `A`-`Z` and `a`-`z` (before: digits, space, `% - . C F` and the degree sign). A face can write the short weekday and month names and `AM` / `PM` at that size. A board with an older contract leaves the letters it lacks out, as for any character a font does not have, so a face that relies on them should set `min_contract` to `0.18.0`.
+- Vectors: no new cases; every vector file only carries the new version.
+
 ## 0.17.0 (2026-11-10)
 
 Additive, every board: **quiet hours save power** (PLAN D125). An app that does not know the key needs no change (an unknown key is skipped, §9), but it should expect no link during quiet hours on a board that uses the default.

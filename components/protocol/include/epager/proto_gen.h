@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-#define PROTO_CONTRACT_VERSION "0.17.0"
+#define PROTO_CONTRACT_VERSION "0.18.0"
 #define PROTO_MAJOR 0
 #define PROTO_UNICODE_VERSION "15.0.0"
 
@@ -570,7 +570,7 @@ extern const proto_struct_desc_t proto_struct_face_root;
 #define PROTO_CFG_KEY_COUNT 28u
 #define PROTO_CFG_STR_MAX_LEN 64u
 /* Contract versions packed as major << 16 | minor << 8 | patch (config key `since`) */
-#define PROTO_CONTRACT_VERSION_PACKED 0x001100u
+#define PROTO_CONTRACT_VERSION_PACKED 0x001200u
 
 /* GATT UUIDs, little-endian byte order (as BLE_UUID128_INIT expects) */
 #define PROTO_UUID_SERVICE_LE 0xca, 0x5f, 0xda, 0x25, 0x19, 0x6c, 0x47, 0x8b, 0x14, 0x42, 0x0a, 0x0c, 0x01, 0x00, 0x8a, 0xa0

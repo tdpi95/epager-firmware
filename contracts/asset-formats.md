@@ -240,10 +240,12 @@ Fonts (`font`; the first column is the size the face is designed on):
 |---|---|---|---|
 | `small` | regular 16 px | regular 16 px | the board's full text range (Latin and Vietnamese) |
 | `small_bold` | bold 16 px | bold 20 px | the same |
-| `large_bold` | bold 24 px | bold 20 px | Paper: digits, space, `% - . C F` and the degree sign only; LCD: full range |
+| `large_bold` | bold 24 px | bold 20 px | Paper: digits, space, `% - .`, the degree sign and (since 0.18.0) the letters `A`-`Z`, `a`-`z`; before 0.18.0 only `C` and `F` of the letters; LCD: full range |
 | `clock` | bold 56 px | bold 72 px | digits, space, colon, minus |
 
-A text drawn with a font that lacks a character leaves it out. Use `large_bold` and `clock` for numbers only.
+A text drawn with a font that lacks a character leaves it out. Use `clock` for numbers only; on the Paper `large_bold`
+has no accented letters, so it suits numbers and the short names (`weekday`, `month` with `short`, `ampm`), not the
+long Vietnamese ones.
 
 Icons: `weather` (the board's icon of the weather condition and of day or night; shown when there is a reading),
 `ble` (the Bluetooth rune, connected or struck through), `wifi` (the Wi-Fi fan; shown only while connected),

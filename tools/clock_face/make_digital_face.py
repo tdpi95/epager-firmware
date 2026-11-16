@@ -28,15 +28,16 @@ def paper() -> dict:
     els.append({**win, "thickness": 3, "visible_if": [{"option": 2, "equals": 0}]})
     els.append({**win, "fill": True, "visible_if": [{"option": 2, "equals": 1}]})
     ink = ("black", "white")
-    styled(els, {"kind": "text", "x": 14, "y": 12, "w": 52, "h": 20, "font": "small_bold", "source": "weekday"}, ink)
-    styled(els, {"kind": "text", "x": 70, "y": 12, "w": 36, "h": 20, "font": "small_bold", "source": "ampm"}, ink)
-    styled(els, {"kind": "number", "x": 120, "y": 11, "w": 66, "align": "right", "set": "small", "source": "day", "spacing": 2}, ink)
+    styled(els, {"kind": "text", "x": 14, "y": 7, "w": 70, "h": 34, "font": "large_bold", "source": "weekday"}, ink)
+    styled(els, {"kind": "text", "x": 88, "y": 14, "w": 36, "h": 20, "font": "small_bold", "source": "ampm"}, ink)
+    styled(els, {"kind": "number", "x": 126, "y": 11, "w": 60, "align": "right", "set": "small", "source": "day", "spacing": 2}, ink)
     styled(els, {"kind": "line", "x": 12, "y": 44, "w": 176, "h": 0, "thickness": 2}, ink)
     styled(els, {"kind": "number", "x": 8, "y": 53, "w": 184, "align": "center", "set": "seg", "source": "time", "spacing": 2}, ink)
     styled(els, {"kind": "line", "x": 12, "y": 130, "w": 176, "h": 0, "thickness": 2}, ink)
-    styled(els, {"kind": "text", "x": 14, "y": 137, "w": 100, "h": 30, "font": "large_bold", "source": "room_temp"}, ink, INFO)
-    styled(els, {"kind": "text", "x": 116, "y": 137, "w": 70, "h": 30, "font": "large_bold", "align": "right",
-                 "source": "room_humidity"}, ink, INFO)
+    styled(els, {"kind": "image", "x": 14, "y": 138, "image": "thermometer"}, ink, INFO)
+    styled(els, {"kind": "text", "x": 30, "y": 140, "w": 78, "h": 22, "font": "small_bold", "source": "room_temp"}, ink, INFO)
+    styled(els, {"kind": "image", "x": 118, "y": 139, "image": "drop"}, ink, INFO)
+    styled(els, {"kind": "text", "x": 138, "y": 140, "w": 48, "h": 22, "font": "small_bold", "source": "room_humidity"}, ink, INFO)
     els += [
         {"kind": "text", "x": 40, "y": 177, "w": 44, "h": 22, "font": "small_bold", "literal": "UPD",
          "visible_if": [{"above_zero": "update_available"}]},
@@ -46,7 +47,9 @@ def paper() -> dict:
         {"kind": "text", "x": 146, "y": 177, "w": 48, "h": 22, "font": "small", "align": "right", "source": "battery_pct"},
     ]
     return {"images": [{"digit_set": "seg", "format": "mono1", "dir": "digits-paper"},
-                       {"digit_set": "small", "format": "mono1", "dir": "small-paper"}], "elements": els}
+                       {"digit_set": "small", "format": "mono1", "dir": "small-paper"},
+                       {"name": "thermometer", "format": "mono1", "file": "icons/thermometer.png"},
+                       {"name": "drop", "format": "mono1", "file": "icons/drop.png"}], "elements": els}
 
 
 def lcd() -> dict:
@@ -89,7 +92,7 @@ def lcd() -> dict:
 
 def render() -> str:
     face = {
-        "meta": {"id": "epager.digital", "name": "Digital", "name_vi": "Điện tử", "author": "ePager", "version": "1.1.0",
+        "meta": {"id": "epager.digital", "name": "Digital", "name_vi": "Điện tử", "author": "ePager", "version": "1.2.0",
                  "min_contract": "0.15.0", "update_anchor": "top_right"},
         "options": [
             {"id": 1, "type": "toggle", "label": "Info row", "label_vi": "Dòng thông tin", "default": True},

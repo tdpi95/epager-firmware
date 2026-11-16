@@ -7,7 +7,8 @@ Black ink on a transparent background: mono1 masks, drawn in the element's colou
 
 Big: Noto Sans Bold (the project's font, .deps/fonts, fetched by tools/assets/font_gen.py), hours over minutes.
 Minimal: Ubuntu Light (the system font package `fonts-ubuntu`), thin digits and a colon in one row.
-Digital: upright seven-segment digits drawn here (no font); a large set for the time and a small one for the day.
+Digital: upright seven-segment digits drawn here (no font); a large set for the time and a small one for the day;
+a thermometer and a drop for the room's temperature and humidity (the Paper).
 Every digit of a set has the same cell, so a time never jumps sideways when a digit changes.
 """
 from __future__ import annotations
@@ -103,11 +104,49 @@ def make_segments(folder: Path, w: int, h: int, t: int, colon_w: int = 0) -> Non
         segment_colon(colon_w, h, t).save(folder / "colon.png", optimize=True)
 
 
+def thermometer(w: int, h: int) -> Image.Image:
+    """A tube with a round bulb, outlined, the bulb and the lower half of the tube filled."""
+    W, H = w * SS, h * SS
+    big = Image.new("L", (W, H), 0)
+    d = ImageDraw.Draw(big)
+    line, cx = 2 * SS, W // 2
+    bulb, tube = W // 2 - SS // 2, W // 4 + SS // 2  # radii
+    cy = H - bulb - SS // 2
+    d.rounded_rectangle([cx - tube, SS // 2, cx + tube, cy], radius=tube, fill=255)
+    d.ellipse([cx - bulb, cy - bulb, cx + bulb, cy + bulb], fill=255)
+    d.rounded_rectangle([cx - tube + line, SS // 2 + line, cx + tube - line, cy], radius=tube - line, fill=0)
+    d.ellipse([cx - bulb + line, cy - bulb + line, cx + bulb - line, cy + bulb - line], fill=0)
+    core = max(SS, tube - line - SS)
+    d.rectangle([cx - core, H * 2 // 5, cx + core, cy], fill=255)
+    d.ellipse([cx - bulb + line + SS, cy - bulb + line + SS, cx + bulb - line - SS, cy + bulb - line - SS], fill=255)
+    return _mask(big, w, h)
+
+
+def drop(w: int, h: int) -> Image.Image:
+    """A water drop: a point at the top, a round bottom, outlined."""
+    W, H = w * SS, h * SS
+    big = Image.new("L", (W, H), 0)
+    d = ImageDraw.Draw(big)
+
+    def shape(inset: int, fill: int) -> None:
+        r = W // 2 - SS // 2 - inset
+        cx, cy = W // 2, H - SS // 2 - inset - r
+        d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=fill)
+        d.polygon([(cx, SS // 2 + inset * 2), (cx - r * 0.96, cy - r * 0.3), (cx + r * 0.96, cy - r * 0.3)], fill=fill)
+
+    shape(0, 255)
+    shape(2 * SS, 0)
+    return _mask(big, w, h)
+
+
 if __name__ == "__main__":
     make_segments(FACES / "digital/digits-paper", 36, 68, 8, 12)
     make_segments(FACES / "digital/small-paper", 14, 26, 4)
     make_segments(FACES / "digital/digits-lcd", 48, 88, 10, 16)
     make_segments(FACES / "digital/small-lcd", 16, 30, 4)
+    (FACES / "digital/icons").mkdir(exist_ok=True)
+    thermometer(12, 24).save(FACES / "digital/icons/thermometer.png", optimize=True)
+    drop(16, 22).save(FACES / "digital/icons/drop.png", optimize=True)
     make(FACES / "big/digits-paper", NOTO_BOLD, 80, colon=False)
     make(FACES / "big/digits-lcd", NOTO_BOLD, 96, colon=False)
     make(FACES / "minimal/digits-paper", UBUNTU_LIGHT, 50, colon=True)
