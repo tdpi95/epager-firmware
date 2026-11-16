@@ -42,6 +42,7 @@ typedef struct {
 } item_t;
 
 static const item_t ITEMS[] = {
+    {ROW_FACE, 0, 0, false, false}, /* the first row: the look of the idle screen is what people change most */
     {ROW_CLOCK, PROTO_CFG_UI_CLOCK_24H, 2, false, false},
     {ROW_TEMP, PROTO_CFG_UI_TEMP_UNIT, 2, false, false},
     {ROW_LANGUAGE, PROTO_CFG_UI_LANGUAGE, 2, false, false},
@@ -55,7 +56,6 @@ static const item_t ITEMS[] = {
     {ROW_PHONES, 0, 0, false, false},
     {ROW_NETWORKS, 0, 0, true, false},
     {ROW_UPDATE, 0, 0, true, true},
-    {ROW_FACE, 0, 0, false, false}, /* before About, so the rows above keep their places */
     {ROW_ABOUT, 0, 0, false, false},
 };
 

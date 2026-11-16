@@ -665,7 +665,7 @@ static void test_waking_touch_does_nothing_else(void)
 #define SWIPE_BACK() drag(60, 120, 220, 120, 6) /* swipe right */
 #define TAP_ROW(k) drag(148, ROW_Y(k), 148, ROW_Y(k), 2)
 
-static const char *PAGE1 = "Settings\n1/3\nClock\n24h\nTemperature\n\xC2\xB0" "C\nLanguage\nEnglish\nMessage text\nOn\n";
+static const char *PAGE1 = "Settings\n1/3\nClock face\n>\nClock\n24h\nTemperature\n\xC2\xB0" "C\nLanguage\nEnglish\n";
 
 /* PLAN D99: swipe up on the clock screen opens the settings, a swipe right goes back, up and down turn the pages. */
 static void test_settings_open_pages_and_back(void)
@@ -674,12 +674,12 @@ static void test_settings_open_pages_and_back(void)
     SWIPE_UP();
     TEST_ASSERT_NOT_NULL(strstr(text(), PAGE1));
     TEST_ASSERT_EQUAL_UINT32(0, n_actions);
-    SWIPE_UP(); /* the next page: nine rows, four a page */
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n2/3\nHide numbers\nOff\nRotation\n0\xC2\xB0\nPairing mode\nPaired phones\n>\n"));
+    SWIPE_UP(); /* the next page: ten rows, four a page */
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n2/3\nMessage text\nOn\nHide numbers\nOff\nRotation\n0\xC2\xB0\nPairing mode\n"));
     SWIPE_UP();
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n3/3\nClock face\n>\nAbout\n>\n"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n3/3\nPaired phones\n>\nAbout\n>\n"));
     SWIPE_UP(); /* the last page stays */
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n3/3\nClock face\n"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n3/3\nPaired phones\n"));
     SWIPE_DOWN();
     TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n2/3\n"));
     SWIPE_DOWN();
@@ -699,7 +699,7 @@ static void test_settings_tap_changes_a_value(void)
 {
     run(20);
     SWIPE_UP();
-    TAP_ROW(0); /* Clock: 24h -> 12h */
+    TAP_ROW(1); /* Clock: 24h -> 12h */
     TEST_ASSERT_EQUAL_UINT32(1, n_actions);
     TEST_ASSERT_EQUAL_INT(UI_ACTION_SETTING, last_action);
     TEST_ASSERT_EQUAL_UINT32((uint32_t)PROTO_CFG_UI_CLOCK_24H << 8 | 0u, last_arg);
@@ -709,24 +709,24 @@ static void test_settings_tap_changes_a_value(void)
     ui_set_config(&c);
     run(20);
     TEST_ASSERT_NOT_NULL(strstr(text(), "Clock\n12h\n"));
-    TAP_ROW(2); /* Language: English -> Vietnamese */
+    TAP_ROW(3); /* Language: English -> Vietnamese */
     TEST_ASSERT_EQUAL_UINT32((uint32_t)PROTO_CFG_UI_LANGUAGE << 8 | PROTO_LANGUAGE_VI, last_arg);
     c.language = PROTO_LANGUAGE_VI;
     ui_set_config(&c);
     run(20);
-    TEST_ASSERT_NOT_NULL(strstr(text(), "C\xC3\xA0i \xC4\x91\xE1\xBA\xB7t\n1/3\n\xC4\x90\xE1\xBB\x93ng h\xE1\xBB\x93\n12h\n")); /* Cài đặt, Đồng hồ */
+    TEST_ASSERT_NOT_NULL(strstr(text(), "C\xC3\xA0i \xC4\x91\xE1\xBA\xB7t\n1/3\nM\xE1\xBA\xB7t \xC4\x91\xE1\xBB\x93ng h\xE1\xBB\x93\n>\n\xC4\x90\xE1\xBB\x93ng h\xE1\xBB\x93\n12h\n")); /* Cài đặt, Mặt đồng hồ, Đồng hồ */
     TEST_ASSERT_NOT_NULL(strstr(text(), "Ti\xE1\xBA\xBFng Vi\xE1\xBB\x87t\n")); /* Tiếng Việt */
     c.language = PROTO_LANGUAGE_EN;
     ui_set_config(&c);
 
     SWIPE_UP();
-    TAP_ROW(1); /* Rotation: the LCD turns by 0 or 180 degrees: 0 -> 180 */
+    TAP_ROW(2); /* Rotation: the LCD turns by 0 or 180 degrees: 0 -> 180 */
     TEST_ASSERT_EQUAL_UINT32((uint32_t)PROTO_CFG_DISPLAY_ORIENTATION << 8 | 2u, last_arg);
     c.orientation = 2;
     ui_set_config(&c);
     run(20);
     TEST_ASSERT_NOT_NULL(strstr(text(), "Rotation\n180\xC2\xB0\n"));
-    TAP_ROW(1);
+    TAP_ROW(2);
     TEST_ASSERT_EQUAL_UINT32((uint32_t)PROTO_CFG_DISPLAY_ORIENTATION << 8 | 0u, last_arg);
     c.orientation = 3; /* the phone set a quarter turn the panel cannot show: it counts as 180 */
     ui_set_config(&c);
@@ -742,10 +742,8 @@ static void test_settings_tap_changes_a_value(void)
 static void test_settings_clock_face_pages(void)
 {
     reinit(false);
-    SWIPE_UP(); /* opens the list */
-    SWIPE_UP();
-    SWIPE_UP();
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n3/3\nClock face\n>\nAbout\n>\n"));
+    SWIPE_UP(); /* opens the list: Clock face is its first row */
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n1/3\nClock face\n>\n"));
     TAP_ROW(0);
     TEST_ASSERT_NOT_NULL(strstr(text(), "Clock face\nClassic\nIn use\nBig\nDigital\nNight\n"));
     const uint32_t n = n_actions;
@@ -768,7 +766,7 @@ static void test_settings_pairing_and_pages(void)
     run(20);
     SWIPE_UP();
     SWIPE_UP();
-    TAP_ROW(2); /* Pairing mode */
+    TAP_ROW(3); /* Pairing mode */
     TEST_ASSERT_EQUAL_INT(UI_ACTION_PAIRING_TOGGLE, last_action);
     TEST_ASSERT_NULL(strstr(text(), "Settings")); /* the list closes; the firmware shows the pairing screen */
     ui_status_t st = {.battery_pct = 80, .pairing_mode = true, .ota_pct = -1};
@@ -793,7 +791,8 @@ static void test_settings_pairing_and_pages(void)
     ui_set_info(&info);
     SWIPE_UP();
     SWIPE_UP();
-    TAP_ROW(3); /* Paired phones */
+    SWIPE_UP();
+    TAP_ROW(0); /* Paired phones */
     TEST_ASSERT_EQUAL_INT(UI_ACTION_INFO_REFRESH, last_action);
     TEST_ASSERT_NOT_NULL(strstr(text(), "Paired phones\nPhone 1\nPhone 2\nconnected\n"));
     TAP_ROW(0); /* asks */
@@ -810,14 +809,13 @@ static void test_settings_pairing_and_pages(void)
     TEST_ASSERT_EQUAL_UINT32(0, last_arg);
 
     SWIPE_BACK(); /* back to the list, on the page of the row that opened it */
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n2/3\nHide numbers\n"));
-    SWIPE_UP();
-    TAP_ROW(1); /* About (after Clock face) */
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n3/3\nPaired phones\n"));
+    TAP_ROW(1); /* About */
     TEST_ASSERT_NOT_NULL(strstr(text(), "About\n1/2\nFirmware\n1.2.3\nDevice\nePager-1A2B\nBoard\nxiaozhi_3st\nBattery\n"));
     TAP_ROW(0); /* read-only */
     TEST_ASSERT_NOT_NULL(strstr(text(), "About\n"));
     SWIPE_BACK();
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n3/3\nClock face\n>\nAbout\n"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n3/3\nPaired phones\n>\nAbout\n"));
     SWIPE_BACK();
     TEST_ASSERT_NULL(strstr(text(), "Settings"));
 }
@@ -853,12 +851,12 @@ static void test_settings_with_wifi(void)
     reinit(true);
     SWIPE_UP();
     SWIPE_UP();
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n2/4\nHide numbers\nOff\nRotation\n0\xC2\xB0\nWeather\nOff\nPairing mode\n"));
-    TAP_ROW(2); /* Weather */
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n2/4\nMessage text\nOn\nHide numbers\nOff\nRotation\n0\xC2\xB0\nWeather\nOff\n"));
+    TAP_ROW(3); /* Weather */
     TEST_ASSERT_EQUAL_UINT32((uint32_t)PROTO_CFG_WEATHER_ENABLED << 8 | 1u, last_arg);
     SWIPE_UP();
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n3/4\nWi-Fi setup\nPaired phones\n>\nWi-Fi networks\n>\nClock face\n>\n"));
-    TAP_ROW(0);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n3/4\nPairing mode\nWi-Fi setup\nPaired phones\n>\nWi-Fi networks\n>\n"));
+    TAP_ROW(1);
     TEST_ASSERT_EQUAL_INT(UI_ACTION_WIFI_SETUP, last_action);
     ui_wifi_setup_t s = {.state = UI_SETUP_WAITING};
     snprintf(s.ap_ssid, sizeof(s.ap_ssid), "ePager-1A2B");
@@ -873,7 +871,7 @@ static void test_settings_with_wifi(void)
     s.state = UI_SETUP_OFF;
     ui_set_wifi_setup(&s);
     run(20);
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n3/4\nWi-Fi setup\n"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n3/4\nPairing mode\nWi-Fi setup\n"));
 }
 
 /* ---------------------------------------------------------------- firmware update (docs/wifi-ota-plan.md) */
@@ -906,16 +904,16 @@ static void test_update_page_and_rows(void)
     SWIPE_UP();
     SWIPE_UP();
     SWIPE_UP();
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n4/4\nSoftware update\n>\nClock face\n>\nAbout\n>\n"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n4/4\nWi-Fi networks\n>\nSoftware update\n>\nAbout\n>\n"));
     SWIPE_BACK();
     SWIPE_UP();
     SWIPE_UP();
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n2/4\nHide numbers\nOff\nRotation\n0\xC2\xB0\nWeather\nOff\nCheck updates\nOn\n"));
-    TAP_ROW(3); /* Check updates: a config key like the others */
+    SWIPE_UP();
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n3/4\nCheck updates\nOn\nPairing mode\nWi-Fi setup\nPaired phones\n>\n"));
+    TAP_ROW(0); /* Check updates: a config key like the others */
     TEST_ASSERT_EQUAL_UINT32((uint32_t)PROTO_CFG_UPDATE_AUTO_CHECK << 8 | 0u, last_arg);
     SWIPE_UP();
-    SWIPE_UP();
-    TAP_ROW(0); /* Software update */
+    TAP_ROW(1); /* Software update */
     TEST_ASSERT_NOT_NULL(strstr(text(), "Software update\nNot checked\nCheck now\n"));
     TEST_ASSERT_NOT_NULL(strstr(text(), "Check now"));
     TAP_ROW(1);
