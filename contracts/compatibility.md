@@ -2,6 +2,8 @@
 
 | Firmware (variant) | Firmware version | Contract | App versions known to work | Verified on |
 |---|---|---|---|---|
+| paper | 0.3.0 | 0.18.0 | (no companion-app release tested yet) | host tests; on a Paper board: the Digital face and the settings list (flashed over USB); the clock faces over BLE, quiet hours and the Pebble-style idle drain are in the hw-checklist (85, 86, 87) |
+| lcd | 0.3.0 | 0.18.0 | (no companion-app release tested yet) | host tests; the Digital face and the settings list on the LCD board (flashed over USB); clock faces over BLE not run |
 | paper | 0.2.0 | 0.14.0 | (no companion-app release tested yet) | host tests; on a Paper board: updated 0.1.1 -> 0.2.0 over Wi-Fi from the published release, resume, cancel, signature refusal (checklist 84); BLE updates not run (checklist 83) |
 | lcd | 0.2.0 | 0.14.0 | (no companion-app release tested yet) | host tests; Wi-Fi and BLE updates not run on the LCD board |
 | paper, lcd | 0.1.0, 0.1.1 | 0.13.0 | (no companion-app release tested yet) | no firmware update path: update over USB (the flashing page) |
