@@ -62,26 +62,33 @@ def _mask(big: Image.Image, w: int, h: int) -> Image.Image:
 
 
 def segment_digit(w: int, h: int, t: int, segs: str) -> Image.Image:
-    """One seven-segment digit: bars `t` thick with pointed ends and a small gap between neighbours."""
+    """One seven-segment digit as on a real display: six-sided bars `t` thick, each pointed at both ends, and between
+    two neighbours a clear channel (`gap` pixels wide, measured across) where the pointed ends meet at 45 degrees.
+
+    Every bar's tips lie on its centre line; the centre lines run through the middle of the outer bars, so the
+    corner of the digit is where two centre lines cross, and each tip stops `d` short of that crossing."""
     W, H, T = w * SS, h * SS, t * SS
     big = Image.new("L", (W, H), 0)
     d = ImageDraw.Draw(big)
-    half, gap = T // 2, max(SS, T // 6)
+    half = T / 2
+    gap = max(1.5, t / 4) * SS
+    tip = gap / 2 ** 0.5  # how far a tip stops from the crossing of the two centre lines
+    left, right, top, bot = half, W - half, half, H - half
+    mid = H / 2
 
-    def bar_h(cy: int) -> None:
-        x1, x2 = half + gap, W - 1 - half - gap
-        d.polygon([(x1 - half, cy), (x1, cy - half), (x2, cy - half), (x2 + half, cy), (x2, cy + half), (x1, cy + half)], fill=255)
+    def bar_h(cy: float) -> None:
+        x1, x2 = left + tip, right - tip
+        d.polygon([(x1, cy), (x1 + half, cy - half), (x2 - half, cy - half), (x2, cy), (x2 - half, cy + half), (x1 + half, cy + half)], fill=255)
 
-    def bar_v(cx: int, y1: int, y2: int) -> None:
-        d.polygon([(cx, y1 - half), (cx + half, y1), (cx + half, y2), (cx, y2 + half), (cx - half, y2), (cx - half, y1)], fill=255)
+    def bar_v(cx: float, y1: float, y2: float) -> None:
+        d.polygon([(cx, y1), (cx + half, y1 + half), (cx + half, y2 - half), (cx, y2), (cx - half, y2 - half), (cx - half, y1 + half)], fill=255)
 
-    top, mid, bot, left, right = half, H // 2, H - 1 - half, half, W - 1 - half
     for name, cy in (("a", top), ("g", mid), ("d", bot)):
         if name in segs:
             bar_h(cy)
     for name, cx, y1, y2 in (("f", left, top, mid), ("b", right, top, mid), ("e", left, mid, bot), ("c", right, mid, bot)):
         if name in segs:
-            bar_v(cx, y1 + half + gap, y2 - half - gap)
+            bar_v(cx, y1 + tip, y2 - tip)
     return _mask(big, w, h)
 
 
@@ -102,6 +109,19 @@ def make_segments(folder: Path, w: int, h: int, t: int, colon_w: int = 0) -> Non
         segment_digit(w, h, t, segs).save(folder / f"{ch}.png", optimize=True)
     if colon_w:
         segment_colon(colon_w, h, t).save(folder / "colon.png", optimize=True)
+
+
+def ghost(folder: Path, spacing: int) -> Image.Image:
+    """The unlit segments of a four-digit time: an 8 in every digit cell and the colon, one image, laid out as the `number`
+    element lays out the time (`spacing` pixels between cells)."""
+    eight, colon = Image.open(folder / "8.png"), Image.open(folder / "colon.png")
+    cells = [eight, eight, colon, eight, eight]
+    im = Image.new("RGBA", (sum(c.width for c in cells) + spacing * 4, eight.height), (0, 0, 0, 0))
+    x = 0
+    for c in cells:
+        im.alpha_composite(c, (x, 0))
+        x += c.width + spacing
+    return im
 
 
 def thermometer(w: int, h: int) -> Image.Image:
@@ -145,6 +165,7 @@ if __name__ == "__main__":
     make_segments(FACES / "digital/digits-lcd", 48, 88, 10, 16)
     make_segments(FACES / "digital/small-lcd", 16, 30, 4)
     (FACES / "digital/icons").mkdir(exist_ok=True)
+    ghost(FACES / "digital/digits-lcd", 4).save(FACES / "digital/icons/ghost-lcd.png", optimize=True)
     thermometer(12, 24).save(FACES / "digital/icons/thermometer.png", optimize=True)
     drop(16, 22).save(FACES / "digital/icons/drop.png", optimize=True)
     make(FACES / "big/digits-paper", NOTO_BOLD, 80, colon=False)

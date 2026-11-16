@@ -159,7 +159,7 @@ def scene_face_minimal() -> Frames:
 
 def scene_face_digital() -> Frames:
     """The built-in face Digital (a digital watch: two seven-segment digit sets inside a display window): light, then
-    the dark display 12-hour in Vietnamese, then without the room's row and with a full battery on the charger."""
+    the dark display 12-hour in Vietnamese, then without the room's row and with a full battery on the charger (and again with the Wi-Fi off)."""
     b = face_board()
     select_face(b, "epager.digital")
     out: Frames = [("face_digital", b.panel())]
@@ -170,6 +170,9 @@ def scene_face_digital() -> Frames:
     b.set_battery(100, external_power=1)
     select_face(b, "epager.digital", [1, 0])
     out.append(("face_digital_no_info_full", b.panel()))
+    b.set_wifi_state("idle")  # no fan: the bolt and the Bluetooth rune close up against the level
+    settle(b)
+    out.append(("face_digital_charging_no_wifi", b.panel()))
     return out
 
 
