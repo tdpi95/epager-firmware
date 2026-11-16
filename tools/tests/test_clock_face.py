@@ -183,7 +183,7 @@ def test_cli_build_and_check(tmp_path: Path) -> None:
     assert r.returncode == 0, r.stderr
     r = subprocess.run([sys.executable, "-m", "clock_face", "check", str(out), "--board", "paper", "--id", "epager.big"],
                        capture_output=True, text=True, cwd=REPO / "tools", env=env)
-    assert r.returncode == 0 and "epager.big 2.0.0" in r.stdout
+    assert r.returncode == 0 and "epager.big 2.0.1" in r.stdout
     r = subprocess.run([sys.executable, "-m", "clock_face", "check", str(out), "--board", "lcd"], capture_output=True,
                        text=True, cwd=REPO / "tools", env=env)
     assert r.returncode == 1 and "screen size" in r.stderr

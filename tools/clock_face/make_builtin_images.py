@@ -7,8 +7,7 @@ Black ink on a transparent background: mono1 masks, drawn in the element's colou
 
 Big: Noto Sans Bold (the project's font, .deps/fonts, fetched by tools/assets/font_gen.py), hours over minutes.
 Minimal: Ubuntu Light (the system font package `fonts-ubuntu`), thin digits and a colon in one row.
-Digital: seven-segment digits drawn here (no font), leaning 5 degrees like a digital watch; a large set for the
-time and a small one for the day.
+Digital: upright seven-segment digits drawn here (no font); a large set for the time and a small one for the day.
 Every digit of a set has the same cell, so a time never jumps sideways when a digit changes.
 """
 from __future__ import annotations
@@ -51,16 +50,11 @@ def make(folder: Path, font_file: Path, height: int, colon: bool) -> None:
 
 SEGMENTS = {"0": "abcdef", "1": "bc", "2": "abdeg", "3": "abcdg", "4": "bcfg", "5": "acdfg", "6": "acdefg", "7": "abc",
             "8": "abcdefg", "9": "abcdfg"}
-LEAN = 0.0875  # tan(5 degrees)
 
 
-def _lean(big: Image.Image, w: int, h: int) -> Image.Image:
-    """Shear the supersampled drawing to the right at the top, reduce it and cut at half ink: a mask image."""
-    extra = round(h * LEAN)
-    wide = Image.new("L", ((w + extra) * SS, h * SS), 0)
-    wide.paste(big, (0, 0))
-    wide = wide.transform(wide.size, Image.Transform.AFFINE, (1, LEAN, -extra * SS, 0, 1, 0), Image.Resampling.BILINEAR)
-    ink = wide.resize((w + extra, h), Image.Resampling.BOX).point(lambda v: 255 if v >= 128 else 0)
+def _mask(big: Image.Image, w: int, h: int) -> Image.Image:
+    """Reduce the supersampled drawing and cut it at half ink: a mask image."""
+    ink = big.resize((w, h), Image.Resampling.BOX).point(lambda v: 255 if v >= 128 else 0)
     im = Image.new("RGBA", ink.size, (0, 0, 0, 0))
     im.putalpha(ink)
     return im
@@ -87,7 +81,7 @@ def segment_digit(w: int, h: int, t: int, segs: str) -> Image.Image:
     for name, cx, y1, y2 in (("f", left, top, mid), ("b", right, top, mid), ("e", left, mid, bot), ("c", right, mid, bot)):
         if name in segs:
             bar_v(cx, y1 + half + gap, y2 - half - gap)
-    return _lean(big, w, h)
+    return _mask(big, w, h)
 
 
 def segment_colon(w: int, h: int, t: int) -> Image.Image:
@@ -96,7 +90,7 @@ def segment_colon(w: int, h: int, t: int) -> Image.Image:
     x = (w - t) * SS // 2
     for cy in (h * SS * 3 // 10, h * SS * 7 // 10):
         d.rectangle([x, cy - t * SS // 2, x + t * SS - 1, cy + t * SS // 2 - 1], fill=255)
-    return _lean(big, w, h)
+    return _mask(big, w, h)
 
 
 def make_segments(folder: Path, w: int, h: int, t: int, colon_w: int = 0) -> None:
@@ -110,10 +104,10 @@ def make_segments(folder: Path, w: int, h: int, t: int, colon_w: int = 0) -> Non
 
 
 if __name__ == "__main__":
-    make_segments(FACES / "digital/digits-paper", 32, 68, 8, 10)
-    make_segments(FACES / "digital/small-paper", 13, 26, 4)
-    make_segments(FACES / "digital/digits-lcd", 42, 88, 10, 12)
-    make_segments(FACES / "digital/small-lcd", 15, 30, 4)
+    make_segments(FACES / "digital/digits-paper", 36, 68, 8, 12)
+    make_segments(FACES / "digital/small-paper", 14, 26, 4)
+    make_segments(FACES / "digital/digits-lcd", 48, 88, 10, 16)
+    make_segments(FACES / "digital/small-lcd", 16, 30, 4)
     make(FACES / "big/digits-paper", NOTO_BOLD, 80, colon=False)
     make(FACES / "big/digits-lcd", NOTO_BOLD, 96, colon=False)
     make(FACES / "minimal/digits-paper", UBUNTU_LIGHT, 50, colon=True)

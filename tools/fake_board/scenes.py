@@ -138,6 +138,7 @@ def scene_face_big() -> Frames:
     set_config(b, {"ui.clock_24h": False, "ui.temp_unit": 1, "ui.language": 1})
     out.append(("face_big_12h_vi_f", b.panel()))
     set_config(b, {"ui.clock_24h": True, "ui.temp_unit": 0, "ui.language": 0})
+    b.set_battery(100, external_power=1)  # the widest battery text, with the bolt
     select_face(b, "epager.big", [1, 0, 2, 0])  # option 1 (weather) off, option 2 (date) off
     out.append(("face_big_options", b.panel()))
     return out
@@ -158,7 +159,7 @@ def scene_face_minimal() -> Frames:
 
 def scene_face_digital() -> Frames:
     """The built-in face Digital (a digital watch: two seven-segment digit sets inside a display window): light, then
-    the dark display 12-hour in Vietnamese, then without the weather."""
+    the dark display 12-hour in Vietnamese, then without the room's row and with a full battery on the charger."""
     b = face_board()
     select_face(b, "epager.digital")
     out: Frames = [("face_digital", b.panel())]
@@ -166,8 +167,9 @@ def scene_face_digital() -> Frames:
     select_face(b, "epager.digital", [2, 1])
     out.append(("face_digital_dark_12h_vi", b.panel()))
     set_config(b, {"ui.clock_24h": True, "ui.language": 0})
+    b.set_battery(100, external_power=1)
     select_face(b, "epager.digital", [1, 0])
-    out.append(("face_digital_no_weather", b.panel()))
+    out.append(("face_digital_no_info_full", b.panel()))
     return out
 
 

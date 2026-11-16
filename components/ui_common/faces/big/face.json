@@ -1,5 +1,5 @@
 {
-  "meta": {"id": "epager.big", "name": "Big", "name_vi": "Số lớn", "author": "ePager", "version": "2.0.0",
+  "meta": {"id": "epager.big", "name": "Big", "name_vi": "Số lớn", "author": "ePager", "version": "2.0.1",
            "min_contract": "0.15.0", "update_anchor": "top_left"},
   "options": [
     {"id": 1, "type": "toggle", "label": "Weather", "label_vi": "Thời tiết", "default": true},
@@ -18,8 +18,8 @@
         {"kind": "number", "x": 68, "y": 10, "w": 128, "align": "right", "set": "big", "source": "hour", "spacing": 2},
         {"kind": "number", "x": 68, "y": 110, "w": 128, "align": "right", "set": "big", "source": "minute", "spacing": 2},
         {"kind": "text", "x": 150, "y": 90, "w": 44, "h": 20, "font": "small_bold", "align": "right", "source": "ampm"},
-        {"kind": "icon", "x": 26, "y": 6, "w": 10, "h": 16, "icon": "charging"},
-        {"kind": "text", "x": 28, "y": 3, "w": 36, "h": 22, "font": "small", "align": "right", "source": "battery_pct"},
+        {"kind": "icon", "x": 6, "y": 6, "w": 12, "h": 16, "icon": "charging"},
+        {"kind": "text", "x": 18, "y": 3, "w": 46, "h": 22, "font": "small", "align": "right", "source": "battery_pct"},
         {"kind": "text", "x": 6, "y": 28, "w": 58, "h": 20, "font": "small_bold", "source": "weekday",
          "visible_if": [{"option": 2, "equals": 1}]},
         {"kind": "text", "x": 6, "y": 46, "w": 58, "h": 30, "font": "large_bold", "source": "day",
@@ -58,10 +58,10 @@
          "colour": "#d1d5db", "visible_if": [{"option": 1, "equals": 1}]},
         {"kind": "text", "x": 66, "y": 158, "w": 52, "h": 22, "font": "small", "source": "weather_low",
          "colour": "#6b7280", "visible_if": [{"option": 1, "equals": 1}]},
-        {"kind": "icon", "x": 44, "y": 212, "w": 16, "h": 16, "icon": "wifi", "colour": "#9ca3af"},
-        {"kind": "icon", "x": 64, "y": 212, "w": 16, "h": 16, "icon": "ble", "colour": "#9ca3af"},
-        {"kind": "icon", "x": 82, "y": 212, "w": 12, "h": 16, "icon": "charging", "colour": "#f59e0b"},
-        {"kind": "text", "x": 90, "y": 208, "w": 38, "h": 24, "font": "small", "align": "right", "source": "battery_pct",
+        {"kind": "icon", "x": 38, "y": 212, "w": 16, "h": 16, "icon": "wifi", "colour": "#9ca3af"},
+        {"kind": "icon", "x": 54, "y": 212, "w": 16, "h": 16, "icon": "ble", "colour": "#9ca3af"},
+        {"kind": "icon", "x": 68, "y": 212, "w": 12, "h": 16, "icon": "charging", "colour": "#f59e0b"},
+        {"kind": "text", "x": 80, "y": 208, "w": 48, "h": 24, "font": "small", "align": "right", "source": "battery_pct",
          "colour": "#9ca3af"}
       ]
     }

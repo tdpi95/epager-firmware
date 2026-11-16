@@ -13,7 +13,7 @@ from pathlib import Path
 from PIL import Image
 
 FACE = Path(__file__).resolve().parents[2] / "components/ui_common/faces/digital"
-WEATHER = {"option": 1, "equals": 1}
+INFO = {"option": 1, "equals": 1}  # the bottom row: the room on the Paper, the weather on the LCD (it has no sensor)
 
 
 def styled(els: list[dict], e: dict, inks: tuple[str, str], *conds: dict) -> None:
@@ -34,16 +34,16 @@ def paper() -> dict:
     styled(els, {"kind": "line", "x": 12, "y": 44, "w": 176, "h": 0, "thickness": 2}, ink)
     styled(els, {"kind": "number", "x": 8, "y": 53, "w": 184, "align": "center", "set": "seg", "source": "time", "spacing": 2}, ink)
     styled(els, {"kind": "line", "x": 12, "y": 130, "w": 176, "h": 0, "thickness": 2}, ink)
-    styled(els, {"kind": "icon", "x": 12, "y": 135, "w": 32, "h": 32, "icon": "weather"}, ink, WEATHER)
-    styled(els, {"kind": "text", "x": 48, "y": 138, "w": 64, "h": 30, "font": "large_bold", "source": "weather_temp"}, ink, WEATHER)
-    styled(els, {"kind": "text", "x": 114, "y": 142, "w": 72, "h": 20, "font": "small_bold", "align": "right", "source": "room_temp"}, ink)
+    styled(els, {"kind": "text", "x": 14, "y": 137, "w": 100, "h": 30, "font": "large_bold", "source": "room_temp"}, ink, INFO)
+    styled(els, {"kind": "text", "x": 116, "y": 137, "w": 70, "h": 30, "font": "large_bold", "align": "right",
+                 "source": "room_humidity"}, ink, INFO)
     els += [
         {"kind": "text", "x": 40, "y": 177, "w": 44, "h": 22, "font": "small_bold", "literal": "UPD",
          "visible_if": [{"above_zero": "update_available"}]},
-        {"kind": "icon", "x": 104, "y": 180, "w": 16, "h": 16, "icon": "wifi"},
-        {"kind": "icon", "x": 124, "y": 180, "w": 16, "h": 16, "icon": "ble"},
-        {"kind": "icon", "x": 144, "y": 180, "w": 16, "h": 16, "icon": "charging"},
-        {"kind": "text", "x": 160, "y": 177, "w": 34, "h": 22, "font": "small", "align": "right", "source": "battery_pct"},
+        {"kind": "icon", "x": 94, "y": 180, "w": 16, "h": 16, "icon": "wifi"},
+        {"kind": "icon", "x": 112, "y": 180, "w": 16, "h": 16, "icon": "ble"},
+        {"kind": "icon", "x": 130, "y": 180, "w": 14, "h": 16, "icon": "charging"},
+        {"kind": "text", "x": 146, "y": 177, "w": 48, "h": 22, "font": "small", "align": "right", "source": "battery_pct"},
     ]
     return {"images": [{"digit_set": "seg", "format": "mono1", "dir": "digits-paper"},
                        {"digit_set": "small", "format": "mono1", "dir": "small-paper"}], "elements": els}
@@ -70,16 +70,16 @@ def lcd() -> dict:
     styled(els, {"kind": "number", "x": left, "y": y, "w": x - spacing - left, "align": "right", "set": "seg", "source": "time",
                  "spacing": spacing}, ink)
     styled(els, {"kind": "rect", "x": 20, "y": 164, "w": 256, "h": 2, "fill": True}, ink)
-    styled(els, {"kind": "text", "x": 24, "y": 171, "w": 80, "h": 28, "font": "large_bold", "source": "weather_temp"}, ink, WEATHER)
+    styled(els, {"kind": "text", "x": 24, "y": 171, "w": 80, "h": 28, "font": "large_bold", "source": "weather_temp"}, ink, INFO)
     styled(els, {"kind": "text", "x": 108, "y": 174, "w": 164, "h": 22, "font": "small", "align": "right", "source": "weather_place"},
-           ink, WEATHER)
+           ink, INFO)
     els += [
         {"kind": "text", "x": 44, "y": 207, "w": 50, "h": 26, "font": "small_bold", "literal": "UPD", "colour": "#f59e0b",
          "visible_if": [{"above_zero": "update_available"}]},
         {"kind": "icon", "x": 180, "y": 212, "w": 16, "h": 16, "icon": "wifi", "colour": grey},
-        {"kind": "icon", "x": 204, "y": 212, "w": 16, "h": 16, "icon": "ble", "colour": grey},
-        {"kind": "icon", "x": 228, "y": 212, "w": 16, "h": 16, "icon": "charging", "colour": "#f59e0b"},
-        {"kind": "text", "x": 244, "y": 208, "w": 44, "h": 24, "font": "small", "align": "right", "source": "battery_pct", "colour": grey},
+        {"kind": "icon", "x": 202, "y": 212, "w": 16, "h": 16, "icon": "ble", "colour": grey},
+        {"kind": "icon", "x": 224, "y": 212, "w": 14, "h": 16, "icon": "charging", "colour": "#f59e0b"},
+        {"kind": "text", "x": 240, "y": 208, "w": 48, "h": 24, "font": "small", "align": "right", "source": "battery_pct", "colour": grey},
     ]
     return {"images": [{"digit_set": "seg", "format": "mono1", "dir": "digits-lcd"},
                        {"digit_set": "small", "format": "mono1", "dir": "small-lcd"},
@@ -89,10 +89,10 @@ def lcd() -> dict:
 
 def render() -> str:
     face = {
-        "meta": {"id": "epager.digital", "name": "Digital", "name_vi": "Điện tử", "author": "ePager", "version": "1.0.0",
+        "meta": {"id": "epager.digital", "name": "Digital", "name_vi": "Điện tử", "author": "ePager", "version": "1.1.0",
                  "min_contract": "0.15.0", "update_anchor": "top_right"},
         "options": [
-            {"id": 1, "type": "toggle", "label": "Weather", "label_vi": "Thời tiết", "default": True},
+            {"id": 1, "type": "toggle", "label": "Info row", "label_vi": "Dòng thông tin", "default": True},
             {"id": 2, "type": "choice", "label": "Display", "label_vi": "Màn hình", "default": 0,
              "choices": [{"label": "Light", "label_vi": "Sáng"}, {"label": "Dark", "label_vi": "Tối"}]},
         ],

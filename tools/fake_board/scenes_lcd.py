@@ -144,6 +144,7 @@ def scene_face_big() -> Frames:
     select_face(b, "epager.big")
     assert b.clock_face_shown() == "epager.big"
     out: Frames = [("face_big", rgb(b))]
+    b.set_battery(100, external_power=1)  # the widest battery text, with the bolt
     select_face(b, "epager.big", [3, 1, 1, 0, 2, 0])  # digits amber, weather off, date off
     out.append(("face_big_amber_bare", rgb(b)))
     loopback.config_set(b, {"ui.clock_24h": False, "ui.temp_unit": 1, "ui.language": 1})
@@ -170,7 +171,8 @@ def scene_face_night() -> Frames:
 
 def scene_face_digital() -> Frames:
     """The built-in face Digital (a digital watch: seven-segment digits over their unlit segments on a display
-    window): light, then the dark display 12-hour in Vietnamese, then without the weather."""
+    window): light, then the dark display 12-hour in Vietnamese, then without the weather and with a full battery on
+    the charger."""
     b = face_board()
     select_face(b, "epager.digital")
     out: Frames = [("face_digital", rgb(b))]
@@ -178,8 +180,9 @@ def scene_face_digital() -> Frames:
     select_face(b, "epager.digital", [2, 1])
     out.append(("face_digital_dark_12h_vi", rgb(b)))
     loopback.config_set(b, {"ui.clock_24h": True, "ui.language": 0})
+    b.set_battery(100, external_power=1)
     select_face(b, "epager.digital", [1, 0])
-    out.append(("face_digital_no_weather", rgb(b)))
+    out.append(("face_digital_no_info_full", rgb(b)))
     return out
 
 
