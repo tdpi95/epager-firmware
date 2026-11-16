@@ -90,7 +90,8 @@ def test_reference_arithmetic_matches_c_division() -> None:
 
 # --------------------------------------------------------------------------- the compiler and the built-in faces
 
-@pytest.mark.parametrize("face,board", [("big", "paper"), ("big", "lcd"), ("minimal", "paper"), ("night", "lcd")])
+@pytest.mark.parametrize("face,board", [("big", "paper"), ("big", "lcd"), ("digital", "paper"), ("digital", "lcd"), ("minimal", "paper"),
+                                        ("night", "lcd")])
 def test_builtin_faces_build_and_fit(face: str, board: str) -> None:
     data = B.build_file(FACES / face, board)
     lim = CF.LIMITS[board]
@@ -106,6 +107,15 @@ def test_big_and_minimal_use_image_digit_sets_and_night_does_not() -> None:
     thin = CF.parse_face(B.build_file(FACES / "minimal", "paper"), CF.PAPER, "epager.minimal")
     assert len(thin.sets[1]) == 11, "the digits and a colon"
     assert len(CF.parse_face(B.build_file(FACES / "night", "lcd"), CF.LCD, "epager.night").images) == 0
+
+
+def test_digital_face_source_is_the_script_output() -> None:
+    sys.path.insert(0, str(REPO / "tools" / "clock_face"))
+    import make_digital_face as D
+
+    assert (FACES / "digital" / "face.json").read_text() == D.render(), "run tools/clock_face/make_digital_face.py"
+    lcd = CF.parse_face(B.build_file(FACES / "digital", "lcd"), CF.LCD, "epager.digital")
+    assert len(lcd.sets) == 2 and len(lcd.sets[1]) == 11 and len(lcd.sets[2]) == 10, "the time's digits and colon, the day's digits"
 
 
 def test_generated_builtin_source_is_up_to_date() -> None:

@@ -1,4 +1,5 @@
-"""Draw the digit images of the built-in faces "Big" and "Minimal" (components/ui_common/faces/<face>/digits-*/).
+"""Draw the digit images of the built-in faces "Big", "Minimal" and "Digital"
+(components/ui_common/faces/<face>/digits-*/).
 
 The PNGs are checked in (the face source is what people copy); this script only says how they were made:
     python tools/clock_face/make_builtin_images.py
@@ -6,6 +7,8 @@ Black ink on a transparent background: mono1 masks, drawn in the element's colou
 
 Big: Noto Sans Bold (the project's font, .deps/fonts, fetched by tools/assets/font_gen.py), hours over minutes.
 Minimal: Ubuntu Light (the system font package `fonts-ubuntu`), thin digits and a colon in one row.
+Digital: seven-segment digits drawn here (no font), leaning 5 degrees like a digital watch; a large set for the
+time and a small one for the day.
 Every digit of a set has the same cell, so a time never jumps sideways when a digit changes.
 """
 from __future__ import annotations
@@ -46,7 +49,71 @@ def make(folder: Path, font_file: Path, height: int, colon: bool) -> None:
         im.save(folder / ("colon.png" if ch == ":" else f"{ch}.png"), optimize=True)
 
 
+SEGMENTS = {"0": "abcdef", "1": "bc", "2": "abdeg", "3": "abcdg", "4": "bcfg", "5": "acdfg", "6": "acdefg", "7": "abc",
+            "8": "abcdefg", "9": "abcdfg"}
+LEAN = 0.0875  # tan(5 degrees)
+
+
+def _lean(big: Image.Image, w: int, h: int) -> Image.Image:
+    """Shear the supersampled drawing to the right at the top, reduce it and cut at half ink: a mask image."""
+    extra = round(h * LEAN)
+    wide = Image.new("L", ((w + extra) * SS, h * SS), 0)
+    wide.paste(big, (0, 0))
+    wide = wide.transform(wide.size, Image.Transform.AFFINE, (1, LEAN, -extra * SS, 0, 1, 0), Image.Resampling.BILINEAR)
+    ink = wide.resize((w + extra, h), Image.Resampling.BOX).point(lambda v: 255 if v >= 128 else 0)
+    im = Image.new("RGBA", ink.size, (0, 0, 0, 0))
+    im.putalpha(ink)
+    return im
+
+
+def segment_digit(w: int, h: int, t: int, segs: str) -> Image.Image:
+    """One seven-segment digit: bars `t` thick with pointed ends and a small gap between neighbours."""
+    W, H, T = w * SS, h * SS, t * SS
+    big = Image.new("L", (W, H), 0)
+    d = ImageDraw.Draw(big)
+    half, gap = T // 2, max(SS, T // 6)
+
+    def bar_h(cy: int) -> None:
+        x1, x2 = half + gap, W - 1 - half - gap
+        d.polygon([(x1 - half, cy), (x1, cy - half), (x2, cy - half), (x2 + half, cy), (x2, cy + half), (x1, cy + half)], fill=255)
+
+    def bar_v(cx: int, y1: int, y2: int) -> None:
+        d.polygon([(cx, y1 - half), (cx + half, y1), (cx + half, y2), (cx, y2 + half), (cx - half, y2), (cx - half, y1)], fill=255)
+
+    top, mid, bot, left, right = half, H // 2, H - 1 - half, half, W - 1 - half
+    for name, cy in (("a", top), ("g", mid), ("d", bot)):
+        if name in segs:
+            bar_h(cy)
+    for name, cx, y1, y2 in (("f", left, top, mid), ("b", right, top, mid), ("e", left, mid, bot), ("c", right, mid, bot)):
+        if name in segs:
+            bar_v(cx, y1 + half + gap, y2 - half - gap)
+    return _lean(big, w, h)
+
+
+def segment_colon(w: int, h: int, t: int) -> Image.Image:
+    big = Image.new("L", (w * SS, h * SS), 0)
+    d = ImageDraw.Draw(big)
+    x = (w - t) * SS // 2
+    for cy in (h * SS * 3 // 10, h * SS * 7 // 10):
+        d.rectangle([x, cy - t * SS // 2, x + t * SS - 1, cy + t * SS // 2 - 1], fill=255)
+    return _lean(big, w, h)
+
+
+def make_segments(folder: Path, w: int, h: int, t: int, colon_w: int = 0) -> None:
+    folder.mkdir(parents=True, exist_ok=True)
+    for old in folder.glob("*.png"):
+        old.unlink()
+    for ch, segs in SEGMENTS.items():
+        segment_digit(w, h, t, segs).save(folder / f"{ch}.png", optimize=True)
+    if colon_w:
+        segment_colon(colon_w, h, t).save(folder / "colon.png", optimize=True)
+
+
 if __name__ == "__main__":
+    make_segments(FACES / "digital/digits-paper", 32, 68, 8, 10)
+    make_segments(FACES / "digital/small-paper", 13, 26, 4)
+    make_segments(FACES / "digital/digits-lcd", 42, 88, 10, 12)
+    make_segments(FACES / "digital/small-lcd", 15, 30, 4)
     make(FACES / "big/digits-paper", NOTO_BOLD, 80, colon=False)
     make(FACES / "big/digits-lcd", NOTO_BOLD, 96, colon=False)
     make(FACES / "minimal/digits-paper", UBUNTU_LIGHT, 50, colon=True)

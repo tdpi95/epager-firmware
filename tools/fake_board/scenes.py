@@ -156,6 +156,21 @@ def scene_face_minimal() -> Frames:
     return out
 
 
+def scene_face_digital() -> Frames:
+    """The built-in face Digital (a digital watch: two seven-segment digit sets inside a display window): light, then
+    the dark display 12-hour in Vietnamese, then without the weather."""
+    b = face_board()
+    select_face(b, "epager.digital")
+    out: Frames = [("face_digital", b.panel())]
+    set_config(b, {"ui.clock_24h": False, "ui.language": 1})
+    select_face(b, "epager.digital", [2, 1])
+    out.append(("face_digital_dark_12h_vi", b.panel()))
+    set_config(b, {"ui.clock_24h": True, "ui.language": 0})
+    select_face(b, "epager.digital", [1, 0])
+    out.append(("face_digital_no_weather", b.panel()))
+    return out
+
+
 def scene_face_firmware_parts() -> Frames:
     """What the firmware adds to a face: the notification badge on a built-in face, the update mark on any face that
     does not draw update_available itself; an installed face never gets the badge, with or without the count field."""
@@ -464,6 +479,7 @@ SCENES: dict[str, Callable[[], Frames]] = {
     "weather": scene_weather,
     "face_big": scene_face_big,
     "face_minimal": scene_face_minimal,
+    "face_digital": scene_face_digital,
     "face_firmware_parts": scene_face_firmware_parts,
     "face_fallback": scene_face_fallback,
     "settings_faces": scene_settings_faces,

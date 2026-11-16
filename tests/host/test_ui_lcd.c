@@ -747,7 +747,7 @@ static void test_settings_clock_face_pages(void)
     SWIPE_UP();
     TEST_ASSERT_NOT_NULL(strstr(text(), "Settings\n3/3\nClock face\n>\nAbout\n>\n"));
     TAP_ROW(0);
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Clock face\nClassic\nIn use\nBig\nNight\n"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Clock face\nClassic\nIn use\nBig\nDigital\nNight\n"));
     const uint32_t n = n_actions;
     TAP_ROW(1); /* a face that is not in use is used at once: no page */
     TEST_ASSERT_EQUAL_UINT32(n + 1, n_actions);
@@ -1198,6 +1198,25 @@ static void test_face_builtin_faces_draw_and_fall_back(void)
     TEST_ASSERT_EQUAL_UINT32(0, state().violations);
 }
 
+static void test_face_digital_draws_its_own_update_mark(void)
+{
+    ui_set_time(T_14_27_05);
+    face_config(face_cfg(), "epager.digital", NULL, 0);
+    run(300);
+    TEST_ASSERT_EQUAL_STRING("epager.digital", ui_clock_face_shown());
+    TEST_ASSERT_EQUAL_UINT32(0, ui_clock_face_errors());
+    TEST_ASSERT_NOT_NULL(strstr(text(), "14:27\n")); /* the seven-segment number */
+    TEST_ASSERT_NOT_NULL(strstr(text(), "11\n"));    /* the day in the small digit set */
+    TEST_ASSERT_NULL(strstr(text(), "UPD"));
+    ui_update_t u = {.state = UI_UPD_AVAILABLE, .mark = true};
+    snprintf(u.version, sizeof(u.version), "0.3.0");
+    ui_set_update(&u);
+    run(300);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "UPD\n")); /* the face's indicator ... */
+    TEST_ASSERT_NULL(strstr(text(), "!\n"));       /* ... instead of the firmware's mark */
+    TEST_ASSERT_EQUAL_UINT32(0, state().violations);
+}
+
 static void test_face_colour_option_and_another_screen(void)
 {
     ui_set_time(T_14_27_05);
@@ -1312,6 +1331,7 @@ int main(void)
     RUN_TEST(test_wifi_setup_screen);
     RUN_TEST(test_lvgl_pool_headroom);
     RUN_TEST(test_face_builtin_faces_draw_and_fall_back);
+    RUN_TEST(test_face_digital_draws_its_own_update_mark);
     RUN_TEST(test_face_colour_option_and_another_screen);
     RUN_TEST(test_face_badge_and_update_mark);
     RUN_TEST(test_face_other_screens_cover_it);

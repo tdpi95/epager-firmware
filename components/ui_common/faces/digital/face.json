@@ -1,0 +1,141 @@
+{
+  "meta": {
+    "id": "epager.digital",
+    "name": "Digital",
+    "name_vi": "Điện tử",
+    "author": "ePager",
+    "version": "1.0.0",
+    "min_contract": "0.15.0",
+    "update_anchor": "top_right"
+  },
+  "options": [
+    {
+      "id": 1,
+      "type": "toggle",
+      "label": "Weather",
+      "label_vi": "Thời tiết",
+      "default": true
+    },
+    {
+      "id": 2,
+      "type": "choice",
+      "label": "Display",
+      "label_vi": "Màn hình",
+      "default": 0,
+      "choices": [
+        {
+          "label": "Light",
+          "label_vi": "Sáng"
+        },
+        {
+          "label": "Dark",
+          "label_vi": "Tối"
+        }
+      ]
+    }
+  ],
+  "boards": {
+    "paper": {
+      "images": [
+        {
+          "digit_set": "seg",
+          "format": "mono1",
+          "dir": "digits-paper"
+        },
+        {
+          "digit_set": "small",
+          "format": "mono1",
+          "dir": "small-paper"
+        }
+      ],
+      "elements": [
+        {"kind": "rect", "x": 0, "y": 0, "w": 200, "h": 200, "fill": true, "colour": "white"},
+        {"kind": "rect", "x": 4, "y": 4, "w": 192, "h": 168, "radius": 8, "colour": "black", "thickness": 3, "visible_if": [{"option": 2, "equals": 0}]},
+        {"kind": "rect", "x": 4, "y": 4, "w": 192, "h": 168, "radius": 8, "colour": "black", "fill": true, "visible_if": [{"option": 2, "equals": 1}]},
+        {"kind": "text", "x": 14, "y": 12, "w": 52, "h": 20, "font": "small_bold", "source": "weekday", "colour": "black", "visible_if": [{"option": 2, "equals": 0}]},
+        {"kind": "text", "x": 14, "y": 12, "w": 52, "h": 20, "font": "small_bold", "source": "weekday", "colour": "white", "visible_if": [{"option": 2, "equals": 1}]},
+        {"kind": "text", "x": 70, "y": 12, "w": 36, "h": 20, "font": "small_bold", "source": "ampm", "colour": "black", "visible_if": [{"option": 2, "equals": 0}]},
+        {"kind": "text", "x": 70, "y": 12, "w": 36, "h": 20, "font": "small_bold", "source": "ampm", "colour": "white", "visible_if": [{"option": 2, "equals": 1}]},
+        {"kind": "number", "x": 120, "y": 11, "w": 66, "align": "right", "set": "small", "source": "day", "spacing": 2, "colour": "black", "visible_if": [{"option": 2, "equals": 0}]},
+        {"kind": "number", "x": 120, "y": 11, "w": 66, "align": "right", "set": "small", "source": "day", "spacing": 2, "colour": "white", "visible_if": [{"option": 2, "equals": 1}]},
+        {"kind": "line", "x": 12, "y": 44, "w": 176, "h": 0, "thickness": 2, "colour": "black", "visible_if": [{"option": 2, "equals": 0}]},
+        {"kind": "line", "x": 12, "y": 44, "w": 176, "h": 0, "thickness": 2, "colour": "white", "visible_if": [{"option": 2, "equals": 1}]},
+        {"kind": "number", "x": 8, "y": 53, "w": 184, "align": "center", "set": "seg", "source": "time", "spacing": 2, "colour": "black", "visible_if": [{"option": 2, "equals": 0}]},
+        {"kind": "number", "x": 8, "y": 53, "w": 184, "align": "center", "set": "seg", "source": "time", "spacing": 2, "colour": "white", "visible_if": [{"option": 2, "equals": 1}]},
+        {"kind": "line", "x": 12, "y": 130, "w": 176, "h": 0, "thickness": 2, "colour": "black", "visible_if": [{"option": 2, "equals": 0}]},
+        {"kind": "line", "x": 12, "y": 130, "w": 176, "h": 0, "thickness": 2, "colour": "white", "visible_if": [{"option": 2, "equals": 1}]},
+        {"kind": "icon", "x": 12, "y": 135, "w": 32, "h": 32, "icon": "weather", "colour": "black", "visible_if": [{"option": 2, "equals": 0}, {"option": 1, "equals": 1}]},
+        {"kind": "icon", "x": 12, "y": 135, "w": 32, "h": 32, "icon": "weather", "colour": "white", "visible_if": [{"option": 2, "equals": 1}, {"option": 1, "equals": 1}]},
+        {"kind": "text", "x": 48, "y": 138, "w": 64, "h": 30, "font": "large_bold", "source": "weather_temp", "colour": "black", "visible_if": [{"option": 2, "equals": 0}, {"option": 1, "equals": 1}]},
+        {"kind": "text", "x": 48, "y": 138, "w": 64, "h": 30, "font": "large_bold", "source": "weather_temp", "colour": "white", "visible_if": [{"option": 2, "equals": 1}, {"option": 1, "equals": 1}]},
+        {"kind": "text", "x": 114, "y": 142, "w": 72, "h": 20, "font": "small_bold", "align": "right", "source": "room_temp", "colour": "black", "visible_if": [{"option": 2, "equals": 0}]},
+        {"kind": "text", "x": 114, "y": 142, "w": 72, "h": 20, "font": "small_bold", "align": "right", "source": "room_temp", "colour": "white", "visible_if": [{"option": 2, "equals": 1}]},
+        {"kind": "text", "x": 40, "y": 177, "w": 44, "h": 22, "font": "small_bold", "literal": "UPD", "visible_if": [{"above_zero": "update_available"}]},
+        {"kind": "icon", "x": 104, "y": 180, "w": 16, "h": 16, "icon": "wifi"},
+        {"kind": "icon", "x": 124, "y": 180, "w": 16, "h": 16, "icon": "ble"},
+        {"kind": "icon", "x": 144, "y": 180, "w": 16, "h": 16, "icon": "charging"},
+        {"kind": "text", "x": 160, "y": 177, "w": 34, "h": 22, "font": "small", "align": "right", "source": "battery_pct"}
+      ]
+    },
+    "lcd": {
+      "images": [
+        {
+          "digit_set": "seg",
+          "format": "mono1",
+          "dir": "digits-lcd"
+        },
+        {
+          "digit_set": "small",
+          "format": "mono1",
+          "dir": "small-lcd"
+        },
+        {
+          "name": "eight",
+          "format": "mono1",
+          "file": "digits-lcd/8.png"
+        },
+        {
+          "name": "colon",
+          "format": "mono1",
+          "file": "digits-lcd/colon.png"
+        }
+      ],
+      "elements": [
+        {"kind": "rect", "x": 0, "y": 0, "w": 296, "h": 240, "fill": true, "colour": "#111827"},
+        {"kind": "rect", "x": 8, "y": 8, "w": 280, "h": 194, "radius": 12, "fill": true, "colour": "#b7c2a8", "visible_if": [{"option": 2, "equals": 0}]},
+        {"kind": "rect", "x": 8, "y": 8, "w": 280, "h": 194, "radius": 12, "fill": true, "colour": "#0d130e", "visible_if": [{"option": 2, "equals": 1}]},
+        {"kind": "image", "x": 30, "y": 66, "image": "eight", "colour": "#a7b399", "visible_if": [{"option": 2, "equals": 0}]},
+        {"kind": "image", "x": 30, "y": 66, "image": "eight", "colour": "#161f18", "visible_if": [{"option": 2, "equals": 1}]},
+        {"kind": "image", "x": 84, "y": 66, "image": "eight", "colour": "#a7b399", "visible_if": [{"option": 2, "equals": 0}]},
+        {"kind": "image", "x": 84, "y": 66, "image": "eight", "colour": "#161f18", "visible_if": [{"option": 2, "equals": 1}]},
+        {"kind": "image", "x": 138, "y": 66, "image": "colon", "colour": "#a7b399", "visible_if": [{"option": 2, "equals": 0}]},
+        {"kind": "image", "x": 138, "y": 66, "image": "colon", "colour": "#161f18", "visible_if": [{"option": 2, "equals": 1}]},
+        {"kind": "image", "x": 162, "y": 66, "image": "eight", "colour": "#a7b399", "visible_if": [{"option": 2, "equals": 0}]},
+        {"kind": "image", "x": 162, "y": 66, "image": "eight", "colour": "#161f18", "visible_if": [{"option": 2, "equals": 1}]},
+        {"kind": "image", "x": 216, "y": 66, "image": "eight", "colour": "#a7b399", "visible_if": [{"option": 2, "equals": 0}]},
+        {"kind": "image", "x": 216, "y": 66, "image": "eight", "colour": "#161f18", "visible_if": [{"option": 2, "equals": 1}]},
+        {"kind": "text", "x": 24, "y": 18, "w": 130, "h": 26, "font": "small_bold", "source": "weekday", "format": "long", "colour": "#1a231b", "visible_if": [{"option": 2, "equals": 0}]},
+        {"kind": "text", "x": 24, "y": 18, "w": 130, "h": 26, "font": "small_bold", "source": "weekday", "format": "long", "colour": "#c5d1b8", "visible_if": [{"option": 2, "equals": 1}]},
+        {"kind": "text", "x": 160, "y": 18, "w": 40, "h": 26, "font": "small_bold", "source": "ampm", "colour": "#1a231b", "visible_if": [{"option": 2, "equals": 0}]},
+        {"kind": "text", "x": 160, "y": 18, "w": 40, "h": 26, "font": "small_bold", "source": "ampm", "colour": "#c5d1b8", "visible_if": [{"option": 2, "equals": 1}]},
+        {"kind": "number", "x": 200, "y": 17, "w": 72, "align": "right", "set": "small", "source": "day", "spacing": 3, "colour": "#1a231b", "visible_if": [{"option": 2, "equals": 0}]},
+        {"kind": "number", "x": 200, "y": 17, "w": 72, "align": "right", "set": "small", "source": "day", "spacing": 3, "colour": "#c5d1b8", "visible_if": [{"option": 2, "equals": 1}]},
+        {"kind": "rect", "x": 20, "y": 54, "w": 256, "h": 2, "fill": true, "colour": "#1a231b", "visible_if": [{"option": 2, "equals": 0}]},
+        {"kind": "rect", "x": 20, "y": 54, "w": 256, "h": 2, "fill": true, "colour": "#c5d1b8", "visible_if": [{"option": 2, "equals": 1}]},
+        {"kind": "number", "x": 30, "y": 66, "w": 236, "align": "right", "set": "seg", "source": "time", "spacing": 4, "colour": "#1a231b", "visible_if": [{"option": 2, "equals": 0}]},
+        {"kind": "number", "x": 30, "y": 66, "w": 236, "align": "right", "set": "seg", "source": "time", "spacing": 4, "colour": "#c5d1b8", "visible_if": [{"option": 2, "equals": 1}]},
+        {"kind": "rect", "x": 20, "y": 164, "w": 256, "h": 2, "fill": true, "colour": "#1a231b", "visible_if": [{"option": 2, "equals": 0}]},
+        {"kind": "rect", "x": 20, "y": 164, "w": 256, "h": 2, "fill": true, "colour": "#c5d1b8", "visible_if": [{"option": 2, "equals": 1}]},
+        {"kind": "text", "x": 24, "y": 171, "w": 80, "h": 28, "font": "large_bold", "source": "weather_temp", "colour": "#1a231b", "visible_if": [{"option": 2, "equals": 0}, {"option": 1, "equals": 1}]},
+        {"kind": "text", "x": 24, "y": 171, "w": 80, "h": 28, "font": "large_bold", "source": "weather_temp", "colour": "#c5d1b8", "visible_if": [{"option": 2, "equals": 1}, {"option": 1, "equals": 1}]},
+        {"kind": "text", "x": 108, "y": 174, "w": 164, "h": 22, "font": "small", "align": "right", "source": "weather_place", "colour": "#1a231b", "visible_if": [{"option": 2, "equals": 0}, {"option": 1, "equals": 1}]},
+        {"kind": "text", "x": 108, "y": 174, "w": 164, "h": 22, "font": "small", "align": "right", "source": "weather_place", "colour": "#c5d1b8", "visible_if": [{"option": 2, "equals": 1}, {"option": 1, "equals": 1}]},
+        {"kind": "text", "x": 44, "y": 207, "w": 50, "h": 26, "font": "small_bold", "literal": "UPD", "colour": "#f59e0b", "visible_if": [{"above_zero": "update_available"}]},
+        {"kind": "icon", "x": 180, "y": 212, "w": 16, "h": 16, "icon": "wifi", "colour": "#9ca3af"},
+        {"kind": "icon", "x": 204, "y": 212, "w": 16, "h": 16, "icon": "ble", "colour": "#9ca3af"},
+        {"kind": "icon", "x": 228, "y": 212, "w": 16, "h": 16, "icon": "charging", "colour": "#f59e0b"},
+        {"kind": "text", "x": 244, "y": 208, "w": 44, "h": 24, "font": "small", "align": "right", "source": "battery_pct", "colour": "#9ca3af"}
+      ]
+    }
+  }
+}

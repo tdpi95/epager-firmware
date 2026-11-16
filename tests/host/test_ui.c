@@ -1949,6 +1949,25 @@ static void test_face_follows_the_data(void)
     TEST_ASSERT_NULL(strstr(text(), "31\xc2\xb0""C"));
 }
 
+static void test_face_digital_draws_its_own_update_mark(void)
+{
+    ui_set_time(T_14_27_05);
+    face_config(face_cfg(), "epager.digital", NULL, 0);
+    run(2100);
+    TEST_ASSERT_EQUAL_STRING("epager.digital", ui_clock_face_shown());
+    TEST_ASSERT_EQUAL_UINT32(0, ui_clock_face_errors());
+    TEST_ASSERT_NOT_NULL(strstr(text(), "14:27\n")); /* the seven-segment number */
+    TEST_ASSERT_NOT_NULL(strstr(text(), "11\n"));    /* the day in the small digit set */
+    TEST_ASSERT_NULL(strstr(text(), "UPD"));
+    ui_update_t u = {.state = UI_UPD_AVAILABLE, .mark = true};
+    snprintf(u.version, sizeof(u.version), "0.3.0");
+    ui_set_update(&u);
+    run(2100);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "UPD\n")); /* the face's indicator ... */
+    TEST_ASSERT_NULL(strstr(text(), "!\n"));       /* ... instead of the firmware's mark */
+    TEST_ASSERT_EQUAL_UINT32(0, state().violations);
+}
+
 static void test_face_unavailable_falls_back_to_classic(void)
 {
     ui_set_time(T_14_27_05);
@@ -2127,7 +2146,7 @@ static void test_settings_clock_face_pages(void)
     static uint8_t file[FACE_FILE_MAX];
     install_face(&blob, "test.min", file, vector_face("paper_min", file, sizeof(file)));
     open_face_list();
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Clock face\n1/4\nClassic\nIn use\nBig\n\nMinimal\n\nMin\n"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Clock face\n1/5\nClassic\nIn use\nBig\n\nDigital\n\nMinimal\n"));
     /* a face that is not in use is used at once, no page: the UI reports the choice and stays on the list */
     down(1);
     seen_n = 0;
@@ -2137,7 +2156,7 @@ static void test_settings_clock_face_pages(void)
     TEST_ASSERT_EQUAL_UINT32(1, seen_arg);
     TEST_ASSERT_EQUAL_STRING("epager.big", ui_face_list_id(1)); /* what the firmware resolves it with */
     run(2100);
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Clock face\n2/4\n"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Clock face\n2/5\n"));
     /* the face in use with nothing to set (a built-in face without options, Classic) opens no page */
     face_config(face_cfg(), "", NULL, 0);
     run(2100);
@@ -2146,13 +2165,13 @@ static void test_settings_clock_face_pages(void)
     ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_LONG);
     TEST_ASSERT_EQUAL_INT(0, seen_n);
     run(2100);
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Clock face\n1/4\n"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Clock face\n1/5\n"));
     down(1);
     /* the firmware stores the choice: the list moves "In use", the page of the face in use has its options */
     face_config(face_cfg(), "epager.minimal", NULL, 0);
     run(2100);
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Classic\n\nBig\n\nMinimal\nIn use\n"));
-    down(1);
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Classic\n\nBig\n\nDigital\n\nMinimal\nIn use\n"));
+    down(2);
     ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_LONG); /* the face in use: its page */
     run(2100);
     TEST_ASSERT_NOT_NULL(strstr(text(), "Minimal\n1/2\nStyle\nLight\nDate\nOn\n"));
@@ -2166,7 +2185,7 @@ static void test_settings_clock_face_pages(void)
     TEST_ASSERT_EQUAL_UINT32(2u << 8 | 0u, seen_arg);
     ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_LONG); /* back to the list */
     run(2100);
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Clock face\n3/4\n"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Clock face\n4/5\n"));
     /* an installed face has Delete, which asks first; the firmware reports the face gone and the list shrinks */
     face_config(face_cfg(), "test.min", NULL, 0);
     down(1);
@@ -2180,12 +2199,12 @@ static void test_settings_clock_face_pages(void)
     TEST_ASSERT_NOT_NULL(strstr(text(), "Delete\nDelete?\n"));
     ui_on_button(BOARD_BTN_BOOT, BOARD_PRESS_LONG);
     TEST_ASSERT_EQUAL_INT(UI_ACTION_FACE_DELETE, seen_action);
-    TEST_ASSERT_EQUAL_UINT32(3, seen_arg);
-    TEST_ASSERT_EQUAL_STRING("test.min", ui_face_list_id(3));
+    TEST_ASSERT_EQUAL_UINT32(4, seen_arg);
+    TEST_ASSERT_EQUAL_STRING("test.min", ui_face_list_id(4));
     remove_face(&blob, "test.min"); /* what the firmware does next; the id key goes back to Classic */
     face_config(face_cfg(), "", NULL, 0);
     run(2100);
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Clock face\n3/3\nClassic\nIn use\nBig\n\nMinimal\n"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Clock face\n4/4\nClassic\nIn use\nBig\n\nDigital\n\nMinimal\n"));
     TEST_ASSERT_NULL(strstr(text(), "Min\n"));
     TEST_ASSERT_EQUAL_UINT32(0, state().violations);
 }
@@ -2248,6 +2267,7 @@ int main(void)
     RUN_TEST(test_climate_line);
     RUN_TEST(test_face_builtin_replaces_classic);
     RUN_TEST(test_face_follows_the_data);
+    RUN_TEST(test_face_digital_draws_its_own_update_mark);
     RUN_TEST(test_face_unavailable_falls_back_to_classic);
     RUN_TEST(test_face_for_another_screen_or_too_heavy_falls_back);
     RUN_TEST(test_face_options_change_what_is_drawn);
