@@ -27,15 +27,21 @@
 
 #if CONFIG_EPAGER_DEBUG_CONSOLE
 
+#include <fcntl.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "driver/usb_serial_jtag.h"
+#include "driver/usb_serial_jtag_vfs.h"
 #include "esp_console.h"
+#include "linenoise/linenoise.h"
 #include "esp_log.h"
 #include "esp_pm.h"
 #include "epager/proto_gen.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
+#include "freertos/task.h"
 
 #define TAG "console"
 
@@ -282,13 +288,77 @@ static int cmd_ab(int argc, char **argv)
     return send(&c);
 }
 
+/*
+ * Our own REPL loop instead of esp_console_new_repl_usb_serial_jtag (hw-checklist 88): with no USB host the
+ * port's read fails at once and ESP-IDF's loop retries every 10 ms, so a board started on battery woke a
+ * hundred times a second and never reached light sleep (PLAN D127, the night of 2026-11-15).
+ * Here the task looks for a host once a second and only reads while one is there; a read already waiting when
+ * the cable goes stays blocked, which costs nothing. Dumb mode always: the probe at boot never saw a terminal.
+ */
+#define CONSOLE_PROMPT "epager> "
+#define CONSOLE_LINE_MAX 256
+#define CONSOLE_NO_HOST_MS 1000
+
+static void console_task(void *arg)
+{
+    (void)arg;
+    setvbuf(stdin, NULL, _IONBF, 0);
+    bool greeted = false;
+    for (;;) {
+        if (!usb_serial_jtag_is_connected()) {
+            greeted = false;
+            vTaskDelay(pdMS_TO_TICKS(CONSOLE_NO_HOST_MS));
+            continue;
+        }
+        if (!greeted) {
+            printf("\nType 'help' to get the list of commands.\n");
+            greeted = true;
+        }
+        char *line = linenoise(CONSOLE_PROMPT);
+        if (line == NULL) { /* the host went away between the check and the read */
+            vTaskDelay(pdMS_TO_TICKS(CONSOLE_NO_HOST_MS));
+            continue;
+        }
+        linenoiseHistoryAdd(line);
+        int ret = 0;
+        esp_err_t err = esp_console_run(line, &ret);
+        if (err == ESP_ERR_NOT_FOUND) {
+            printf("Unrecognized command\n");
+        } else if (err == ESP_OK && ret != 0) {
+            printf("Command returned %d\n", ret);
+        } else if (err != ESP_OK && err != ESP_ERR_INVALID_ARG) { /* INVALID_ARG: an empty line */
+            printf("Internal error: %s\n", esp_err_to_name(err));
+        }
+        linenoiseFree(line);
+    }
+}
+
+static bool console_init(void)
+{
+    usb_serial_jtag_vfs_set_rx_line_endings(ESP_LINE_ENDINGS_CR); /* idf.py monitor sends CR for Enter */
+    usb_serial_jtag_vfs_set_tx_line_endings(ESP_LINE_ENDINGS_CRLF);
+    fcntl(fileno(stdout), F_SETFL, 0); /* blocking stdin and stdout */
+    fcntl(fileno(stdin), F_SETFL, 0);
+    usb_serial_jtag_driver_config_t dc = USB_SERIAL_JTAG_DRIVER_CONFIG_DEFAULT();
+    if (usb_serial_jtag_driver_install(&dc) != ESP_OK) {
+        return false;
+    }
+    esp_console_config_t cc = ESP_CONSOLE_CONFIG_DEFAULT();
+    cc.max_cmdline_length = CONSOLE_LINE_MAX;
+    cc.hint_color = -1;
+    if (esp_console_init(&cc) != ESP_OK) {
+        return false;
+    }
+    usb_serial_jtag_vfs_use_driver(); /* interrupt-driven reads: a waiting read blocks instead of polling */
+    linenoiseSetDumbMode(1);
+    linenoiseSetMaxLineLen(CONSOLE_LINE_MAX);
+    linenoiseHistorySetMaxLen(32);
+    return true;
+}
+
 void app_console_start(void)
 {
     q = xQueueCreate(4, sizeof(app_console_cmd_t));
-    esp_console_repl_t *repl = NULL;
-    esp_console_repl_config_t rc = ESP_CONSOLE_REPL_CONFIG_DEFAULT();
-    rc.prompt = "epager>";
-    esp_console_dev_usb_serial_jtag_config_t hw = ESP_CONSOLE_DEV_USB_SERIAL_JTAG_CONFIG_DEFAULT();
     const esp_console_cmd_t cmds[] = {
         {.command = "post", .help = "post TITLE [BODY] [CATEGORY]: a sample notification", .func = cmd_post},
         {.command = "remove", .help = "remove the last posted notification", .func = cmd_remove},
@@ -313,7 +383,7 @@ void app_console_start(void)
         {.command = "ab", .help = "ab [rail on|off | ble default|MIN MAX LATENCY [TIMEOUT] | ancs default|off|S | tick default|MS | reset]: A/B drain tests",
          .func = cmd_ab},
     };
-    if (q == NULL || esp_console_new_repl_usb_serial_jtag(&hw, &rc, &repl) != ESP_OK) {
+    if (q == NULL || !console_init()) {
         ESP_LOGE(TAG, "debug console not started");
         return;
     }
@@ -321,7 +391,10 @@ void app_console_start(void)
     for (size_t i = 0; i < sizeof(cmds) / sizeof(cmds[0]); i++) {
         esp_console_cmd_register(&cmds[i]);
     }
-    esp_console_start_repl(repl);
+    if (xTaskCreate(console_task, "console_repl", 4096, NULL, 2, NULL) != pdPASS) { /* the old REPL's name and size */
+        ESP_LOGE(TAG, "debug console not started");
+        return;
+    }
     ESP_LOGW(TAG, "DEBUG console on: typed text becomes notification content");
 }
 
