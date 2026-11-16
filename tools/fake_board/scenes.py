@@ -130,7 +130,7 @@ def select_face(b: FakeBoard, ident: str, opts: list[int] | None = None) -> None
 
 
 def scene_face_big() -> Frames:
-    """The built-in face Big (an image digit set, fonts, icons): 24-hour clock, then 12-hour Vietnamese in
+    """The built-in face Big (hours over minutes in an image digit set, fonts, icons): 24-hour clock, then 12-hour Vietnamese in
     Fahrenheit, then with the weather and the date switched off through its options."""
     b = face_board()
     select_face(b, "epager.big")
@@ -144,7 +144,7 @@ def scene_face_big() -> Frames:
 
 
 def scene_face_minimal() -> Frames:
-    """The built-in face Minimal (fonts and a line only): light, then dark and without the date through its options."""
+    """The built-in face Minimal (a thin image digit set and the date): light, then dark and without the date through its options."""
     b = face_board()
     select_face(b, "epager.minimal")
     out: Frames = [("face_minimal", b.panel())]

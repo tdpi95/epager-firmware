@@ -1179,8 +1179,8 @@ static void test_face_builtin_faces_draw_and_fall_back(void)
     face_config(face_cfg(), "epager.big", NULL, 0);
     run(300);
     TEST_ASSERT_EQUAL_STRING("epager.big", ui_clock_face_shown());
-    TEST_ASSERT_NOT_NULL(strstr(text(), "14:27\n"));
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Sunday, 11 Oct"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "14\n27\n")); /* hours over minutes */
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Sunday\n11\nOctober\n"));
     TEST_ASSERT_EQUAL_UINT16(0x10c4, pixel(2, 2)); /* #111827 as RGB565: the face's page, not the light Classic one */
     face_config(face_cfg(), "epager.night", NULL, 0);
     run(300);
@@ -1189,7 +1189,7 @@ static void test_face_builtin_faces_draw_and_fall_back(void)
     ui_status_t st = {.battery_pct = 63, .wifi_state = 0};
     ui_set_status(&st);
     run(300);
-    TEST_ASSERT_NOT_NULL(strstr(text(), "63\n")); /* inside the battery ring */
+    TEST_ASSERT_NOT_NULL(strstr(text(), "63%\n")); /* in the gap of the battery ring */
     face_config(face_cfg(), "epager.nope", NULL, 0);
     run(300);
     TEST_ASSERT_EQUAL_STRING("", ui_clock_face_shown());
@@ -1210,7 +1210,7 @@ static void test_face_colour_option_and_another_screen(void)
     ui_status_t st = {.battery_pct = 63};
     ui_set_status(&st);
     run(300);
-    TEST_ASSERT_NULL(strstr(text(), "63\n")); /* the ring and its number are off */
+    TEST_ASSERT_NULL(strstr(text(), "63%\n")); /* the ring and its number are off */
     static uint8_t file[FACE_FILE_MAX];
     size_t n = vector_face("paper_min", file, sizeof(file)); /* made for 200x200 */
     install_face(&blob, "test.min", file, n);
@@ -1262,11 +1262,11 @@ static void test_face_other_screens_cover_it(void)
     ui_set_time(T_14_27_05);
     face_config(face_cfg(), "epager.big", NULL, 0);
     run(300);
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Sunday, 11 Oct")); /* the face's date */
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Sunday\n11\n")); /* the face's date */
     drag(148, 200, 148, 60, 6); /* swipe up on the clock: the settings (D99) */
     run(300);
     TEST_ASSERT_NOT_NULL(strstr(text(), "Settings"));
-    TEST_ASSERT_NULL(strstr(text(), "Sunday, 11 Oct")); /* the face is under the settings, not on top */
+    TEST_ASSERT_NULL(strstr(text(), "Sunday\n11\n")); /* the face is under the settings, not on top */
     ui_set_power(false);
     run(300);
     TEST_ASSERT_NOT_NULL(strstr(text(), "Powered off"));

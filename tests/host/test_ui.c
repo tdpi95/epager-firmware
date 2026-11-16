@@ -1910,8 +1910,8 @@ static void test_face_builtin_replaces_classic(void)
     run(2100);
     TEST_ASSERT_EQUAL_STRING("epager.big", ui_clock_face_shown());
     TEST_ASSERT_EQUAL_UINT32(0, ui_clock_face_errors());
-    TEST_ASSERT_NOT_NULL(strstr(text(), "14:27\n")); /* the number element's text */
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Sunday, 11 Oct"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "14\n27\n")); /* the number elements' text: hours over minutes */
+    TEST_ASSERT_NOT_NULL(strstr(text(), "Sun\n11\nOct\n"));
     TEST_ASSERT_NULL(strstr(text(), "Time not set"));
     TEST_ASSERT_EQUAL_UINT32(0, state().violations);
     face_config(face_cfg(), "", NULL, 0); /* back to Classic by choice: no error */
@@ -1928,12 +1928,12 @@ static void test_face_follows_the_data(void)
     c.language = PROTO_LANGUAGE_VI;
     face_config(c, "epager.big", NULL, 0);
     run(2100);
-    TEST_ASSERT_NOT_NULL(strstr(text(), "2:27\n"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "2\n27\n"));
     TEST_ASSERT_NOT_NULL(strstr(text(), "PM\n")); /* the face's AM/PM text */
-    TEST_ASSERT_NOT_NULL(strstr(text(), "Chủ nhật, 11/10"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "CN\n11\nT10\n"));
     ui_set_time(T_14_27_05 + 60);
     run(2100);
-    TEST_ASSERT_NOT_NULL(strstr(text(), "2:28\n")); /* the minute moves */
+    TEST_ASSERT_NOT_NULL(strstr(text(), "2\n28\n")); /* the minute moves */
     wx_reading_t r;
     memset(&r, 0, sizeof(r));
     r.temp_c10 = 312;
@@ -1944,7 +1944,6 @@ static void test_face_follows_the_data(void)
     ui_set_weather(&r);
     run(2100);
     TEST_ASSERT_NOT_NULL(strstr(text(), "31\xc2\xb0""C\n"));
-    TEST_ASSERT_NOT_NULL(strstr(text(), "86%\n"));
     ui_set_weather(NULL);
     run(2100);
     TEST_ASSERT_NULL(strstr(text(), "31\xc2\xb0""C"));
@@ -2101,10 +2100,10 @@ static void test_face_hides_under_other_screens(void)
     ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_SHORT); /* the settings */
     run(400);
     TEST_ASSERT_NOT_NULL(strstr(text(), "Settings"));
-    TEST_ASSERT_NULL(strstr(text(), "14:27")); /* the face's number is not on screen */
+    TEST_ASSERT_NULL(strstr(text(), "14\n27")); /* the face's numbers are not on screen */
     ui_on_button(BOARD_BTN_PWR, BOARD_PRESS_LONG);
     run(2100);
-    TEST_ASSERT_NOT_NULL(strstr(text(), "14:27\n"));
+    TEST_ASSERT_NOT_NULL(strstr(text(), "14\n27\n"));
     ui_set_power(false);
     run(2100);
     TEST_ASSERT_NULL(strstr(text(), "14:27"));

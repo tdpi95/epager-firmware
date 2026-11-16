@@ -95,15 +95,17 @@ def test_builtin_faces_build_and_fit(face: str, board: str) -> None:
     data = B.build_file(FACES / face, board)
     lim = CF.LIMITS[board]
     f = CF.parse_face(data, lim, json.loads((FACES / face / "face.json").read_text())["meta"]["id"])
-    assert len(data) < 8192, "built-in faces stay small (they are linked into the firmware)"
+    assert len(data) < 12288, "built-in faces stay small (they are linked into the firmware)"
     assert len(f.elements) <= CF.MAX_ELEMENTS and f.meta["min_contract"] == "0.15.0"
     assert B.build_file(FACES / face, board) == data, "building is deterministic"
 
 
-def test_big_uses_an_image_digit_set_and_minimal_does_not() -> None:
+def test_big_and_minimal_use_image_digit_sets_and_night_does_not() -> None:
     big = CF.parse_face(B.build_file(FACES / "big", "paper"), CF.PAPER, "epager.big")
-    assert len(big.sets[1]) == 11 and all(big.images[i]["format"] == 1 for i in big.sets[1].values())
-    assert len(CF.parse_face(B.build_file(FACES / "minimal", "paper"), CF.PAPER, "epager.minimal").images) == 0
+    assert len(big.sets[1]) == 10 and all(big.images[i]["format"] == 1 for i in big.sets[1].values())
+    thin = CF.parse_face(B.build_file(FACES / "minimal", "paper"), CF.PAPER, "epager.minimal")
+    assert len(thin.sets[1]) == 11, "the digits and a colon"
+    assert len(CF.parse_face(B.build_file(FACES / "night", "lcd"), CF.LCD, "epager.night").images) == 0
 
 
 def test_generated_builtin_source_is_up_to_date() -> None:
@@ -118,11 +120,15 @@ def test_digit_images_are_the_checked_in_generator_output(tmp_path: Path) -> Non
     sys.path.insert(0, str(REPO / "tools" / "clock_face"))
     import make_builtin_images as M
 
-    M.make(tmp_path, 36, 80, 9, 14)
-    for p in sorted(tmp_path.glob("*.png")):
-        a = Image.open(p).convert("RGBA")
-        b = Image.open(FACES / "big" / "digits-paper" / p.name).convert("RGBA")
-        assert ImageChops.difference(a, b).getbbox() is None, p.name
+    if not M.NOTO_BOLD.exists():
+        pytest.skip("the source font is fetched by tools/assets/font_gen.py")
+    M.make(tmp_path, M.NOTO_BOLD, 80, colon=False)
+    names = sorted(p.name for p in tmp_path.glob("*.png"))
+    assert names == sorted(p.name for p in (FACES / "big" / "digits-paper").glob("*.png"))
+    for name in names:
+        a = Image.open(tmp_path / name).convert("RGBA")
+        b = Image.open(FACES / "big" / "digits-paper" / name).convert("RGBA")
+        assert a.size == b.size and ImageChops.difference(a, b).getbbox() is None, name
 
 
 def test_compiler_refuses_bad_sources(tmp_path: Path) -> None:
@@ -167,7 +173,7 @@ def test_cli_build_and_check(tmp_path: Path) -> None:
     assert r.returncode == 0, r.stderr
     r = subprocess.run([sys.executable, "-m", "clock_face", "check", str(out), "--board", "paper", "--id", "epager.big"],
                        capture_output=True, text=True, cwd=REPO / "tools", env=env)
-    assert r.returncode == 0 and "epager.big 1.0.0" in r.stdout
+    assert r.returncode == 0 and "epager.big 2.0.0" in r.stdout
     r = subprocess.run([sys.executable, "-m", "clock_face", "check", str(out), "--board", "lcd"], capture_output=True,
                        text=True, cwd=REPO / "tools", env=env)
     assert r.returncode == 1 and "screen size" in r.stderr

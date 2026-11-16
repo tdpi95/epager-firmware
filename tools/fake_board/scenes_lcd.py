@@ -138,7 +138,7 @@ def select_face(b: FakeBoard, ident: str, opts: list[int] | None = None) -> None
 
 
 def scene_face_big() -> Frames:
-    """The built-in face Big: seven-segment digits as masks recoloured by an option, then another colour with the
+    """The built-in face Big: hours over minutes, digit masks, the hours recoloured by an option, then another colour with the
     weather and the date off, then 12-hour in Vietnamese with Fahrenheit."""
     b = face_board()
     select_face(b, "epager.big")
@@ -153,7 +153,7 @@ def scene_face_big() -> Frames:
 
 
 def scene_face_night() -> Frames:
-    """The built-in face Night: the clock font, a battery ring (an arc), the weather and the room."""
+    """The built-in face Night: the clock font inside a battery ring (an arc), the weather and the room."""
     b = face_board()
     b.set_climate(23.73, 62.97)
     select_face(b, "epager.night")
