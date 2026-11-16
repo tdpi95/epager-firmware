@@ -23,6 +23,12 @@ extern "C" {
 #define XFER_ID_MAX 32u
 #define XFER_VERSION_MAX 32u
 #define XFER_JOURNAL_KEY "journal"
+/* The asset index (PLAN D128): every installed asset's size, version and origin in RAM, so ASSET_LIST, STORAGE_INFO
+ * and the budget checks touch no file. It is saved as one file in xfer_params_t.index_store and rebuilt from the asset
+ * files when that file is missing or bad, or when XFER_INDEX_DIRTY_KEY says a change was cut off. */
+#define XFER_INDEX_MAX 192u               /* 128 app icons (the seen list) + 16 clock faces, with room to spare */
+#define XFER_INDEX_FILE "index"
+#define XFER_INDEX_DIRTY_KEY "asset_idx"
 #define XFER_ASSET_HEADER_LEN 16u /* asset-formats.md container */
 
 /* Firmware destination (esp_ota_* on the board, fw_mem on the host). Status codes are protocol
@@ -54,6 +60,9 @@ typedef struct {
 typedef struct {
     const kv_storage_t *kv;               /* resume journal (required) */
     const blob_storage_t *blob;           /* NULL: no asset support */
+    /* Where the asset index file lives: not `blob`, whose files are the assets and whose sizes are the storage
+     * accounting. NULL: the index is rebuilt from the asset files at every xfer_init (fine for blob_mem). */
+    const blob_storage_t *index_store;
     const xfer_asset_support_t *assets;
     size_t n_assets;
     uint16_t display_w, display_h;        /* image assets without a fixed size must match the display */
@@ -81,6 +90,15 @@ typedef struct {
     uint8_t sha256[PROTO_SHA256_LEN];
 } xfer_target_t;
 
+/* One installed asset (the asset index). */
+typedef struct {
+    char name[BLOB_NAME_MAX + 1];         /* the stored file, "<type>_<id>": the index is sorted by it */
+    uint8_t ver_len, origin;
+    bool has_origin;
+    uint32_t size;
+    uint8_t ver[XFER_VERSION_MAX];
+} xfer_index_entry_t;
+
 typedef struct {
     xfer_params_t p;
     bool has_session;
@@ -90,9 +108,13 @@ typedef struct {
         uint32_t offset, crc, last_ack, journaled;
     } s;
     uint8_t next_handle;
+    bool index_dirty;                     /* XFER_INDEX_DIRTY_KEY is set: the saved index may be stale */
+    uint16_t n_index;
+    xfer_index_entry_t index[XFER_INDEX_MAX]; /* about 15 KB: the core lives in PSRAM on the boards */
 } xfer_t;
 
-/* Boot: removes temporary and version files left behind by an interrupted transfer or install. */
+/* Boot: loads the asset index (or rebuilds it from the asset files) and removes temporary and version files left
+ * behind by an interrupted transfer or install. */
 void xfer_init(xfer_t *x, const xfer_params_t *p);
 /* The link dropped: the session ends, its offset is journaled for a later resume. */
 void xfer_on_disconnect(xfer_t *x);
@@ -108,7 +130,7 @@ void xfer_asset_blob_name(uint8_t asset_type, const char *id, size_t id_len, cha
 /* Delete an installed asset and its version file, as ASSET_DELETE does (on_asset is called). OK, NOT_FOUND,
  * UNSUPPORTED (no asset storage) or INTERNAL. The core uses it to drop the icon of an app that leaves the
  * seen list (protocol.md 6.4). */
-proto_status_t xfer_asset_remove(const xfer_t *x, uint8_t asset_type, const char *id, size_t id_len);
+proto_status_t xfer_asset_remove(xfer_t *x, uint8_t asset_type, const char *id, size_t id_len);
 
 #define XFER_APP_ICON_ID_LEN 32u /* lower-case hex of the first 16 bytes of SHA-256(app_id) */
 /* Asset id of an app's icon (asset-formats.md app_icon): writes XFER_APP_ICON_ID_LEN chars + NUL. */

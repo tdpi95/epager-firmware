@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 
 #include "esp_app_desc.h"
 #include "esp_attr.h"
@@ -102,6 +103,8 @@ static EXT_RAM_BSS_ATTR core_t core;
 static EXT_RAM_BSS_ATTR ancs_sm_t ancs;
 static core_params_t params;
 static blob_fs_t blob_fs;                      /* the assets partition as blob_storage (transfer, UI icon lookup) */
+static blob_fs_t index_fs;                     /* its "sys" folder: the transfer's asset index (PLAN D128) */
+#define APP_INDEX_DIR APP_ASSETS_MOUNT "/sys"  /* not among the assets: list() skips folders */
 static xfer_asset_support_t asset_support[2]; /* app icons, and clock faces (M8b); the other asset types have no reader yet */
 #if CONFIG_EPAGER_FEATURE_CLOCK_FACES
 static uint16_t face_w, face_h; /* the screen a clock face must be made for */
@@ -1234,6 +1237,10 @@ static bool init_core_and_ui(bool kv_nvs_ok, bool assets_ok)
                                ? (xfer_asset_support_t){PROTO_ASSET_TYPE_APP_ICON, PROTO_ASSET_FORMAT_RGB565A8, 3088, 32, 32, 0, 0}
                                : (xfer_asset_support_t){PROTO_ASSET_TYPE_APP_ICON, PROTO_ASSET_FORMAT_MONO1, 88, 24, 24, 0, 0};
         params.blob = &blob_fs.iface;
+        mkdir(APP_INDEX_DIR, 0775); /* fails harmlessly when it exists */
+        if (blob_fs_init(&index_fs, APP_INDEX_DIR, assets_usage, NULL)) {
+            params.asset_index = &index_fs.iface; /* without it every boot rebuilds the index from the files */
+        }
         params.assets = asset_support;
         params.n_assets = 1;
         params.features |= PROTO_FEATURES_ASSETS;

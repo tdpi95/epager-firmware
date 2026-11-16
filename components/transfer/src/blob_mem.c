@@ -164,7 +164,9 @@ static blob_status_t mem_list(void *ctx, uint32_t index, char *name, size_t cap,
         return BLOB_ERR;
     }
     strcpy(name, prev->name);
-    *size = prev->size;
+    if (size) {
+        *size = prev->size;
+    }
     return BLOB_OK;
 }
 

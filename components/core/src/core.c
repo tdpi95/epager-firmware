@@ -268,7 +268,7 @@ static void face_assets_changed(core_t *c)
     char name[BLOB_NAME_MAX + 1], face[BLOB_NAME_MAX + 1];
     uint8_t v[1] = {0};
     uint32_t i = 0, size;
-    while (b->list(b->ctx, i++, name, sizeof(name), &size) == BLOB_OK) {
+    while (b->list(b->ctx, i++, name, sizeof(name), NULL) == BLOB_OK) { /* names only: no stat() per file */
         if (strncmp(name, "opt_", 4) != 0 || name[strlen(name) - 1] == '~') {
             continue;
         }
@@ -488,7 +488,7 @@ void core_init(core_t *c, const core_params_t *p)
                                 .verify_timeout_ms = p->ota_verify_timeout_ms, .on_event = cb_ota, .ctx = c};
         xfer_ota_init(&c->ota, &op);
     }
-    xfer_params_t xp = {.kv = p->kv_xfer, .blob = p->blob, .assets = p->assets, .n_assets = p->n_assets,
+    xfer_params_t xp = {.kv = p->kv_xfer, .blob = p->blob, .index_store = p->asset_index, .assets = p->assets, .n_assets = p->n_assets,
                         .display_w = p->display_w, .display_h = p->display_h, .fw = p->fw,
                         .ota = p->fw ? &c->ota : NULL, .max_chunk = core_max_chunk(c->mtu),
                         .ack_window = p->ack_window, .journal_every = p->journal_every, .emit = cb_xfer_emit,

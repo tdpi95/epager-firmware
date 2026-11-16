@@ -135,7 +135,7 @@ static void setup_params(xcore_t *x)
                     PROTO_FEATURES_BATTERY | (x->has_wifi ? PROTO_FEATURES_WIFI | PROTO_FEATURES_WEATHER : 0u),
         .transports = PROTO_TRANSPORTS_BLE, .max_mtu = 517,
         .kv_cfg = &x->kv.iface, .kv_apps = &x->kv.iface, .kv_xfer = &x->kv.iface,
-        .blob = &x->blob.iface, .assets = x->assets, .n_assets = 3, .fw = &x->fw.iface,
+        .blob = &x->blob.iface, .asset_index = &x->index.iface, .assets = x->assets, .n_assets = 3, .fw = &x->fw.iface,
         .builtin_face = on_builtin_face,
         .low_battery_pct = 30, .ota_required_checks = 0, .ota_verify_timeout_ms = 60000,
         .ack_window = 1024, .journal_every = 512,
@@ -151,6 +151,7 @@ xcore_t *xcore_new(void)
     xcore_t *x = calloc(1, sizeof(*x));
     kv_mem_init(&x->kv);
     blob_mem_init(&x->blob, 16384);
+    blob_mem_init(&x->index, 1u << 20);
     fw_mem_init(&x->fw, x->fw_buf, XCORE_FW_SLOT);
     x->now_ms = 1000;
     x->has_battery = x->battery_ok = true;
@@ -164,6 +165,7 @@ xcore_t *xcore_new(void)
 void xcore_free(xcore_t *x)
 {
     blob_mem_free(&x->blob);
+    blob_mem_free(&x->index);
     free(x);
 }
 

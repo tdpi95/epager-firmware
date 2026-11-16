@@ -22,6 +22,7 @@ typedef struct {
     /* persistent storage (survives xcore_reboot) */
     kv_mem_t kv;
     blob_mem_t blob;
+    blob_mem_t index; /* the transfer's asset index file */
     fw_mem_t fw;
     uint8_t fw_buf[XCORE_FW_SLOT];
     /* platform state */

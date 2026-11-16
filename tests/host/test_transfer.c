@@ -72,8 +72,9 @@ typedef struct {
     uint32_t offset, prefix_crc;
 } begin_t;
 
-static begin_t begin(xboard_t *b, uint8_t kind, uint8_t type, const char *id, const uint8_t *data, size_t len,
-                     const char *version, bool restart)
+/* origin < 0: none sent */
+static begin_t begin_ex(xboard_t *b, uint8_t kind, uint8_t type, const char *id, const uint8_t *data, size_t len,
+                        const char *version, bool restart, int origin)
 {
     uint8_t msg[256], sha[PROTO_SHA256_LEN];
     proto_writer_t w;
@@ -94,6 +95,9 @@ static begin_t begin(xboard_t *b, uint8_t kind, uint8_t type, const char *id, co
     if (restart) {
         proto_w_bool(&w, PROTO_TAG_XFER_BEGIN_RESTART, true);
     }
+    if (origin >= 0) {
+        proto_w_u8(&w, PROTO_TAG_XFER_BEGIN_ORIGIN, (uint8_t)origin);
+    }
     send(b, msg, &w);
     TEST_ASSERT_EQUAL_INT(1, b->n_out);
     begin_t r = {out_status(b, 0), 0, 0, 0};
@@ -103,6 +107,12 @@ static begin_t begin(xboard_t *b, uint8_t kind, uint8_t type, const char *id, co
         r.prefix_crc = out_u32(b, 0, PROTO_TAG_XFER_BEGIN_RSP_PREFIX_CRC32);
     }
     return r;
+}
+
+static begin_t begin(xboard_t *b, uint8_t kind, uint8_t type, const char *id, const uint8_t *data, size_t len,
+                     const char *version, bool restart)
+{
+    return begin_ex(b, kind, type, id, data, len, version, restart, -1);
 }
 
 static begin_t begin_asset(xboard_t *b, const char *id, const uint8_t *data, size_t len)
@@ -255,7 +265,7 @@ static void test_install_failure_is_retryable(void)
     send_range(b, r.handle, a, 0, (uint32_t)n);
     xboard_power_limit(b, 0); /* the rename fails */
     TEST_ASSERT_EQUAL_INT(PROTO_INTERNAL, finish(b, r.handle));
-    b->kv.power = b->blob.power = b->fw.power = NULL;
+    b->kv.power = b->blob.power = b->index.power = b->fw.power = NULL;
     TEST_ASSERT_EQUAL_INT(PROTO_OK, finish(b, r.handle));
     uint32_t size;
     TEST_ASSERT_NOT_NULL(blob_mem_data(&b->blob, "3_x", &size));
@@ -273,7 +283,7 @@ static void test_stale_temp_data_is_never_installed(void)
     send_range(b, r.handle, v0, 0, (uint32_t)n0); /* complete, not finished */
     xboard_power_limit(b, 0);
     TEST_ASSERT_EQUAL_INT(PROTO_INTERNAL, begin_asset(b, "a", v1, n1).st); /* stale data cannot be removed */
-    b->kv.power = b->blob.power = b->fw.power = NULL;
+    b->kv.power = b->blob.power = b->index.power = b->fw.power = NULL;
     r = begin_asset(b, "a", v1, n1);
     TEST_ASSERT_EQUAL_UINT32(0, r.offset);
     send_range(b, r.handle, v1, 0, (uint32_t)n1);
@@ -861,6 +871,319 @@ static void test_fw_mem_edges(void)
     TEST_ASSERT_EQUAL_INT(PROTO_INTERNAL, s->write(s->ctx, 0, "1", 1));
 }
 
+/* ---------------------------------------------------------------- asset index (PLAN D128) */
+
+/* A blob_storage that counts the calls into another one. */
+typedef struct {
+    blob_storage_t iface;
+    const blob_storage_t *in;
+    unsigned stat, read, list, change;
+} counting_t;
+
+static blob_status_t c_stat(void *ctx, const char *n, uint32_t *size)
+{
+    counting_t *c = ctx;
+    c->stat++;
+    return c->in->stat(c->in->ctx, n, size);
+}
+static blob_status_t c_read(void *ctx, const char *n, uint32_t off, void *buf, size_t len)
+{
+    counting_t *c = ctx;
+    c->read++;
+    return c->in->read(c->in->ctx, n, off, buf, len);
+}
+static blob_status_t c_write(void *ctx, const char *n, uint32_t off, const void *data, size_t len)
+{
+    counting_t *c = ctx;
+    c->change++;
+    return c->in->write(c->in->ctx, n, off, data, len);
+}
+static blob_status_t c_flush(void *ctx, const char *n)
+{
+    counting_t *c = ctx;
+    return c->in->flush(c->in->ctx, n);
+}
+static blob_status_t c_rename(void *ctx, const char *from, const char *to)
+{
+    counting_t *c = ctx;
+    c->change++;
+    return c->in->rename(c->in->ctx, from, to);
+}
+static blob_status_t c_remove(void *ctx, const char *n)
+{
+    counting_t *c = ctx;
+    c->change++;
+    return c->in->remove(c->in->ctx, n);
+}
+static blob_status_t c_list(void *ctx, uint32_t index, char *name, size_t cap, uint32_t *size)
+{
+    counting_t *c = ctx;
+    c->list++;
+    return c->in->list(c->in->ctx, index, name, cap, size);
+}
+static blob_status_t c_usage(void *ctx, uint32_t *total, uint32_t *free_bytes)
+{
+    counting_t *c = ctx;
+    return c->in->usage(c->in->ctx, total, free_bytes);
+}
+
+/* The board's asset storage goes through `c` from the next boot on. */
+static void count_calls(xboard_t *b, counting_t *c)
+{
+    *c = (counting_t){.iface = {c_stat, c_read, c_write, c_flush, c_rename, c_remove, c_list, c_usage, c}, .in = b->params.blob};
+    b->params.blob = &c->iface;
+}
+
+static void zero(counting_t *c) { c->stat = c->read = c->list = c->change = 0; }
+
+/* The saved index must always say what a boot without one reads from the files. */
+static void assert_index_matches_files(const xboard_t *b)
+{
+    static xfer_t ref;
+    xfer_params_t p = b->params;
+    p.index_store = NULL;
+    xfer_init(&ref, &p);
+    TEST_ASSERT_EQUAL_UINT16(ref.n_index, b->x.n_index);
+    for (uint16_t i = 0; i < ref.n_index; i++) {
+        const xfer_index_entry_t *want = &ref.index[i], *got = &b->x.index[i];
+        TEST_ASSERT_EQUAL_STRING(want->name, got->name);
+        TEST_ASSERT_EQUAL_UINT32(want->size, got->size);
+        TEST_ASSERT_EQUAL_UINT8(want->ver_len, got->ver_len);
+        if (want->ver_len) {
+            TEST_ASSERT_EQUAL_MEMORY(want->ver, got->ver, want->ver_len);
+        }
+        TEST_ASSERT_EQUAL(want->has_origin, got->has_origin);
+        TEST_ASSERT_EQUAL_UINT8(want->origin, got->origin);
+    }
+}
+
+static char *request(xboard_t *b, uint8_t type, uint16_t offset)
+{
+    uint8_t msg[32];
+    proto_writer_t w;
+    proto_writer_init(&w, msg, sizeof(msg));
+    proto_w_header(&w, type, 7);
+    if (offset) {
+        proto_w_u16(&w, PROTO_TAG_ASSET_LIST_OFFSET, offset);
+    }
+    send(b, msg, &w);
+    TEST_ASSERT_EQUAL_INT(1, b->n_out);
+    return msg_to_json_str(b->out[0], b->out_len[0]);
+}
+
+static proto_status_t asset_delete(xboard_t *b, const char *id)
+{
+    uint8_t msg[64];
+    proto_writer_t w;
+    proto_writer_init(&w, msg, sizeof(msg));
+    proto_w_header(&w, PROTO_MSG_ASSET_DELETE, 8);
+    proto_w_u8(&w, PROTO_TAG_ASSET_DELETE_ASSET_TYPE, THEME);
+    proto_w_str(&w, PROTO_TAG_ASSET_DELETE_ID, id);
+    send(b, msg, &w);
+    TEST_ASSERT_EQUAL_INT(1, b->n_out);
+    return out_status(b, 0);
+}
+
+static void install_v(xboard_t *b, const char *id, const char *version, int origin, uint8_t seed)
+{
+    uint8_t a[64];
+    size_t n = container(a, THEME, THEME_V1, 0, 0, 16u + seed % 32u, seed);
+    begin_t r = begin_ex(b, PROTO_TRANSFER_KIND_ASSET, THEME, id, a, n, version, false, origin);
+    TEST_ASSERT_EQUAL_INT(PROTO_OK, r.st);
+    TEST_ASSERT_EQUAL_INT(PROTO_OK, send_range(b, r.handle, a, r.offset, (uint32_t)n));
+    TEST_ASSERT_EQUAL_INT(PROTO_OK, finish(b, r.handle));
+}
+
+/* ASSET_LIST and STORAGE_INFO open no file, and a boot with a good index opens none either (the Paper's watchdog
+ * fired while ASSET_LIST stat()ed and read every file on LittleFS). */
+static void test_asset_list_touches_no_file(void)
+{
+    xboard_t *b = xboard_from_vectors("{\"storage_total\": 100000}");
+    counting_t c;
+    count_calls(b, &c);
+    xboard_reboot(b);
+    char id[8], ver[8];
+    for (int i = 0; i < 20; i++) {
+        snprintf(id, sizeof(id), "a%02d", i);
+        snprintf(ver, sizeof(ver), "v%d", i);
+        install_v(b, id, i % 3 ? ver : NULL, i % 2 ? -1 : PROTO_ASSET_ORIGIN_LOCAL, (uint8_t)i);
+    }
+    assert_index_matches_files(b);
+    zero(&c);
+    xboard_reboot(b);
+    TEST_ASSERT_EQUAL_UINT(0, c.stat + c.read + c.change);
+    TEST_ASSERT_GREATER_THAN_UINT(0, c.list); /* one walk of the names checks the index */
+    assert_index_matches_files(b);
+
+    zero(&c);
+    char *page0 = request(b, PROTO_MSG_ASSET_LIST, 0), *page1 = request(b, PROTO_MSG_ASSET_LIST, 16);
+    char *info = request(b, PROTO_MSG_STORAGE_INFO, 0);
+    TEST_ASSERT_EQUAL_UINT(0, c.stat + c.read + c.list + c.change);
+    TEST_ASSERT_NOT_NULL(strstr(page0, "\"total\":20"));
+    TEST_ASSERT_NOT_NULL(strstr(page0, "{\"asset_type\":3,\"id\":\"a00\",\"size\":32,\"origin\":2}"));
+    TEST_ASSERT_NOT_NULL(strstr(page0, "{\"asset_type\":3,\"id\":\"a01\",\"size\":33,\"version\":\"v1\"}"));
+    TEST_ASSERT_NOT_NULL(strstr(page0, "{\"asset_type\":3,\"id\":\"a02\",\"size\":34,\"version\":\"v2\",\"origin\":2}"));
+    TEST_ASSERT_NULL(strstr(page0, "\"a16\""));
+    TEST_ASSERT_NOT_NULL(strstr(page1, "\"id\":\"a16\""));
+    TEST_ASSERT_NOT_NULL(strstr(page1, "\"id\":\"a19\""));
+    TEST_ASSERT_NULL(strstr(page1, "\"a15\""));
+    TEST_ASSERT_NOT_NULL(strstr(info, "\"asset_count\":20"));
+    free(page0);
+    free(page1);
+    free(info);
+
+    /* a delete and a replacement are seen at once and by the next boot */
+    TEST_ASSERT_EQUAL_INT(PROTO_OK, asset_delete(b, "a05"));
+    TEST_ASSERT_EQUAL_INT(PROTO_NOT_FOUND, asset_delete(b, "a05"));
+    install_v(b, "a06", "new", PROTO_ASSET_ORIGIN_GALLERY, 40);
+    page0 = request(b, PROTO_MSG_ASSET_LIST, 0);
+    TEST_ASSERT_NOT_NULL(strstr(page0, "\"total\":19"));
+    TEST_ASSERT_NULL(strstr(page0, "\"a05\""));
+    TEST_ASSERT_NOT_NULL(strstr(page0, "{\"asset_type\":3,\"id\":\"a06\",\"size\":40,\"version\":\"new\",\"origin\":1}"));
+    free(page0);
+    zero(&c);
+    xboard_reboot(b);
+    TEST_ASSERT_EQUAL_UINT(0, c.stat + c.read);
+    assert_index_matches_files(b);
+    xboard_free(b);
+}
+
+/* Cut the power at every step of a replacing install and of a delete: after the boot the index says what the files say. */
+static void test_asset_index_survives_any_power_cut(void)
+{
+    for (int op = 0; op < 2; op++) {
+        int32_t budget = 0;
+        for (;; budget++) {
+            xboard_t *b = xboard_from_vectors("{\"storage_total\": 100000, \"journal_every\": 16}");
+            counting_t c;
+            count_calls(b, &c);
+            xboard_reboot(b);
+            install_v(b, "keep", "1", -1, 1);
+            install_v(b, "night", "1", PROTO_ASSET_ORIGIN_GALLERY, 2);
+            xboard_power_limit(b, budget);
+            if (op == 0) {
+                uint8_t a[64];
+                size_t n = container(a, THEME, THEME_V1, 0, 0, 40, 9);
+                begin_t r = begin_ex(b, PROTO_TRANSFER_KIND_ASSET, THEME, "night", a, n, "2", false, PROTO_ASSET_ORIGIN_LOCAL);
+                if (r.st == PROTO_OK) {
+                    send_range(b, r.handle, a, r.offset, (uint32_t)n);
+                    finish(b, r.handle);
+                }
+            } else {
+                asset_delete(b, "night");
+            }
+            const bool survived = b->power > 0;
+            xboard_reboot(b);
+            assert_index_matches_files(b);
+            zero(&c);
+            xboard_reboot(b); /* a rebuilt index was saved: the boot after trusts it */
+            TEST_ASSERT_EQUAL_UINT(0, c.stat + c.read);
+            xboard_free(b);
+            if (survived) {
+                break;
+            }
+        }
+        printf("asset index power-loss sweep (%s): %d cut points\n", op ? "delete" : "install", (int)budget + 1);
+        TEST_ASSERT_GREATER_THAN(op ? 3 : 10, budget);
+    }
+}
+
+/* A saved index that is bad, stale or marked dirty is rebuilt from the files (and saved again). */
+static void test_asset_index_rebuilt_when_it_cannot_be_trusted(void)
+{
+    for (int k = 0; k < 8; k++) {
+        xboard_t *b = xboard_from_vectors("{\"storage_total\": 100000}");
+        counting_t c;
+        count_calls(b, &c);
+        xboard_reboot(b);
+        install_v(b, "a", "1", -1, 1);
+        install_v(b, "b", "2", PROTO_ASSET_ORIGIN_LOCAL, 2);
+        install_v(b, "c", NULL, -1, 3);
+        uint32_t size;
+        uint8_t *idx = (uint8_t *)blob_mem_data(&b->index, XFER_INDEX_FILE, &size);
+        TEST_ASSERT_NOT_NULL(idx);
+        uint8_t copy[256], one = 1;
+        TEST_ASSERT_LESS_THAN_UINT32(sizeof(copy), size);
+        memcpy(copy, idx, size);
+        const blob_storage_t *ix = &b->index.iface, *bl = &b->blob.iface;
+        switch (k) {
+        case 0: idx[size / 2] ^= 0x40; break;                                      /* corrupt */
+        case 1: ix->remove(ix->ctx, XFER_INDEX_FILE); break;                       /* gone */
+        case 2: b->kv.iface.set(b->kv.iface.ctx, XFER_INDEX_DIRTY_KEY, &one, 1); break; /* a change was cut off */
+        case 3: ix->remove(ix->ctx, XFER_INDEX_FILE); ix->write(ix->ctx, XFER_INDEX_FILE, 0, copy, size - 1); break;
+        case 4: ix->write(ix->ctx, XFER_INDEX_FILE, size, "x", 1); break;          /* trailing bytes */
+        case 5: bl->write(bl->ctx, "3_d", 0, "data", 4); break;                    /* an asset it does not know */
+        case 6: bl->remove(bl->ctx, "3_a"); break;                                 /* an asset that is gone */
+        default: bl->write(bl->ctx, "3_zz@", 0, "9", 1); break;                    /* an orphaned version file */
+        }
+        zero(&c);
+        xboard_reboot(b);
+        TEST_ASSERT_GREATER_THAN_UINT_MESSAGE(0, c.stat, "rebuilt");
+        assert_index_matches_files(b);
+        TEST_ASSERT_EQUAL_UINT16(k == 5 ? 4 : k == 6 ? 2 : 3, b->x.n_index);
+        TEST_ASSERT_NULL(blob_mem_data(&b->blob, "3_zz@", &size));
+        size_t n;
+        TEST_ASSERT_EQUAL_INT(KV_NOT_FOUND, b->kv.iface.get(b->kv.iface.ctx, XFER_INDEX_DIRTY_KEY, &one, 1, &n));
+        zero(&c);
+        xboard_reboot(b);
+        TEST_ASSERT_EQUAL_UINT(0, c.stat + c.read);
+        xboard_free(b);
+    }
+}
+
+/* The index holds XFER_INDEX_MAX assets: a new one past that is NO_SPACE (a replacement is not), and a rebuild that
+ * finds more files deletes the rest so that the list and the files agree. Real storage (blob_fs) for 300 files. */
+static void test_asset_index_full(void)
+{
+    xboard_t *b = xboard_from_vectors("{\"storage_total\": 100000}");
+    tmp_fs_t fs;
+    blob_fs_t bf;
+    TEST_ASSERT_EQUAL_INT(0, tmp_fs_make(&fs, 1u << 24));
+    TEST_ASSERT_TRUE(blob_fs_init(&bf, fs.dir, tmp_fs_usage, &fs));
+    b->params.blob = &bf.iface;
+    char name[BLOB_NAME_MAX + 1];
+    for (unsigned i = 0; i < XFER_INDEX_MAX + 2u; i++) {
+        snprintf(name, sizeof(name), "3_x%03u", i);
+        TEST_ASSERT_EQUAL_INT(BLOB_OK, bf.iface.write(bf.iface.ctx, name, 0, "data", 4));
+        if (i % 2) {
+            strcat(name, "@");
+            TEST_ASSERT_EQUAL_INT(BLOB_OK, bf.iface.write(bf.iface.ctx, name, 0, "1", 1));
+        }
+    }
+    xboard_reboot(b);
+    TEST_ASSERT_EQUAL_UINT16(XFER_INDEX_MAX, b->x.n_index);
+    uint32_t i = 0, assets = 0, metas = 0;
+    while (bf.iface.list(bf.iface.ctx, i++, name, sizeof(name), NULL) == BLOB_OK) {
+        const size_t n = strlen(name);
+        if (name[n - 1] == '@') {
+            name[n - 1] = '\0';
+            uint32_t size;
+            TEST_ASSERT_EQUAL_INT_MESSAGE(BLOB_OK, bf.iface.stat(bf.iface.ctx, name, &size), "orphaned version file");
+            metas++;
+        } else {
+            assets++;
+        }
+    }
+    TEST_ASSERT_EQUAL_UINT32(XFER_INDEX_MAX, assets);
+    TEST_ASSERT_LESS_OR_EQUAL_UINT32(XFER_INDEX_MAX / 2u + 1u, metas);
+    assert_index_matches_files(b);
+
+    uint8_t a[64];
+    size_t n = container(a, THEME, THEME_V1, 0, 0, 16, 1);
+    TEST_ASSERT_EQUAL_INT(PROTO_NO_SPACE, begin_asset(b, "new", a, n).st);
+    char id[BLOB_NAME_MAX + 1];
+    strcpy(id, b->x.index[7].name + 2); /* "3_<id>" */
+    install_v(b, id, "2", -1, 0);       /* a replacement fits */
+    TEST_ASSERT_EQUAL_INT(PROTO_OK, asset_delete(b, id));
+    install_v(b, "new", "1", -1, 0);
+    TEST_ASSERT_EQUAL_UINT16(XFER_INDEX_MAX, b->x.n_index);
+    xboard_reboot(b);
+    assert_index_matches_files(b);
+    blob_fs_deinit(&bf);
+    xboard_free(b);
+    tmp_fs_remove_dir(fs.dir);
+}
+
 int main(void)
 {
     UNITY_BEGIN();
@@ -890,5 +1213,9 @@ int main(void)
     RUN_TEST(test_blob_mem_edges);
     RUN_TEST(test_app_icon_upload_on_a_file_system);
     RUN_TEST(test_fw_mem_edges);
+    RUN_TEST(test_asset_list_touches_no_file);
+    RUN_TEST(test_asset_index_survives_any_power_cut);
+    RUN_TEST(test_asset_index_rebuilt_when_it_cannot_be_trusted);
+    RUN_TEST(test_asset_index_full);
     return UNITY_END();
 }

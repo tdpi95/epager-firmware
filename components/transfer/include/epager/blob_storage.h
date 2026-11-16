@@ -33,7 +33,8 @@ typedef struct {
     blob_status_t (*rename)(void *ctx, const char *from, const char *to);
     /* BLOB_OK if the file did not exist. */
     blob_status_t (*remove)(void *ctx, const char *name);
-    /* index-th file in a stable order (while nothing changes); BLOB_NOT_FOUND past the end. */
+    /* index-th file in a stable order (while nothing changes); BLOB_NOT_FOUND past the end. `size` may be NULL: callers
+     * that need names only pass NULL, which spares blob_fs a stat() per file (a walk of LittleFS metadata each). */
     blob_status_t (*list)(void *ctx, uint32_t index, char *name, size_t cap, uint32_t *size);
     blob_status_t (*usage)(void *ctx, uint32_t *total, uint32_t *free_bytes);
     void *ctx;

@@ -10,6 +10,7 @@ typedef struct {
     /* persistent storage (survives xboard_reboot) */
     kv_mem_t kv;
     blob_mem_t blob;
+    blob_mem_t index;  /* the transfer's asset index file (params.index_store) */
     fw_mem_t fw;
     uint8_t *fw_buf;
     /* configuration */

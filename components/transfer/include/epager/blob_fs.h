@@ -38,6 +38,8 @@ typedef struct {
     int fd;                        /* the file kept open for writing, -1 if none */
     uint64_t open_size;            /* its size, with the bytes not yet synced */
     char open_name[BLOB_NAME_MAX + 1];
+    int rd_fd;                     /* the file kept open by read() for the next read of the same file, -1 if none */
+    char rd_name[BLOB_NAME_MAX + 1];
     void *list_dir;                /* DIR * kept open between list() calls with consecutive indexes, NULL if none */
     uint32_t list_next;            /* the index the next call continues with */
 } blob_fs_t;
@@ -45,7 +47,7 @@ typedef struct {
 /* False if dir is empty, too long or has a trailing slash. */
 bool blob_fs_init(blob_fs_t *b, const char *dir, blob_fs_usage_fn usage, void *usage_ctx);
 
-/* Release the directory and the file kept open (a board never calls it; tests do, between cases). */
+/* Release the directory and the files kept open (a board never calls it; tests do, between cases). */
 void blob_fs_deinit(blob_fs_t *b);
 
 /* Optional: report the step and errno of a failed write (fn NULL turns it off). */

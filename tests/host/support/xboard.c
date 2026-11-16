@@ -60,6 +60,7 @@ xboard_t *xboard_new(const cJSON *board)
     xboard_t *b = calloc(1, sizeof(*b));
     kv_mem_init(&b->kv);
     blob_mem_init(&b->blob, (uint32_t)jnum(board, "storage_total", 0));
+    blob_mem_init(&b->index, 1u << 20);
     const cJSON *a;
     cJSON_ArrayForEach(a, cJSON_GetObjectItemCaseSensitive(board, "asset_support")) {
         b->assets[b->n_assets++] = (xfer_asset_support_t){(uint8_t)jnum(a, "asset_type", 0),
@@ -83,7 +84,8 @@ xboard_t *xboard_new(const cJSON *board)
                                             .kv = &b->kv.iface, .on_event = on_ota_event, .ctx = b};
         xboard_set_battery(b, cJSON_GetObjectItemCaseSensitive(fw, "battery"));
     }
-    b->params = (xfer_params_t){.kv = &b->kv.iface, .blob = &b->blob.iface, .assets = b->assets,
+    b->params = (xfer_params_t){.kv = &b->kv.iface, .blob = &b->blob.iface, .index_store = &b->index.iface,
+                                .assets = b->assets,
                                 .n_assets = b->n_assets, .display_w = (uint16_t)jnum(disp, "width", 0),
                                 .display_h = (uint16_t)jnum(disp, "height", 0), .fw = b->has_fw ? &b->fw.iface : NULL,
                                 .ota = b->has_fw ? &b->ota : NULL, .max_chunk = (uint16_t)jnum(board, "max_chunk", 0),
@@ -96,13 +98,14 @@ xboard_t *xboard_new(const cJSON *board)
 void xboard_free(xboard_t *b)
 {
     blob_mem_free(&b->blob);
+    blob_mem_free(&b->index);
     free(b->fw_buf);
     free(b);
 }
 
 void xboard_reboot(xboard_t *b)
 {
-    b->kv.power = b->blob.power = b->fw.power = NULL;
+    b->kv.power = b->blob.power = b->index.power = b->fw.power = NULL;
     if (b->has_fw) {
         xfer_ota_init(&b->ota, &b->ota_params);
     }
@@ -112,7 +115,7 @@ void xboard_reboot(xboard_t *b)
 void xboard_power_limit(xboard_t *b, int32_t budget)
 {
     b->power = budget;
-    b->kv.power = b->blob.power = b->fw.power = &b->power;
+    b->kv.power = b->blob.power = b->index.power = b->fw.power = &b->power;
 }
 
 void xboard_request(xboard_t *b, const uint8_t *msg, size_t len)

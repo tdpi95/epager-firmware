@@ -57,6 +57,7 @@ typedef struct {
     /* storage; the kv instances may be the same object (their keys do not collide) */
     const kv_storage_t *kv_cfg, *kv_apps, *kv_xfer;
     const blob_storage_t *blob;   /* NULL: no assets */
+    const blob_storage_t *asset_index; /* where the transfer keeps its asset index (xfer_params_t.index_store); may be NULL */
     const xfer_asset_support_t *assets;
     size_t n_assets;
     const xfer_fw_sink_t *fw;     /* NULL: no firmware updates */

@@ -45,9 +45,20 @@ static void close_list(blob_fs_t *b)
     b->list_next = 0;
 }
 
-/* Sync and close the file kept open for writing. */
+/* Forget the file kept open by read(). */
+static void close_read(blob_fs_t *b)
+{
+    if (b->rd_fd >= 0) {
+        close(b->rd_fd);
+        b->rd_fd = -1;
+    }
+    b->rd_name[0] = '\0';
+}
+
+/* Sync and close the file kept open for writing; read() opens files anew after any change. */
 static blob_status_t close_open(blob_fs_t *b)
 {
+    close_read(b);
     if (b->fd < 0) {
         return BLOB_OK;
     }
@@ -79,17 +90,26 @@ static blob_status_t fs_stat(void *ctx, const char *name, uint32_t *size)
     return BLOB_OK;
 }
 
+/* The file stays open for the next read of the same name (a file read in blocks, such as a clock face being checked
+ * or the asset index): on LittleFS every open() walks the directory's metadata log. Any other call closes it. */
 static blob_status_t fs_read(void *ctx, const char *name, uint32_t off, void *buf, size_t len)
 {
     blob_fs_t *b = ctx;
     char path[PATH_MAX_LEN];
-    if (!path_of(b, name, path) || close_open(b) != BLOB_OK) {
+    if (!path_of(b, name, path)) {
         return BLOB_ERR;
     }
-    const int fd = open(path, O_RDONLY);
-    if (fd < 0) {
-        return errno == ENOENT ? BLOB_NOT_FOUND : BLOB_ERR;
+    if (b->rd_fd < 0 || strcmp(b->rd_name, name) != 0) {
+        if (close_open(b) != BLOB_OK) {
+            return BLOB_ERR;
+        }
+        b->rd_fd = open(path, O_RDONLY);
+        if (b->rd_fd < 0) {
+            return errno == ENOENT ? BLOB_NOT_FOUND : BLOB_ERR;
+        }
+        strcpy(b->rd_name, name);
     }
+    const int fd = b->rd_fd;
     blob_status_t st = lseek(fd, (off_t)off, SEEK_SET) == (off_t)off ? BLOB_OK : BLOB_ERR;
     uint8_t *p = buf;
     while (st == BLOB_OK && len > 0) {
@@ -101,7 +121,9 @@ static blob_status_t fs_read(void *ctx, const char *name, uint32_t off, void *bu
         p += n;
         len -= (size_t)n;
     }
-    close(fd);
+    if (st != BLOB_OK) {
+        close_read(b);
+    }
     return st;
 }
 
@@ -122,6 +144,7 @@ static blob_status_t fs_write(void *ctx, const char *name, uint32_t off, const v
         return BLOB_ERR;
     }
     close_list(b);
+    close_read(b);
     if (b->fd >= 0 && strcmp(b->open_name, name) != 0 && close_open(b) != BLOB_OK) {
         return BLOB_ERR;
     }
@@ -260,7 +283,8 @@ static blob_status_t fs_list(void *ctx, uint32_t index, char *name, size_t cap, 
             }
             continue;
         }
-        if (!entry_is_file(b, e, true, &st)) {
+        st.st_size = 0;
+        if (!entry_is_file(b, e, size != NULL, &st)) {
             continue;
         }
         const size_t n = strlen(e->d_name);
@@ -269,7 +293,9 @@ static blob_status_t fs_list(void *ctx, uint32_t index, char *name, size_t cap, 
             break;
         }
         memcpy(name, e->d_name, n + 1);
-        *size = (uint32_t)st.st_size;
+        if (size) {
+            *size = (uint32_t)st.st_size;
+        }
         b->list_next++;
         return BLOB_OK; /* the directory stays open for the next index */
     }
@@ -300,6 +326,7 @@ bool blob_fs_init(blob_fs_t *b, const char *dir, blob_fs_usage_fn usage, void *u
     b->usage = usage;
     b->usage_ctx = usage_ctx;
     b->fd = -1;
+    b->rd_fd = -1;
     b->iface = (blob_storage_t){.stat = fs_stat, .read = fs_read, .write = fs_write, .flush = fs_flush,
                                 .rename = fs_rename, .remove = fs_remove, .list = fs_list, .usage = fs_usage,
                                 .ctx = b};

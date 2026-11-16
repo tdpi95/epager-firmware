@@ -295,6 +295,61 @@ static void test_list_sees_unsynced_sizes(void)
     TEST_ASSERT_EQUAL_UINT32(4, size);
 }
 
+/* list() without a size pointer gives the names without a stat() per file: on LittleFS each stat() walks the
+ * directory's metadata log, which made listing the assets take seconds (PLAN D128). */
+static void test_a_walk_for_names_needs_no_stat(void)
+{
+    put("a", "1");
+    put("b", "22");
+    put("c", "333");
+    char name[BLOB_NAME_MAX + 1], got[3][BLOB_NAME_MAX + 1];
+    uint32_t i = 0, size;
+    stat_calls = 0;
+    while (s->list(s->ctx, i, name, sizeof(name), NULL) == BLOB_OK) {
+        TEST_ASSERT_LESS_THAN_UINT32(3, i);
+        strcpy(got[i++], name);
+    }
+    TEST_ASSERT_EQUAL_UINT32(3, i);
+    TEST_ASSERT_EQUAL_UINT(0, stat_calls);
+    for (i = 0; s->list(s->ctx, i, name, sizeof(name), &size) == BLOB_OK; i++) { /* the same order with sizes */
+        TEST_ASSERT_EQUAL_STRING(got[i], name);
+    }
+    TEST_ASSERT_EQUAL_UINT32(3, i);
+}
+
+/* read() keeps the file open for the next read of it (a file read in blocks opens once); every change is seen. */
+static void test_reads_in_blocks_see_every_change(void)
+{
+    char buf[16] = {0};
+    put("a", "hello world");
+    TEST_ASSERT_EQUAL_INT(BLOB_OK, s->read(s->ctx, "a", 0, buf, 5));
+    TEST_ASSERT_EQUAL_MEMORY("hello", buf, 5);
+    TEST_ASSERT_EQUAL_INT(BLOB_OK, s->read(s->ctx, "a", 6, buf, 5));
+    TEST_ASSERT_EQUAL_MEMORY("world", buf, 5);
+
+    put("b", "HELLO WORLD"); /* replaced by a rename */
+    TEST_ASSERT_EQUAL_INT(BLOB_OK, s->rename(s->ctx, "b", "a"));
+    TEST_ASSERT_EQUAL_INT(BLOB_OK, s->read(s->ctx, "a", 0, buf, 5));
+    TEST_ASSERT_EQUAL_MEMORY("HELLO", buf, 5);
+
+    TEST_ASSERT_EQUAL_INT(BLOB_OK, s->write(s->ctx, "a", 0, "J", 1)); /* rewritten in place, not synced yet */
+    TEST_ASSERT_EQUAL_INT(BLOB_OK, s->read(s->ctx, "a", 0, buf, 2));
+    TEST_ASSERT_EQUAL_MEMORY("JE", buf, 2);
+
+    put("x", "xyz"); /* another file in between */
+    TEST_ASSERT_EQUAL_INT(BLOB_OK, s->read(s->ctx, "x", 0, buf, 3));
+    TEST_ASSERT_EQUAL_MEMORY("xyz", buf, 3);
+    TEST_ASSERT_EQUAL_INT(BLOB_OK, s->read(s->ctx, "a", 6, buf, 5));
+    TEST_ASSERT_EQUAL_MEMORY("WORLD", buf, 5);
+
+    TEST_ASSERT_EQUAL_INT(BLOB_ERR, s->read(s->ctx, "x", 2, buf, 5)); /* past the end */
+    TEST_ASSERT_EQUAL_INT(BLOB_OK, s->read(s->ctx, "x", 0, buf, 3));
+    TEST_ASSERT_EQUAL_MEMORY("xyz", buf, 3);
+
+    TEST_ASSERT_EQUAL_INT(BLOB_OK, s->remove(s->ctx, "x"));
+    TEST_ASSERT_EQUAL_INT(BLOB_NOT_FOUND, s->read(s->ctx, "x", 0, buf, 1));
+}
+
 static void test_names_cannot_leave_the_directory(void)
 {
     uint32_t size;
@@ -385,6 +440,8 @@ int main(void)
     RUN_TEST(test_removing_while_walking_shifts_the_listing);
     RUN_TEST(test_a_write_or_rename_between_list_calls_is_seen);
     RUN_TEST(test_list_sees_unsynced_sizes);
+    RUN_TEST(test_a_walk_for_names_needs_no_stat);
+    RUN_TEST(test_reads_in_blocks_see_every_change);
     RUN_TEST(test_names_cannot_leave_the_directory);
     RUN_TEST(test_a_failed_write_says_which_step_failed);
     RUN_TEST(test_a_missing_directory_is_an_error_not_a_crash);

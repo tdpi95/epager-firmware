@@ -598,9 +598,10 @@ size_t ui_faces_collect(ui_face_entry_t *out, size_t max)
     const blob_storage_t *b = ui.p.blob;
     char name[BLOB_NAME_MAX + 1], meta[BLOB_NAME_MAX + 1];
     uint32_t size, k = 0;
-    while (b && n < max && b->list(b->ctx, k++, name, sizeof(name), &size) == BLOB_OK) {
+    while (b && n < max && b->list(b->ctx, k++, name, sizeof(name), NULL) == BLOB_OK) { /* names only: no stat() per file */
         const size_t len = strlen(name);
-        if (strncmp(name, "6_", 2) != 0 || len < 3 || name[len - 1] == '~' || name[len - 1] == '@' || len - 2 > CF_NAME_MAX) {
+        if (strncmp(name, "6_", 2) != 0 || len < 3 || name[len - 1] == '~' || name[len - 1] == '@' || len - 2 > CF_NAME_MAX ||
+            b->stat(b->ctx, name, &size) != BLOB_OK) {
             continue; /* not a face (the type is the number before the underscore) */
         }
         memcpy(out[n].id, name + 2, len - 2); /* <= CF_NAME_MAX, checked above; the entry is zeroed */
