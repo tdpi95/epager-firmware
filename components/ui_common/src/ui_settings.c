@@ -22,6 +22,7 @@ typedef enum {
     ROW_BODY,
     ROW_MASK,
     ROW_ROTATION,
+    ROW_SCREEN_OFF,
     ROW_WEATHER,
     ROW_AUTOCHECK,
     ROW_PAIRING,
@@ -41,6 +42,10 @@ typedef struct {
     bool needs_update; /* only on boards with Wi-Fi updates (ui_params_t.update) */
 } item_t;
 
+/* "Screen off" (boards with a backlight): the choices of display.idle_off_s, in seconds; 0 = never. */
+static const uint16_t SCREEN_OFF_S[] = {15, 30, 60, 120, 300, 0};
+#define SCREEN_OFF_N (sizeof(SCREEN_OFF_S) / sizeof(SCREEN_OFF_S[0]))
+
 static const item_t ITEMS[] = {
     {ROW_FACE, 0, 0, false, false}, /* the first row: the look of the idle screen is what people change most */
     {ROW_CLOCK, PROTO_CFG_UI_CLOCK_24H, 2, false, false},
@@ -49,6 +54,7 @@ static const item_t ITEMS[] = {
     {ROW_BODY, PROTO_CFG_DISPLAY_SHOW_BODY, 2, false, false},
     {ROW_MASK, PROTO_CFG_DISPLAY_MASK_NUMBERS, 2, false, false},
     {ROW_ROTATION, PROTO_CFG_DISPLAY_ORIENTATION, 4, false, false},
+    {ROW_SCREEN_OFF, 0, 0, false, false},
     {ROW_WEATHER, PROTO_CFG_WEATHER_ENABLED, 2, true, false},
     {ROW_AUTOCHECK, PROTO_CFG_UPDATE_AUTO_CHECK, 2, true, true},
     {ROW_PAIRING, 0, 0, false, false},
@@ -71,7 +77,8 @@ static const item_t *item_at(size_t i)
 {
     for (size_t k = 0; k < sizeof(ITEMS) / sizeof(ITEMS[0]); k++) {
         if ((ITEMS[k].needs_wifi && !ui.p.wifi_setup) || (ITEMS[k].needs_update && !ui.p.update) ||
-            (ITEMS[k].row == ROW_FACE && ui.p.no_faces)) {
+            (ITEMS[k].row == ROW_FACE && ui.p.no_faces) ||
+            (ITEMS[k].row == ROW_SCREEN_OFF && (ui.p.display == NULL || ui.p.display->set_backlight == NULL))) {
             continue;
         }
         if (i-- == 0) {
@@ -413,7 +420,7 @@ static void main_row(size_t i, const char **name, char *value, size_t cap)
     }
     const uint8_t v = current(it);
     const char *text = "";
-    char turn[8];
+    char turn[24];
     switch (it->row) {
     case ROW_CLOCK: *name = s->set_clock; text = v ? "24h" : "12h"; break;
     case ROW_TEMP: *name = s->set_temp; text = v ? "°F" : "°C"; break;
@@ -425,6 +432,20 @@ static void main_row(size_t i, const char **name, char *value, size_t cap)
         *name = s->set_rotation;
         text = turn;
         break;
+    case ROW_SCREEN_OFF: {
+        const uint16_t secs = ui.cfg.idle_off_s;
+        *name = s->set_screen_off;
+        if (secs == 0) {
+            text = s->never;
+        } else if (secs % 60u == 0) {
+            snprintf(turn, sizeof(turn), s->screen_min, secs / 60u);
+            text = turn;
+        } else {
+            snprintf(turn, sizeof(turn), s->screen_s, secs);
+            text = turn;
+        }
+        break;
+    }
     case ROW_WEATHER: *name = s->set_weather; text = v ? s->on : s->off_value; break;
     case ROW_AUTOCHECK: *name = s->set_autocheck; text = v ? s->on : s->off_value; break;
     case ROW_PAIRING: *name = s->set_pairing; break;
@@ -646,6 +667,18 @@ ui_action_t ui_settings_select(void)
         return UI_ACTION_NONE;
     }
     switch (it->row) {
+    case ROW_SCREEN_OFF: { /* the next choice that is longer; a value a phone set in between, or the last choice, goes round */
+        const uint16_t now = ui.cfg.idle_off_s;
+        uint16_t next = SCREEN_OFF_S[0];
+        for (size_t k = 0; k < SCREEN_OFF_N; k++) {
+            if (now != 0 && (SCREEN_OFF_S[k] == 0 || SCREEN_OFF_S[k] > now)) {
+                next = SCREEN_OFF_S[k];
+                break;
+            }
+        }
+        ui_emit(UI_ACTION_SCREEN_TIMEOUT, next);
+        return UI_ACTION_NONE;
+    }
     case ROW_PAIRING:
         ui.settings = false; /* pairing is a screen of its own: back to the clock when it ends */
         ui.model_dirty = true;

@@ -57,6 +57,8 @@ typedef enum {
     UI_ACTION_FACE_SELECT,       /* the Clock face pages: use face number `arg` of the list (ui_face_list_id; 0 = Classic) */
     UI_ACTION_FACE_OPTION,       /* arg = (option id << 8) | value: the active face's option moves to that value */
     UI_ACTION_FACE_DELETE,       /* delete the installed face number `arg` of the list */
+    UI_ACTION_SCREEN_TIMEOUT,    /* the LCD's "Screen off" row: arg = seconds without activity until the screen
+                                  * switches off (0 = never); the firmware stores display.idle_off_s */
 } ui_action_t;
 
 /* The firmware update, as the firmware reports it (ui_set_update). */

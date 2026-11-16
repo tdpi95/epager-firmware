@@ -328,7 +328,7 @@ def scene_update() -> Frames:
     swipe(b, 60, 120, 220, 120)  # back: remind later, the clock again
     for _ in range(4):  # open the settings, then the pages up to Software update
         swipe(b, 148, 200, 148, 60)
-    tap(b, 148, 76)
+    tap(b, 148, 156)  # Software update: the third row of the last page
     out.append(("update_page", rgb(b)))
     b.set_update("failed", error="net", version="0.2.0")
     settle(b)
@@ -357,17 +357,18 @@ def scene_settings() -> Frames:
     loopback.config_set(b, {"ui.language": 0})
     settle(b)
     swipe(b, 148, 200, 148, 60)  # the second page
-    tap(b, 148, 156)  # Weather: on
+    tap(b, 148, 196)  # Screen off: 1 min -> 2 min
     out.append(("settings_page2", rgb(b)))
     swipe(b, 148, 200, 148, 60)  # the third page
-    tap(b, 148, 116)  # Paired phones
+    swipe(b, 148, 200, 148, 60)  # the fourth
+    tap(b, 148, 76)  # Paired phones
     tap(b, 148, 76)  # asks before forgetting
     out.append(("settings_phones", rgb(b)))
     swipe(b, 60, 120, 220, 120)  # back to the list
-    tap(b, 148, 156)  # Wi-Fi networks
+    tap(b, 148, 116)  # Wi-Fi networks
     out.append(("settings_networks", rgb(b)))
     swipe(b, 60, 120, 220, 120)
-    tap(b, 148, 196)  # About
+    tap(b, 148, 196)  # About: the fourth row of the last page
     out.append(("settings_about", rgb(b)))
     return out
 

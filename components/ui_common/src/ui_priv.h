@@ -63,6 +63,7 @@ typedef struct {
     /* the Paper's settings list (PLAN D96, D97): the rows, the values and the pages */
     const char *set_clock, *set_temp, *set_language, *set_body, *set_mask, *set_rotation, *set_weather;
     const char *set_pairing, *set_wifi, *on, *off_value;
+    const char *set_screen_off, *never, *screen_s, *screen_min; /* "Screen off" row (boards with a backlight); printf: the number */
     const char *set_phones, *set_networks, *set_about; /* a row of the list and the title of its page */
     const char *forget_ask, *none_phones, *none_networks, *phone_n, *phone_connected; /* phone_n: printf, the number */
     const char *about_firmware, *about_device, *about_board, *about_battery, *about_protocol;

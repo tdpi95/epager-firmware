@@ -933,6 +933,11 @@ static void on_ui_action(void *ctx, ui_action_t a, uint32_t arg)
     case UI_ACTION_SETTING: /* the Paper's settings list: a config key and its new value (PLAN D96) */
         core_config_set_u8(&fb.core, (uint16_t)(arg >> 8), (uint8_t)arg);
         break;
+    case UI_ACTION_SCREEN_TIMEOUT: {
+        const uint8_t secs[2] = {(uint8_t)arg, (uint8_t)(arg >> 8)};
+        (void)core_config_set(&fb.core, PROTO_CFG_DISPLAY_IDLE_OFF_S, secs, sizeof(secs));
+        break;
+    }
     case UI_ACTION_FACE_SELECT:
         (void)core_face_select(&fb.core, ui_face_list_id(arg));
         break;

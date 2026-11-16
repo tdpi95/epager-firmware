@@ -29,6 +29,7 @@ static const ui_strings_t STRINGS[] = {
                            "Any key: close", "Setting updated", "Wi-Fi saved",
                            "Clock", "Temperature", "Language", "Message text", "Hide numbers", "Rotation", "Weather",
                            "Pairing mode", "Wi-Fi setup", "On", "Off",
+                           "Screen off", "Never", "%u s", "%u min",
                            "Paired phones", "Wi-Fi networks", "About", "Forget?", "No phones", "No networks", "Phone %u",
                            "connected", "Firmware", "Device", "Board", "Battery", "Protocol",
                            "Check updates", "Software update", "Update available",
@@ -49,6 +50,7 @@ static const ui_strings_t STRINGS[] = {
                            "Nhấn phím bất kỳ: đóng", "Đã cập nhật cài đặt", "Đã lưu Wi-Fi",
                            "Đồng hồ", "Nhiệt độ", "Ngôn ngữ", "Nội dung tin", "Ẩn số", "Xoay màn hình", "Thời tiết",
                            "Ghép nối", "Cài đặt Wi-Fi", "Bật", "Tắt",
+                           "Tắt màn hình", "Không bao giờ", "%u giây", "%u phút",
                            "Điện thoại", "Mạng Wi-Fi", "Thông tin", "Xóa?", "Chưa có điện thoại", "Chưa có mạng",
                            "Điện thoại %u", "đang kết nối", "Phần mềm", "Thiết bị", "Bo mạch", "Pin", "Giao thức",
                            "Kiểm tra cập nhật", "Cập nhật", "Có bản cập nhật",
@@ -399,7 +401,8 @@ void ui_set_config(const ui_config_t *c)
     if (c->language != ui.cfg.language || c->show_body != ui.cfg.show_body || c->mask_numbers != ui.cfg.mask_numbers ||
         c->tz_offset_min != ui.cfg.tz_offset_min || c->clock_24h != ui.cfg.clock_24h ||
         c->temp_unit != ui.cfg.temp_unit || c->weather_enabled != ui.cfg.weather_enabled ||
-        c->update_auto_check != ui.cfg.update_auto_check || c->clock_face_opts_len != ui.cfg.clock_face_opts_len ||
+        c->update_auto_check != ui.cfg.update_auto_check || c->idle_off_s != ui.cfg.idle_off_s ||
+        c->clock_face_opts_len != ui.cfg.clock_face_opts_len ||
         strcmp(c->clock_face_id, ui.cfg.clock_face_id) != 0 ||
         memcmp(c->clock_face_opts, ui.cfg.clock_face_opts, sizeof(c->clock_face_opts)) != 0) {
         ui.model_dirty = true;

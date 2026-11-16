@@ -167,8 +167,8 @@ def test_settings_page_and_sleep_now(fb_libs) -> None:
     scenes_lcd.tap(b, 148, 156)  # Temperature: Celsius -> Fahrenheit, stored like a CONFIG_SET
     assert "Temperature\n\u00b0F\n" in b.screen_text()
     scenes_lcd.swipe(b, 148, 200, 148, 60)  # the second page
-    scenes_lcd.swipe(b, 148, 200, 148, 60)  # the third page (it starts with the firmware update's check switch)
-    scenes_lcd.tap(b, 148, 116)  # Pairing mode: the second row of the third page
+    scenes_lcd.swipe(b, 148, 200, 148, 60)  # the third page (Weather, the firmware update check switch, Pairing mode, Wi-Fi setup)
+    scenes_lcd.tap(b, 148, 156)  # Pairing mode: the third row of the third page
     assert [e.a for e in b.events if e.type == EV_ACTION][-1] == 1  # UI_ACTION_PAIRING_TOGGLE
     assert "Settings" not in b.screen_text()
     assert "Open the ePager app" in b.screen_text()  # the firmware turned pairing mode on
