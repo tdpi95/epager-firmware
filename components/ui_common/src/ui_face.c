@@ -76,6 +76,7 @@ static struct {
     lv_draw_buf_t *wx_icon[UI_WEATHER_ICON_COUNT];
     lv_draw_buf_t *status_icon[UI_STATUS_ICON_COUNT];
     bool update_drawn;           /* the face draws update_available itself */
+    bool count_drawn;            /* the face draws notif_count itself: no firmware badge */
 } fc;
 
 static UI_EXT_BSS cf_face_t face;
@@ -554,6 +555,7 @@ static bool load(const char *id)
     }
     fc.builtin = b != NULL;
     fc.update_drawn = cf_draws_source(&face, PROTO_FACE_SOURCE_UPDATE_AVAILABLE);
+    fc.count_drawn = cf_draws_source(&face, PROTO_FACE_SOURCE_NOTIF_COUNT);
     return build_objects();
 }
 
@@ -960,7 +962,7 @@ void ui_face_apply(bool show)
     }
     /* the firmware's own parts: the notification badge on the built-in faces, the update mark when the face does
      * not draw update_available itself */
-    const bool badge = fc.builtin && ui.n_cards > 0 && ui.st.ota_pct < 0;
+    const bool badge = fc.builtin && !fc.count_drawn && ui.n_cards > 0 && ui.st.ota_pct < 0;
     ui_set_hidden(fc.badge, !badge);
     if (badge) {
         char num[8];

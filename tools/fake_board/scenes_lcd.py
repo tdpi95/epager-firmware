@@ -199,9 +199,15 @@ def scene_face_firmware_parts() -> Frames:
     settle(b)
     swipe(b, 148, 200, 148, 60)  # up: the clock, the notifications stay
     out: Frames = [("face_builtin_badge", rgb(b))]
+    select_face(b, "epager.digital")  # Digital draws the count itself, in the status bar, so it gets no corner badge
+    out.append(("face_digital_count", rgb(b)))
+    select_face(b, "epager.big")
     b.set_update("available", version="0.3.0", size=2800000)
     settle(b)
     out.append(("face_builtin_badge_update_mark", rgb(b)))
+    select_face(b, "epager.digital")  # the count and the update mark side by side
+    out.append(("face_digital_count_update", rgb(b)))
+    select_face(b, "epager.big")
     loopback.install_clock_face(b, "sample.plain", sample_faces.big_variant("lcd", "sample.plain"))
     select_face(b, "sample.plain")
     out.append(("face_installed_no_badge_update_mark", rgb(b)))

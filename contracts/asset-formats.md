@@ -296,7 +296,8 @@ room; the room humidity is rounded to a whole percent. An element whose source h
 #### The firmware's own parts
 
 - **The notification badge** (the count of waiting notifications) is drawn by the firmware on the built-in
-  faces only, in the bottom left corner. An installed face never gets it: it shows the count where it places
+  faces only, in the bottom left corner (a built-in face that places the `notif_count` source itself, like Digital in its
+  status bar, gets no corner badge). An installed face never gets it: it shows the count where it places
   the `notif_count` source, or not at all.
 - **The update mark** (a firmware update is waiting): a face that draws the `update_available` source (an icon
   or a condition) says where it goes; any other face gets the firmware's small mark at the corner named by

@@ -178,7 +178,7 @@ def scene_face_digital() -> Frames:
 
 def scene_face_firmware_parts() -> Frames:
     """What the firmware adds to a face: the notification badge on a built-in face, the update mark on any face that
-    does not draw update_available itself; an installed face never gets the badge, with or without the count field."""
+    does not draw update_available itself (Digital draws both its count and its mark); an installed face never gets the badge, with or without the count field."""
     b = face_board()
     select_face(b, "epager.big")
     post(b, 1, "Mẹ", "…", app_id="app.1")
@@ -186,9 +186,15 @@ def scene_face_firmware_parts() -> Frames:
     b.button(BTN_PWR)  # the clock: the two notifications wait
     settle(b)
     out: Frames = [("face_builtin_badge", b.panel())]
+    select_face(b, "epager.digital")  # Digital draws the count itself, in the status bar, so it gets no corner badge
+    out.append(("face_digital_count", b.panel()))
+    select_face(b, "epager.big")
     b.set_update("available", version="0.3.0", size=1500000)
     settle(b)
     out.append(("face_builtin_badge_update_mark", b.panel()))
+    select_face(b, "epager.digital")  # the count and the update mark side by side
+    out.append(("face_digital_count_update", b.panel()))
+    select_face(b, "epager.big")
     loopback.install_clock_face(b, "sample.plain", sample_faces.big_variant("paper", "sample.plain"))
     select_face(b, "sample.plain")
     out.append(("face_installed_no_badge_update_mark", b.panel()))

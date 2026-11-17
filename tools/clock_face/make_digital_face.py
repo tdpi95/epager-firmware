@@ -16,6 +16,7 @@ FACE = Path(__file__).resolve().parents[2] / "components/ui_common/faces/digital
 INFO = {"option": 1, "equals": 1}  # the right bottom cell: the room on the Paper, the weather on the LCD (it has no sensor)
 
 UPDATE = {"above_zero": "update_available"}
+WAITING = {"above_zero": "notif_count"}
 
 
 def status_icons(els: list[dict], slots: tuple[int, int, int], y: int, ink: str, bolt: str) -> None:
@@ -53,9 +54,13 @@ def paper() -> dict:
     # style a white line separates it from the black window
     els.append({"kind": "rect", "x": 0, "y": 0, "w": 200, "h": 26, "fill": True, "colour": "black"})
     els.append({"kind": "line", "x": 0, "y": 27, "w": 200, "h": 0, "thickness": 2, "colour": "white", "visible_if": [{"option": 2, "equals": 1}]})
-    els.append({"kind": "text", "x": 8, "y": 3, "w": 44, "h": 21, "font": "small_bold", "literal": "UPD", "colour": "white", "visible_if": [UPDATE]})
-    status_icons(els, (94, 112, 130), 5, "white", "white")
-    els.append({"kind": "text", "x": 148, "y": 3, "w": 46, "h": 21, "font": "small", "source": "battery_pct", "colour": "white"})
+    # the count of waiting notifications: a white pill with the number in black, at the left end of the bar
+    els.append({"kind": "rect", "x": 8, "y": 3, "w": 26, "h": 20, "fill": True, "radius": 10, "colour": "white", "visible_if": [WAITING]})
+    els.append({"kind": "text", "x": 8, "y": 3, "w": 26, "h": 21, "font": "small_bold", "align": "center", "source": "notif_count", "colour": "black", "visible_if": [WAITING]})
+    els.append({"kind": "text", "x": 40, "y": 3, "w": 44, "h": 21, "font": "small_bold", "literal": "UPD", "colour": "white", "visible_if": [UPDATE]})
+    status_icons(els, (104, 122, 140), 5, "white", "white")
+    # right aligned, 3 px from the edge: the icons end next to the number whatever its width
+    els.append({"kind": "text", "x": 151, "y": 3, "w": 46, "h": 21, "font": "small", "align": "right", "source": "battery_pct", "colour": "white"})
     styled(els, {"kind": "number", "x": 8, "y": 36, "w": 184, "align": "center", "set": "seg", "source": "time", "spacing": 2}, ink)
     styled(els, {"kind": "line", "x": 10, "y": 112, "w": 180, "h": 0, "thickness": 2}, ink)
     styled(els, {"kind": "line", "x": 100, "y": 112, "w": 0, "h": 52, "thickness": 2}, ink)
@@ -93,7 +98,9 @@ def lcd() -> dict:
     # the status bar on top: a dark strip in both styles (light ink, so the icons need no per-style copies)
     bar, light, warn = "#1a231b", "#c5d1b8", "#f59e0b"
     els.append({"kind": "rect", "x": 0, "y": 0, "w": 296, "h": 34, "fill": True, "colour": bar})
-    els.append({"kind": "text", "x": 12, "y": 5, "w": 50, "h": 24, "font": "small_bold", "literal": "UPD", "colour": warn, "visible_if": [UPDATE]})
+    els.append({"kind": "rect", "x": 12, "y": 5, "w": 30, "h": 24, "fill": True, "radius": 12, "colour": light, "visible_if": [WAITING]})
+    els.append({"kind": "text", "x": 12, "y": 5, "w": 30, "h": 24, "font": "small_bold", "align": "center", "source": "notif_count", "colour": bar, "visible_if": [WAITING]})
+    els.append({"kind": "text", "x": 50, "y": 5, "w": 50, "h": 24, "font": "small_bold", "literal": "UPD", "colour": warn, "visible_if": [UPDATE]})
     status_icons(els, (186, 204, 222), 9, light, warn)
     els.append({"kind": "text", "x": 240, "y": 5, "w": 48, "h": 24, "font": "small", "source": "battery_pct", "colour": light})
     styled(els, {"kind": "number", "x": left, "y": y, "w": width, "align": "right", "set": "seg", "source": "time",
@@ -106,10 +113,10 @@ def lcd() -> dict:
     styled(els, {"kind": "text", "x": 222, "y": 162, "w": 56, "h": 28, "font": "small_bold", "source": "weather_low"}, ink, INFO)
     # the day and weather bar at the bottom, the same strip
     els.append({"kind": "rect", "x": 0, "y": 206, "w": 296, "h": 34, "fill": True, "colour": bar})
-    els.append({"kind": "text", "x": 12, "y": 209, "w": 120, "h": 28, "font": "small_bold", "source": "weekday", "format": "long", "colour": light})
+    els.append({"kind": "text", "x": 22, "y": 209, "w": 110, "h": 28, "font": "small_bold", "source": "weekday", "format": "long", "colour": light})
     els.append({"kind": "text", "x": 138, "y": 209, "w": 52, "h": 28, "font": "small_bold", "align": "center", "source": "ampm", "colour": light})
-    els.append({"kind": "icon", "x": 204, "y": 207, "w": 32, "h": 32, "icon": "weather", "colour": light})
-    els.append({"kind": "text", "x": 222, "y": 209, "w": 62, "h": 28, "font": "small_bold", "align": "right", "source": "weather_temp", "colour": light})
+    els.append({"kind": "icon", "x": 194, "y": 207, "w": 32, "h": 32, "icon": "weather", "colour": light})
+    els.append({"kind": "text", "x": 212, "y": 209, "w": 62, "h": 28, "font": "small_bold", "align": "right", "source": "weather_temp", "colour": light})
     return {"images": [{"digit_set": "seg", "format": "mono1", "dir": "digits-lcd"},
                        {"digit_set": "small", "format": "mono1", "dir": "small-lcd"},
                        {"name": "ghost", "format": "mono1", "file": "icons/ghost-lcd.png"}], "elements": els}
@@ -117,7 +124,7 @@ def lcd() -> dict:
 
 def render() -> str:
     face = {
-        "meta": {"id": "epager.digital", "name": "Digital", "name_vi": "Điện tử", "author": "ePager", "version": "1.3.0",
+        "meta": {"id": "epager.digital", "name": "Digital", "name_vi": "Điện tử", "author": "ePager", "version": "1.4.0",
                  "min_contract": "0.15.0", "update_anchor": "top_right"},
         "options": [
             {"id": 1, "type": "toggle", "label": "Info row", "label_vi": "Dòng thông tin", "default": True},

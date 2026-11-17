@@ -2085,6 +2085,13 @@ static void test_face_badge_only_on_builtin_faces(void)
     run(2100);
     TEST_ASSERT_EQUAL_STRING("test.full", ui_clock_face_shown());
     TEST_ASSERT_NOT_NULL(strstr(text(), "\n2\n")); /* its notif_count number element */
+    /* Digital places the count in its status bar itself: once, and no corner badge on top of it */
+    face_config(face_cfg(), "epager.digital", NULL, 0);
+    run(2100);
+    const char *t = text();
+    const char *first = strncmp(t, "2\n", 2) == 0 ? t : strstr(t, "\n2\n");
+    TEST_ASSERT_NOT_NULL(first);
+    TEST_ASSERT_NULL(strstr(first + 1, "\n2\n"));
 }
 
 static void test_face_update_mark(void)
