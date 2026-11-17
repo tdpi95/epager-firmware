@@ -2,6 +2,8 @@
 
 | Firmware (variant) | Firmware version | Contract | App versions known to work | Verified on |
 |---|---|---|---|---|
+| lcd | 0.3.2 | 0.18.0 | (no companion-app release tested yet) | host tests; the Digital face's count in the status bar and the moved weekday and temperature not run on the board yet |
+| paper | 0.3.2 | 0.18.0 | (no companion-app release tested yet) | host tests; the Digital face's count in the status bar and the battery level's new margin not run on the board yet |
 | lcd | 0.3.1 | 0.18.0 | (no companion-app release tested yet) | host tests; the Screen off settings row not run on the board yet |
 | paper | 0.3.1 | 0.18.0 | (no companion-app release tested yet) | host tests; the Screen off row is LCD only |
 | paper | 0.3.0 | 0.18.0 | (no companion-app release tested yet) | host tests; on a Paper board: the Digital face and the settings list (flashed over USB); the clock faces over BLE, quiet hours and the Pebble-style idle drain are in the hw-checklist (85, 86, 87) |
